@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container text-center">
+    <div class="p-5 mb-4 bg-light rounded-3 border border-2" style="border-color: var(--verde-fachero) !important;">
+        <div class="container-fluid py-3">
+            <h1 class="display-5 fw-bold text-uppercase">Más onda a tus outfits ⚡</h1>
+            <p class="col-md-8 fs-5 mx-auto text-muted">
+                Gorras, lentes y las mejores medias de Adolfo Sourdeaux para todo el país.
+            </p>
+            <a href="/productos" class="btn btn-fachero btn-lg mt-3 px-5 rounded-pill shadow">
+                VER EL SHOP <i class="bi bi-arrow-right-short"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success"><i class="bi bi-capslock"></i></h3> <h4>Gorras</h4>
+                    <p>Trucker, Visera Plana y más.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success"><i class="bi bi-eyeglasses"></i></h3>
+                    <h4>Lentes</h4>
+                    <p>Para tirar facha este verano.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <h3 class="text-success"><i class="bi bi-emoji-smile"></i></h3>
+                    <h4>Medias</h4>
+                    <p>Packs de soquetes y estilo skate.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

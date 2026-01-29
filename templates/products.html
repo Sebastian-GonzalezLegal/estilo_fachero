@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Nuestros Productos</h2>
+        <div class="btn-group">
+            <a href="/productos" class="btn btn-outline-dark">Todo</a>
+            {% for t in tipos %}
+            <a href="/productos?tipo={{ t }}" class="btn btn-outline-dark">{{ t|capitalize }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for prod in productos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="bg-light text-center py-5 rounded-top position-relative" style="min-height: 200px;">
+                    {% if prod.primera_foto() %}
+                    {% set foto = prod.primera_foto() %}
+                    {% if foto.startswith('http') %}
+                    <img src="{{ foto }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                    {% else %}
+                    <img src="{{ url_for('static', filename='img/productos/' + foto) }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                    {% endif %}
+                    {% else %}
+                    <i class="bi bi-camera fs-1 text-muted"></i>
+                    {% endif %}
+                    <span class="position-absolute top-0 end-0 badge bg-dark m-2">{{ prod.tipo }}</span>
+                    {% if prod.stock <= 0 %}
+                    <span class="position-absolute top-0 start-0 badge bg-danger m-2">Sin stock</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">{{ prod.nombre }}</h5>
+                    {% if prod.descripcion %}
+                    <p class="card-text text-muted small mb-2">{{ prod.descripcion | truncate(80) }}</p>
+                    {% endif %}
+                    <h4 class="text-success mb-2">${{ "%.0f"|format(prod.precio) }}</h4>
+                    {% if prod.stock > 0 %}
+                    <small class="text-muted mb-2">Stock: {{ prod.stock }}</small>
+                    {% endif %}
+                    
+                    <div class="mt-auto">
+                        <div class="d-flex align-items-center mb-2">
+                            <label class="me-2 text-muted small">Cant:</label>
+                            <input type="number" 
+                                   id="cantidad-{{ prod.id }}" 
+                                   class="form-control form-control-sm text-center" 
+                                   value="1" 
+                                   min="1" 
+                                   max="{{ prod.stock if prod.stock > 0 else 999 }}"
+                                   style="max-width: 70px;">
+                        </div>
+                    
+                        <div id="en-carrito-{{ prod.id }}" class="text-success small fw-bold mb-2 text-center" style="min-height: 20px;">
+                            </div>
+                    
+                        {% if prod.stock > 0 %}
+                        <button id="btn-agregar-{{ prod.id }}" 
+                                onclick="agregarAlCarrito({{ prod.id }}, '{{ prod.nombre|e }}', {{ prod.precio }})" 
+                                class="btn btn-fachero w-100 fw-bold">
+                            AGREGAR
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary w-100 fw-bold" disabled>Sin stock</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        </div>
+</div>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-7">
+            <h3 class="mb-4 fw-bold">Datos de Envío 📦</h3>
+            <form action="/finalizar" method="POST" id="form-compra">
+                <div class="mb-3">
+                    <label class="form-label">Nombre Completo</label>
+                    <input type="text" name="nombre" class="form-control" required placeholder="Juan Pérez">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required placeholder="juan@ejemplo.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Teléfono / WhatsApp</label>
+                    <input type="tel" name="telefono" class="form-control" required placeholder="11 1234 5678">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Dirección de Entrega</label>
+                    <input type="text" name="direccion" class="form-control" required placeholder="Calle Falsa 123, Tigre">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Código Postal</label>
+                    <input type="text" name="cp" id="cp-destino" class="form-control" required placeholder="1425">
+                    <div class="form-text">Lo usamos para cotizar el envío (MiCorreo).</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Envío (MiCorreo)</label>
+                    <button type="button" id="btn-cotizar-envio" class="btn btn-fachero w-100">
+                        COTIZAR ENVÍO
+                    </button>
+                    <div id="envio-estado" class="small text-muted mt-2"></div>
+                    <div id="envio-opciones" class="mt-3"></div>
+
+                    <input type="hidden" name="envio_tipo" id="envio_tipo">
+                    <input type="hidden" name="envio_nombre" id="envio_nombre">
+                    <input type="hidden" name="envio_precio" id="envio_precio" value="0">
+                </div>
+
+                <input type="hidden" name="carrito_data" id="carrito_input">
+
+                <button type="submit" class="btn btn-fachero w-100 btn-lg mt-3">
+                    CONFIRMAR PEDIDO
+                </button>
+            </form>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card bg-light border-0 shadow-sm p-3 mt-4 mt-md-0">
+                <h4 class="fw-bold">Resumen</h4>
+                <div id="resumen-items" class="small text-muted mb-3">
+                    </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Envío</span>
+                    <span class="fw-bold">$<span id="envio-resumen">0</span></span>
+                </div>
+                <h3 class="fw-bold text-end mt-2">Total: $<span id="total-resumen">0</span></h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Apenas carga, copiamos el carrito del LocalStorage al Input Oculto
+    document.addEventListener("DOMContentLoaded", function() {
+        const carrito = localStorage.getItem('carrito') || '[]';
+        
+        // 1. Rellenar el input oculto para Python
+        document.getElementById('carrito_input').value = carrito;
+
+        // 2. Rellenar el resumen visual de la derecha
+        const items = JSON.parse(carrito);
+        let totalProductos = 0;
+        let totalEnvio = 0;
+        const resumenDiv = document.getElementById('resumen-items');
+        
+        if(items.length === 0) {
+            alert("El carrito está vacío, volvé a elegir productos.");
+            window.location.href = "/productos";
+        }
+
+        items.forEach(prod => {
+            const subtotal = prod.precio * prod.cantidad;
+            totalProductos += subtotal;
+            resumenDiv.innerHTML += `
+                <div class="d-flex justify-content-between">
+                    <span>${prod.cantidad}x ${prod.nombre}</span>
+                    <span>$${subtotal}</span>
+                </div>
+            `;
+        });
+
+        function renderTotales() {
+            document.getElementById('envio-resumen').innerText = Math.round(totalEnvio);
+            document.getElementById('total-resumen').innerText = Math.round(totalProductos + totalEnvio);
+            document.getElementById('envio_precio').value = totalEnvio;
+        }
+
+        renderTotales();
+
+        // Cotizar envío con MiCorreo
+        const btnCotizar = document.getElementById('btn-cotizar-envio');
+        const estado = document.getElementById('envio-estado');
+        const opciones = document.getElementById('envio-opciones');
+        const cpInput = document.getElementById('cp-destino');
+
+        function monedaARS(n) {
+            if (typeof n !== 'number') return n;
+            return n.toFixed(2);
+        }
+
+        function setEnvioSeleccionado(rate) {
+            if (!rate) return;
+            document.getElementById('envio_tipo').value = rate.deliveredType || '';
+            document.getElementById('envio_nombre').value = rate.productName || 'MiCorreo';
+            totalEnvio = Number(rate.price || 0);
+            renderTotales();
+        }
+
+        btnCotizar.addEventListener('click', async () => {
+            const cp = (cpInput.value || '').trim();
+            if (!cp) {
+                estado.innerText = "Ingresá un código postal para cotizar.";
+                return;
+            }
+
+            estado.innerText = "Cotizando envío...";
+            opciones.innerHTML = "";
+
+            try {
+                const res = await fetch('/api/micorreo/rates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postalCodeDestination: cp, carrito: items })
+                });
+                const data = await res.json();
+
+                if (!data.ok) {
+                    estado.innerText = data.error || "No se pudo cotizar el envío.";
+                    return;
+                }
+
+                const rates = data.rates || [];
+                const rateD = rates.find(r => r.deliveredType === 'D');
+                const rateS = rates.find(r => r.deliveredType === 'S');
+
+                if (!rateD && !rateS) {
+                    estado.innerText = "MiCorreo no devolvió cotizaciones para ese destino.";
+                    return;
+                }
+
+                estado.innerText = "Elegí una opción de envío:";
+
+                const renderRate = (rate, titulo) => {
+                    if (!rate) return '';
+                    const id = `envio-${rate.deliveredType}`;
+                    return `
+                        <label class="w-100 border rounded p-3 mb-2 d-block" for="${id}" style="cursor:pointer;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">${titulo}</div>
+                                    <div class="small text-muted">${rate.productName || ''} · ${rate.deliveryTimeMin || '?'}-${rate.deliveryTimeMax || '?'} días</div>
+                                </div>
+                                <div class="fw-bold">$${monedaARS(Number(rate.price || 0))}</div>
+                            </div>
+                            <input class="form-check-input mt-2" type="radio" name="envio_radio" id="${id}" />
+                        </label>
+                    `;
+                };
+
+                opciones.innerHTML = `
+                    ${renderRate(rateD, 'Entrega a domicilio')}
+                    ${renderRate(rateS, 'Retiro en sucursal')}
+                `;
+
+                const radioD = document.getElementById('envio-D');
+                const radioS = document.getElementById('envio-S');
+                if (radioD && rateD) radioD.addEventListener('change', () => setEnvioSeleccionado(rateD));
+                if (radioS && rateS) radioS.addEventListener('change', () => setEnvioSeleccionado(rateS));
+
+                // Selección por defecto: domicilio si existe, si no sucursal
+                if (radioD && rateD) {
+                    radioD.checked = true;
+                    setEnvioSeleccionado(rateD);
+                } else if (radioS && rateS) {
+                    radioS.checked = true;
+                    setEnvioSeleccionado(rateS);
+                }
+            } catch (e) {
+                estado.innerText = "Error al cotizar el envío. Probá de nuevo.";
+            }
+        });
+    });
+
+    // Limpiar carrito al enviar (Opcional, si querés que se vacíe al comprar)
+    document.getElementById('form-compra').addEventListener('submit', function() {
+        localStorage.removeItem('carrito');
+    });
+</script>
+{% endblock %}

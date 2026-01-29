@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-uppercase fw-bold">Tu Carrito <i class="bi bi-cart3"></i></h2>
+    
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover mb-0">
+            <thead class="bg-dark text-white">
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cant.</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tabla-carrito">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="panel-compra-final" class="d-none justify-content-end align-items-center mt-4 p-4 bg-light rounded border border-2" style="border-color: var(--verde-fachero) !important;">
+        <h3 class="m-0 me-4 fw-bold">Total: $<span id="total-compra">0</span></h3>
+        <a href="/finalizar" class="btn btn-fachero btn-lg shadow">
+            Iniciar Compra <i class="bi bi-credit-card"></i>
+        </a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if(typeof mostrarCarrito === "function"){
+            mostrarCarrito();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">{{ 'Editar' if producto else 'Nuevo' }} Producto</h2>
+                <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+            
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" 
+                                       value="{{ producto.nombre if producto else '' }}" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="tipo" class="form-label">Tipo *</label>
+                                <select class="form-select" id="tipo" name="tipo" required>
+                                    <option value="">Elegir...</option>
+                                    {% for t in tipos %}
+                                    <option value="{{ t }}" {{ 'selected' if producto and producto.tipo == t else '' }}>{{ t|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" 
+                                      placeholder="Descripción del producto">{{ producto.descripcion if producto and producto.descripcion else '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Fotos del producto</label>
+                            {% if producto and producto.fotos_lista() %}
+                            <div class="mb-3">
+                                <span class="text-muted small">Fotos actuales (se mantienen al guardar):</span>
+                                <input type="hidden" name="fotos_actuales" value="{{ producto.fotos_lista()|join(',') }}">
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    {% for foto in producto.fotos_lista() %}
+                                    <div class="position-relative">
+                                        {% if foto.startswith('http') %}
+                                        <img src="{{ foto }}" alt="Foto" class="rounded border" style="height: 80px; width: auto; object-fit: cover;">
+                                        {% else %}
+                                        <img src="{{ url_for('static', filename='img/productos/' + foto) }}" alt="Foto" class="rounded border" style="height: 80px; width: auto; object-fit: cover;">
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <input type="hidden" name="fotos_actuales" value="">
+                            {% endif %}
+                            <label for="fotos_nuevas" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-cloud-upload"></i> Elegir fotos para subir
+                            </label>
+                            <input type="file" class="form-control d-none" id="fotos_nuevas" name="fotos_nuevas" 
+                                   multiple accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                            <div id="nombres-archivos" class="small text-muted mt-1"></div>
+                            <small class="text-muted d-block mt-1">Podés elegir varias a la vez. Formatos: JPG, PNG, GIF, WebP. Máx. 16 MB por imagen.</small>
+                            <div class="mt-2">
+                                <label for="fotos_urls" class="form-label small text-muted">URLs adicionales (opcional, una por línea)</label>
+                                <textarea class="form-control form-control-sm" id="fotos" name="fotos" rows="2" 
+                                          placeholder="https://ejemplo.com/foto.jpg">{% if producto and producto.fotos_lista() %}{% for f in producto.fotos_lista() %}{% if f.startswith('http') %}{{ f }}{% if not loop.last %}&#10;{% endif %}{% endif %}{% endfor %}{% endif %}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="precio" class="form-label">Precio *</label>
+                                <input type="number" step="0.01" class="form-control" id="precio" name="precio" 
+                                       value="{{ producto.precio if producto else '' }}" min="0" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="stock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="stock" name="stock" 
+                                       value="{{ producto.stock if producto else 0 }}" min="0">
+                            </div>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Dimensiones para envío</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="peso_g" class="form-label">Peso (g)</label>
+                                <input type="number" class="form-control" id="peso_g" name="peso_g" 
+                                       value="{{ producto.peso_g if producto else 100 }}" min="1">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="alto_cm" class="form-label">Alto (cm)</label>
+                                <input type="number" class="form-control" id="alto_cm" name="alto_cm" 
+                                       value="{{ producto.alto_cm if producto else 10 }}" min="1">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="ancho_cm" class="form-label">Ancho (cm)</label>
+                                <input type="number" class="form-control" id="ancho_cm" name="ancho_cm" 
+                                       value="{{ producto.ancho_cm if producto else 10 }}" min="1">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="largo_cm" class="form-label">Largo (cm)</label>
+                                <input type="number" class="form-control" id="largo_cm" name="largo_cm" 
+                                       value="{{ producto.largo_cm if producto else 10 }}" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-fachero">
+                                <i class="bi bi-check-circle"></i> {{ 'Actualizar' if producto else 'Crear' }} Producto
+                            </button>
+                            <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('fotos_nuevas').addEventListener('change', function() {
+    var names = [];
+    for (var i = 0; i < this.files.length; i++) names.push(this.files[i].name);
+    document.getElementById('nombres-archivos').textContent = names.length ? names.join(', ') : '';
+});
+</script>
+{% endblock %}

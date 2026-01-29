@@ -1,0 +1,68 @@
+/* static/css/estilos.css */
+
+/* --- VARIABLES Y RESET --- */
+:root {
+    --verde-fachero: #4F5D2F;
+    --verde-claro: #748c43;
+    --negro-urbano: #1a1a1a;
+    --gris-fondo: #f8f9fa;
+}
+
+body {
+    background-color: var(--gris-fondo);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- NAVBAR --- */
+.bg-fachero {
+    background-color: var(--verde-fachero) !important;
+}
+
+.navbar-brand img {
+    height: 45px;
+    margin-right: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* --- BOTONES --- */
+.btn-fachero {
+    background-color: var(--verde-fachero);
+    color: white;
+    border: none;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+    transition: 0.3s;
+}
+
+.btn-fachero:hover {
+    background-color: var(--verde-claro);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* --- TARJETAS Y ALERTAS --- */
+.card-success {
+    border-radius: 0; /* Look más moderno/agresivo */
+    border: none;
+}
+
+.alert-pago {
+    background-color: #e9ecef;
+    border-left: 5px solid var(--verde-fachero);
+}
+
+/* --- FOOTER --- */
+footer {
+    background-color: var(--negro-urbano);
+    color: white;
+}
+
+.btn-fachero {
+    background-color: #4b5320; /* Verde militar */
+    color: white;
+    border-radius: 0px; /* Bordes rectos para un look más agresivo/moderno */
+    text-transform: uppercase;
+    font-weight: bold;
+}
