@@ -1,8 +1,10 @@
 // Cargar carrito
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+let productosDisponibles = {}; // Cache de productos con stock
 
 document.addEventListener("DOMContentLoaded", function() {
     actualizarBadge();
+    cargarProductos(); // Cargar stock de productos
     actualizarEstadoProductos();
     
     if(document.getElementById('tabla-carrito')){
@@ -10,15 +12,51 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+// Cargar productos con stock desde la API
+async function cargarProductos() {
+    try {
+        const res = await fetch('/api/productos');
+        const productos = await res.json();
+        productos.forEach(prod => {
+            productosDisponibles[prod.id] = prod;
+        });
+        actualizarEstadoProductos(); // Actualizar estado con stock real
+    } catch (e) {
+        console.error('Error al cargar productos:', e);
+    }
+}
+
 function agregarAlCarrito(id, nombre, precio) {
     const inputCantidad = document.getElementById('cantidad-' + id);
     const cantidadElegida = inputCantidad ? parseInt(inputCantidad.value) : 1;
 
     if (cantidadElegida < 1) { alert("Cantidad no válida"); return; }
 
+    // Validar stock disponible
+    const producto = productosDisponibles[id];
+    if (!producto) {
+        alert("Producto no disponible. Cargando datos...");
+        cargarProductos();
+        return;
+    }
+
+    if (producto.stock <= 0) {
+        alert("Lo sentimos, este producto no tiene stock en este momento.");
+        return;
+    }
+
+    // Calcular cantidad total si ya está en el carrito
+    const existe = carrito.find(p => p.id === id);
+    const cantidadTotal = existe ? existe.cantidad + cantidadElegida : cantidadElegida;
+
+    // Validar que no supere el stock disponible
+    if (cantidadTotal > producto.stock) {
+        alert(`Stock insuficiente. Disponibles: ${producto.stock}`);
+        return;
+    }
+
     const item = { id, nombre, precio, cantidad: cantidadElegida };
     
-    const existe = carrito.find(p => p.id === id);
     if (existe) {
         existe.cantidad += cantidadElegida;
     } else {
@@ -60,11 +98,36 @@ function actualizarBadge() {
 function actualizarEstadoProductos() {
     if (carrito.length === 0) {
         document.querySelectorAll('[id^="en-carrito-"]').forEach(el => el.innerText = '');
-        return;
+    } else {
+        carrito.forEach(prod => {
+            const div = document.getElementById(`en-carrito-${prod.id}`);
+            if (div) div.innerHTML = `<i class="bi bi-bag-check-fill"></i> Tenés ${prod.cantidad}`;
+        });
     }
-    carrito.forEach(prod => {
-        const div = document.getElementById(`en-carrito-${prod.id}`);
-        if (div) div.innerHTML = `<i class="bi bi-bag-check-fill"></i> Tenés ${prod.cantidad}`;
+
+    // Deshabilitar botones de productos sin stock
+    Object.keys(productosDisponibles).forEach(prodId => {
+        const producto = productosDisponibles[prodId];
+        const btn = document.getElementById(`btn-agregar-${prodId}`);
+        const inputCantidad = document.getElementById(`cantidad-${prodId}`);
+        
+        if (producto.stock <= 0) {
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('btn-secondary');
+                btn.classList.remove('btn-fachero');
+                btn.innerHTML = '<i class="bi bi-x-circle"></i> SIN STOCK';
+            }
+            if (inputCantidad) inputCantidad.disabled = true;
+        } else {
+            if (btn) {
+                btn.disabled = false;
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-fachero');
+                btn.innerHTML = '<i class="bi bi-bag-plus-fill"></i> AGREGAR';
+            }
+            if (inputCantidad) inputCantidad.disabled = false;
+        }
     });
 }
 

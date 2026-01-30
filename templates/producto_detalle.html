@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Navegación -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/productos">Productos</a></li>
+            <li class="breadcrumb-item active">{{ producto.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Galería de Fotos -->
+        <div class="col-md-6 mb-4">
+            <div id="carousel-fotos" class="carousel slide border rounded" data-bs-ride="carousel">
+                <div class="carousel-inner bg-light p-3">
+                    {% set fotos = producto.fotos_lista() %}
+                    {% if fotos %}
+                        {% for foto in fotos %}
+                            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                <img src="{{ url_for('static', filename='img/productos/' + foto) }}" 
+                                     class="d-block w-100 rounded" 
+                                     alt="{{ producto.nombre }}"
+                                     style="max-height: 500px; object-fit: contain;">
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="carousel-item active">
+                            <div class="d-flex align-items-center justify-content-center" style="height: 500px;">
+                                <span class="text-muted">Sin imágenes disponibles</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if fotos|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#carousel-fotos" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carousel-fotos" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Miniaturas -->
+            {% if fotos|length > 1 %}
+            <div class="row mt-3 g-2">
+                {% for foto in fotos %}
+                <div class="col-auto">
+                    <img src="{{ url_for('static', filename='img/productos/' + foto) }}" 
+                         class="img-thumbnail cursor-pointer" 
+                         alt="{{ producto.nombre }}"
+                         style="width: 80px; height: 80px; object-fit: contain; cursor: pointer;"
+                         onclick="document.querySelector('#carousel-fotos').querySelector('.carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="col-md-6">
+            <h1 class="fw-bold mb-2">{{ producto.nombre }}</h1>
+
+            <!-- Tipo -->
+            <div class="mb-3">
+                <span class="badge bg-secondary" style="font-size: 0.9rem;">{{ producto.tipo|upper }}</span>
+            </div>
+
+            <!-- Descripción -->
+            {% if producto.descripcion %}
+            <p class="text-muted mb-4">{{ producto.descripcion }}</p>
+            {% endif %}
+
+            <!-- Precio y Stock -->
+            <div class="card bg-light border-0 p-4 mb-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-1">Precio</p>
+                        <h3 class="fw-bold text-success mb-0">${{ "%.2f"|format(producto.precio) }}</h3>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-1">Stock Disponible</p>
+                        {% if producto.stock > 0 %}
+                            <h3 class="fw-bold text-primary mb-0">{{ producto.stock }} unidades</h3>
+                        {% else %}
+                            <h3 class="fw-bold text-danger mb-0">Sin stock</h3>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selector de Cantidad y Botón Agregar -->
+            {% if producto.stock > 0 %}
+            <div class="mb-4">
+                <label class="form-label fw-bold">Cantidad</label>
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-secondary" type="button" onclick="disminuirCantidad()">
+                        <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="number" id="cantidad-detalle" class="form-control text-center" value="1" min="1" max="{{ producto.stock }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="aumentarCantidad()">
+                        <i class="bi bi-plus"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Máximo disponible: {{ producto.stock }} unidades</small>
+            </div>
+
+            <button class="btn btn-fachero btn-lg w-100 mb-3" 
+                    onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                <i class="bi bi-bag-plus-fill"></i> AGREGAR AL CARRITO
+            </button>
+
+            <a href="/productos" class="btn btn-outline-secondary btn-lg w-100">
+                <i class="bi bi-arrow-left"></i> Volver a Productos
+            </a>
+            {% else %}
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> Este producto no tiene stock disponible
+            </div>
+            <a href="/productos" class="btn btn-outline-secondary btn-lg w-100">
+                <i class="bi bi-arrow-left"></i> Volver a Productos
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Productos Relacionados -->
+    <div class="mt-5 pt-5 border-top">
+        <h4 class="fw-bold mb-4">Productos Similares</h4>
+        <div class="row g-3">
+            {% set productos_relacionados = query_productos_por_tipo(producto.tipo, producto.id) %}
+            {% if productos_relacionados %}
+                {% for prod in productos_relacionados[:4] %}
+                <div class="col-md-3 col-sm-6">
+                    <div class="card h-100 shadow-sm border-0 transition-card">
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
+                            {% if prod.primera_foto() %}
+                                <img src="{{ url_for('static', filename='img/productos/' + prod.primera_foto()) }}" 
+                                     class="img-fluid" alt="{{ prod.nombre }}" style="max-height: 100%; object-fit: contain;">
+                            {% else %}
+                                <span class="text-muted">Sin foto</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold">{{ prod.nombre }}</h6>
+                            <p class="text-muted small mb-2">{{ prod.descripcion[:50] }}...</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-success">${{ "%.2f"|format(prod.precio) }}</span>
+                                <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <p class="text-muted text-center">No hay productos similares disponibles</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .transition-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .transition-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .img-thumbnail {
+        border: 2px solid #ddd;
+        padding: 5px;
+    }
+    .img-thumbnail:hover {
+        border-color: #4f5d2f;
+    }
+</style>
+
+<script>
+    function agregarAlCarritoDetalle(id, nombre, precio) {
+        const cantidad = parseInt(document.getElementById('cantidad-detalle').value);
+        
+        if (cantidad < 1) {
+            alert("La cantidad debe ser mayor a 0");
+            return;
+        }
+        
+        // Llamar a la función original modificando temporalmente el input de cantidad
+        const inputCantidad = document.getElementById('cantidad-' + id);
+        const inputDetalle = document.getElementById('cantidad-detalle');
+        
+        // Crear un input temporal con la cantidad del detalle
+        const tempInput = document.createElement('input');
+        tempInput.id = 'cantidad-' + id;
+        tempInput.value = cantidad;
+        document.body.appendChild(tempInput);
+        
+        // Llamar a agregarAlCarrito
+        agregarAlCarrito(id, nombre, precio);
+        
+        // Limpiar
+        document.body.removeChild(tempInput);
+    }
+
+    function aumentarCantidad() {
+        const input = document.getElementById('cantidad-detalle');
+        const max = parseInt(input.max);
+        if (parseInt(input.value) < max) {
+            input.value = parseInt(input.value) + 1;
+        }
+    }
+
+    function disminuirCantidad() {
+        const input = document.getElementById('cantidad-detalle');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
+</script>
+{% endblock %}

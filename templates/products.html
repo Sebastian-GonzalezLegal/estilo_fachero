@@ -34,7 +34,11 @@
                 </div>
                 
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title fw-bold">{{ prod.nombre }}</h5>
+                    <h5 class="card-title fw-bold">
+                        <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-decoration-none text-dark">
+                            {{ prod.nombre }}
+                        </a>
+                    </h5>
                     {% if prod.descripcion %}
                     <p class="card-text text-muted small mb-2">{{ prod.descripcion | truncate(80) }}</p>
                     {% endif %}
@@ -44,6 +48,10 @@
                     {% endif %}
                     
                     <div class="mt-auto">
+                        <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                            <i class="bi bi-eye"></i> Ver Detalle
+                        </a>
+                        
                         <div class="d-flex align-items-center mb-2">
                             <label class="me-2 text-muted small">Cant:</label>
                             <input type="number" 

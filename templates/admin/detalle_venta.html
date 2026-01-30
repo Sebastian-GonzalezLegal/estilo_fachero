@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header con botón volver -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{{ url_for('admin_ventas') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Volver a Ventas
+        </a>
+        <h2 class="fw-bold mb-0">Pedido #{{ pedido.id }}</h2>
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-box-arrow-right"></i> Salir
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Información del Pedido -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-fachero text-white">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Información del Pedido
+                    </h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p class="mb-0">
+                        <strong>Fecha:</strong> {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-secondary mb-3">👤 Datos del Cliente</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 140px;"><strong>Nombre:</strong></td>
+                            <td>{{ pedido.nombre_cliente }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><strong>Email:</strong></td>
+                            <td><a href="mailto:{{ pedido.email_cliente }}">{{ pedido.email_cliente }}</a></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><strong>Teléfono:</strong></td>
+                            <td>{{ pedido.telefono_cliente or 'No proporcionado' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-secondary mb-3">📍 Datos de Entrega</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 140px;"><strong>Dirección:</strong></td>
+                            <td>{{ pedido.direccion_cliente or 'No proporcionada' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted"><strong>Código Postal:</strong></td>
+                            <td>{{ pedido.cp_cliente or 'No proporcionado' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información de Envío -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-fachero text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-box"></i> Datos de Envío
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>
+                        <strong>Método de Envío:</strong> 
+                        {{ pedido.envio_nombre or 'MiCorreo' }}
+                        {% if pedido.envio_tipo == 'D' %}
+                            <span class="badge bg-info">A Domicilio</span>
+                        {% elif pedido.envio_tipo == 'S' %}
+                            <span class="badge bg-info">Retiro en Sucursal</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p>
+                        <strong>Precio de Envío:</strong> ${{ "%.2f"|format(pedido.envio_precio) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos del Pedido -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-fachero text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-bag"></i> Productos Vendidos
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Precio Unitario</th>
+                            <th class="text-end">Subtotal</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in pedido.detalles %}
+                        <tr>
+                            <td>
+                                <strong>{{ detalle.nombre_producto }}</strong>
+                                {% if detalle.producto_id %}
+                                    <br><small class="text-muted">ID: {{ detalle.producto_id }}</small>
+                                {% else %}
+                                    <br><small class="text-danger">(Producto eliminado del catálogo)</small>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ detalle.cantidad }}</td>
+                            <td class="text-end">${{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                            <td class="text-end fw-bold">${{ "%.2f"|format(detalle.cantidad * detalle.precio_unitario) }}</td>
+                            <td class="text-center">
+                                {% if detalle.producto_id %}
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modal-producto-{{ detalle.id }}">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </button>
+                                {% else %}
+                                    <span class="badge bg-secondary">No disponible</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Subtotal Productos:</strong></td>
+                            <td class="text-end"><strong>${{ "%.2f"|format(pedido.total_productos) }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Envío:</strong></td>
+                            <td class="text-end"><strong>${{ "%.2f"|format(pedido.envio_precio) }}</strong></td>
+                        </tr>
+                        <tr class="table-active">
+                            <td colspan="3" class="text-end"><strong class="fs-5">TOTAL:</strong></td>
+                            <td class="text-end"><strong class="fs-5 text-success">${{ "%.2f"|format(pedido.total) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales de detalles de productos -->
+    {% for detalle in pedido.detalles %}
+        {% if detalle.producto_id %}
+            <div class="modal fade" id="modal-producto-{{ detalle.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-fachero text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-box"></i> Detalles del Producto
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Se cargará dinámicamente con JavaScript -->
+                            <div id="contenido-producto-{{ detalle.id }}" class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<style>
+    .bg-fachero {
+        background-color: #4f5d2f !important;
+    }
+</style>
+
+<script>
+    // Cargar detalles del producto en el modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const detalles = {{ detalles|tojson }};
+        
+        detalles.forEach(detalle => {
+            if (detalle.producto_id) {
+                const modal = document.getElementById(`modal-producto-${detalle.id}`);
+                if (modal) {
+                    modal.addEventListener('show.bs.modal', async () => {
+                        const contenido = document.getElementById(`contenido-producto-${detalle.id}`);
+                        
+                        try {
+                            const response = await fetch(`/api/admin/producto/${detalle.producto_id}`);
+                            const data = await response.json();
+                            contenido.innerHTML = data.html;
+                        } catch (error) {
+                            contenido.innerHTML = '<div class="alert alert-danger">Error al cargar el producto</div>';
+                            console.error('Error:', error);
+                        }
+                    });
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -131,6 +131,60 @@ class Admin(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+class Pedido(db.Model):
+    __tablename__ = 'pedidos'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_cliente = db.Column(db.String(200), nullable=False)
+    email_cliente = db.Column(db.String(120), nullable=False)
+    telefono_cliente = db.Column(db.String(20))
+    direccion_cliente = db.Column(db.String(300))
+    cp_cliente = db.Column(db.String(10))
+    envio_tipo = db.Column(db.String(50))  # D (domicilio) o S (sucursal)
+    envio_nombre = db.Column(db.String(100))  # Ej: MiCorreo
+    envio_precio = db.Column(db.Float, default=0)
+    total_productos = db.Column(db.Float, nullable=False)
+    total = db.Column(db.Float, nullable=False)
+    fecha_pedido = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    detalles = db.relationship('DetallePedido', backref='pedido', lazy=True, cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre_cliente": self.nombre_cliente,
+            "email_cliente": self.email_cliente,
+            "telefono_cliente": self.telefono_cliente,
+            "direccion_cliente": self.direccion_cliente,
+            "cp_cliente": self.cp_cliente,
+            "envio_tipo": self.envio_tipo,
+            "envio_nombre": self.envio_nombre,
+            "envio_precio": self.envio_precio,
+            "total_productos": self.total_productos,
+            "total": self.total,
+            "fecha_pedido": self.fecha_pedido.isoformat() if self.fecha_pedido else None,
+            "detalles": [d.to_dict() for d in self.detalles]
+        }
+
+
+class DetallePedido(db.Model):
+    __tablename__ = 'detalles_pedido'
+    id = db.Column(db.Integer, primary_key=True)
+    pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
+    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id'))
+    nombre_producto = db.Column(db.String(200), nullable=False)  # Guardamos nombre por si se borra el producto
+    cantidad = db.Column(db.Integer, nullable=False)
+    precio_unitario = db.Column(db.Float, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "producto_id": self.producto_id,
+            "nombre_producto": self.nombre_producto,
+            "cantidad": self.cantidad,
+            "precio_unitario": self.precio_unitario,
+            "subtotal": self.cantidad * self.precio_unitario
+        }
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return Admin.query.get(int(user_id))
@@ -288,6 +342,24 @@ def productos():
     productos_list = query.all()
     return render_template('products.html', productos=productos_list, tipos=TIPOS_PRODUCTO)
 
+
+@app.route('/productos/<int:id>')
+def producto_detalle(id):
+    producto = Producto.query.filter_by(id=id, activo=True).first_or_404()
+    
+    # Función para obtener productos del mismo tipo (para mostrar relacionados)
+    def query_productos_por_tipo(tipo, producto_id_excluir):
+        return Producto.query.filter(
+            Producto.tipo == tipo,
+            Producto.activo == True,
+            Producto.id != producto_id_excluir
+        ).all()
+    
+    return render_template('producto_detalle.html', 
+                         producto=producto,
+                         query_productos_por_tipo=query_productos_por_tipo)
+
+
 # ESTA ES LA RUTA QUE TE FALTABA
 @app.route('/carrito')
 def cart():
@@ -316,14 +388,72 @@ def checkout():
             carrito = json.loads(carrito_json)
         except:
             carrito = []
+
+        # --- VALIDACIÓN DE STOCK ---
+        for item in carrito:
+            try:
+                pid = int(item.get("id"))
+                cant_pedida = int(item.get("cantidad", 1))
+            except Exception:
+                return render_template('checkout.html')  # Error en validación
+            
+            producto = Producto.query.get(pid)
+            if not producto or not producto.activo:
+                flash(f'El producto "{item.get("nombre", "")}" no está disponible.', 'error')
+                return redirect(url_for('cart'))
+            
+            if producto.stock < cant_pedida:
+                flash(f'Stock insuficiente de "{producto.nombre}". Disponibles: {producto.stock}', 'error')
+                return redirect(url_for('cart'))
+
+        # --- DEDUCIR STOCK (Solo después de validar que todo está OK) ---
+        for item in carrito:
+            try:
+                pid = int(item.get("id"))
+                cant_pedida = int(item.get("cantidad", 1))
+            except Exception:
+                continue
+            
+            producto = Producto.query.get(pid)
+            if producto:
+                producto.stock -= cant_pedida
+        
+        db.session.commit()  # Guardar cambios de stock
         
         total_productos = sum(item['precio'] * item['cantidad'] for item in carrito)
         total = total_productos + envio_precio
+
+        # --- GUARDAR PEDIDO EN BASE DE DATOS ---
+        pedido = Pedido(
+            nombre_cliente=nombre,
+            email_cliente=email_cliente,
+            telefono_cliente=telefono_cliente,
+            direccion_cliente=direccion_cliente,
+            cp_cliente=cp_cliente,
+            envio_tipo=envio_tipo,
+            envio_nombre=envio_nombre,
+            envio_precio=envio_precio,
+            total_productos=total_productos,
+            total=total
+        )
+        
+        # Agregar detalles del pedido
+        for item in carrito:
+            detalle = DetallePedido(
+                producto_id=item.get('id'),
+                nombre_producto=item.get('nombre'),
+                cantidad=item.get('cantidad', 1),
+                precio_unitario=item.get('precio')
+            )
+            pedido.detalles.append(detalle)
+        
+        db.session.add(pedido)
+        db.session.commit()  # Guardar el pedido
         
         datos_vendedor = {
             "banco": "Mercado Pago",
-            "alias": "FACHERO.TIENDA.ALIAS",
-            "titular": "Sebastián González Legal"
+            "alias": "ESTILO.FACHERO",
+            "titular": "Yamila Luciana Serrano"
         }
 
         # --- ENVÍO DE MAILS (Puerto 587 para evitar bloqueos) ---
@@ -602,6 +732,97 @@ def admin_logout():
 def admin_panel():
     productos = Producto.query.order_by(Producto.id.desc()).all()
     return render_template('admin/panel.html', productos=productos)
+
+
+@app.route('/admin/ventas')
+@login_required
+def admin_ventas():
+    # Obtener parámetros de filtrado
+    filtro_cliente = request.args.get('cliente', '').strip()
+    filtro_fecha = request.args.get('fecha', '').strip()
+    
+    # Construir query base
+    query = Pedido.query
+    
+    # Aplicar filtro por cliente (búsqueda por nombre)
+    if filtro_cliente:
+        query = query.filter(Pedido.nombre_cliente.ilike(f'%{filtro_cliente}%'))
+    
+    # Aplicar filtro por fecha
+    if filtro_fecha:
+        try:
+            # Parsear la fecha (formato YYYY-MM-DD)
+            fecha_obj = datetime.strptime(filtro_fecha, '%Y-%m-%d').date()
+            query = query.filter(Pedido.fecha_pedido >= datetime.combine(fecha_obj, datetime.min.time()))
+            query = query.filter(Pedido.fecha_pedido < datetime.combine(fecha_obj + __import__('datetime').timedelta(days=1), datetime.min.time()))
+        except Exception:
+            pass  # Si el formato es inválido, ignorar el filtro
+    
+    # Obtener pedidos ordenados por fecha descendente
+    pedidos = query.order_by(Pedido.fecha_pedido.desc()).all()
+    
+    return render_template('admin/ventas.html', pedidos=pedidos, filtro_cliente=filtro_cliente, filtro_fecha=filtro_fecha)
+
+
+@app.route('/admin/ventas/<int:id>')
+@login_required
+def admin_detalle_venta(id):
+    pedido = Pedido.query.get_or_404(id)
+    # Convertir detalles a diccionarios para pasar al template
+    detalles_dict = [d.to_dict() for d in pedido.detalles]
+    return render_template('admin/detalle_venta.html', pedido=pedido, detalles=detalles_dict)
+
+
+@app.route('/api/admin/producto/<int:id>')
+@login_required
+def api_admin_producto(id):
+    """Obtiene detalles del producto para mostrar en modal"""
+    producto = Producto.query.get_or_404(id)
+    
+    html = f"""
+    <div class="row">
+        <div class="col-md-4">
+            {'<img src="' + url_for('static', filename=f'img/productos/{producto.primera_foto()}') + '" class="img-fluid rounded" alt="' + producto.nombre + '">' if producto.primera_foto() else '<div class="bg-light rounded p-5 text-center">Sin foto</div>'}
+        </div>
+        <div class="col-md-8">
+            <h5><strong>{producto.nombre}</strong></h5>
+            <p class="text-muted">{producto.descripcion or 'Sin descripción'}</p>
+            
+            <table class="table table-sm table-borderless">
+                <tr>
+                    <td><strong>Tipo:</strong></td>
+                    <td><span class="badge bg-secondary">{producto.tipo}</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Precio Actual:</strong></td>
+                    <td>${producto.precio:.2f}</td>
+                </tr>
+                <tr>
+                    <td><strong>Stock Actual:</strong></td>
+                    <td>{producto.stock} unidades</td>
+                </tr>
+                <tr>
+                    <td><strong>Peso:</strong></td>
+                    <td>{producto.peso_g}g</td>
+                </tr>
+                <tr>
+                    <td><strong>Dimensiones:</strong></td>
+                    <td>{producto.alto_cm}cm (alto) × {producto.ancho_cm}cm (ancho) × {producto.largo_cm}cm (largo)</td>
+                </tr>
+                <tr>
+                    <td><strong>Estado:</strong></td>
+                    <td>
+                        <span class="badge {'bg-success' if producto.activo else 'bg-danger'}">
+                            {'Activo' if producto.activo else 'Inactivo'}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    """
+    
+    return jsonify({"html": html})
 
 
 def _parse_fotos_from_form(fotos_raw):

@@ -2,16 +2,23 @@
 
 {% block content %}
 <div class="container mt-4">
+    <!-- Navegación de Secciones -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Panel Admin - Productos</h2>
-        <div>
-            <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-fachero">
-                <i class="bi bi-plus-circle"></i> Nuevo Producto
-            </a>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary ms-2">
-                <i class="bi bi-box-arrow-right"></i> Salir
-            </a>
-        </div>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" href="{{ url_for('admin_panel') }}" role="tab">
+                    <i class="bi bi-box2"></i> Productos
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" href="{{ url_for('admin_ventas') }}" role="tab">
+                    <i class="bi bi-receipt"></i> Ventas
+                </a>
+            </li>
+        </ul>
+        <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-box-arrow-right"></i> Salir
+        </a>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -24,6 +31,12 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+    
+    <div class="mb-3">
+        <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-fachero">
+            <i class="bi bi-plus-circle"></i> Nuevo Producto
+        </a>
+    </div>
     
     <div class="card shadow">
         <div class="card-body">
