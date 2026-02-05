@@ -1,7 +1,0 @@
-.btn-fachero {
-    background-color: #4b5320; /* Verde militar */
-    color: white;
-    border-radius: 0px; /* Bordes rectos para un look más agresivo/moderno */
-    text-transform: uppercase;
-    font-weight: bold;
-}

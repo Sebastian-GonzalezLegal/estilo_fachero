@@ -4,48 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estilo Fachero | Urban Outfit</title>
+    <!-- Google Fonts: Montserrat (Titulos) & Inter (Cuerpo) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-fachero mb-4">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-fachero sticky-top shadow-sm transition-all" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
-                ESTILO FACHERO
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="nav-logo">
+                <span class="brand-text">ESTILO FACHERO</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     {% if 'admin' not in request.path %}
-                    <li class="nav-item"><a class="nav-link text-white" href="/">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="/productos">Productos</a></li>
-                    <li class="nav-item">
-                      <a class="nav-link btn btn-light text-dark ms-2 fw-bold position-relative" href="/carrito">
-                        <i class="bi bi-cart-fill"></i> Carrito
-                        <span id="badge-carrito" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
-                            0
-                        </span>
-                      </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Inicio</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/productos">Productos</a>
+                        </li>
+                        <li class="nav-item ms-lg-3">
+                            <a class="nav-link btn-cart-nav" href="/carrito">
+                                <i class="bi bi-bag-fill"></i>
+                                <span class="d-lg-none ms-2">Carrito</span>
+                                <span id="badge-carrito" class="badge rounded-pill bg-danger cart-badge" style="display: none;">0</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <span class="nav-link text-white-high">Panel de Administración</span>
+                        </li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
-    {% block content %}{% endblock %}
+    <!-- Main Content -->
+    <main class="flex-grow-1 {% if 'admin' not in request.path %}fade-in-up{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
 
-    <footer class="text-center py-4 mt-5">
-        <p class="mb-0">© 2026 <strong>Estilo Fachero</strong> - Adolfo Sourdeaux, Bs As.</p>
-        <small>Le damos más onda a tus outfits ⚡</small>
+    <!-- Footer -->
+    <footer class="footer mt-auto py-5 text-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-uppercase mb-3">Estilo Fachero</h5>
+                    <p class="text-white-50">Le damos más onda a tus outfits. Envíos a todo el país.</p>
+                    <div class="social-icons mb-4">
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <p class="mb-0 text-white-50 small">© 2026 <strong>Estilo Fachero</strong> - Adolfo Sourdeaux, Bs As.</p>
+        </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Script para efecto sticky navbar -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 50) {
+                    document.getElementById('mainNavbar').classList.add('scrolled');
+                } else {
+                    document.getElementById('mainNavbar').classList.remove('scrolled');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

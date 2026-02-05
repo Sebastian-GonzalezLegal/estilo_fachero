@@ -1,68 +1,320 @@
-/* static/css/estilos.css */
+/* static/css/styles.css */
 
-/* --- VARIABLES Y RESET --- */
+/* --- VARIABLES --- */
 :root {
-    --verde-fachero: #4F5D2F;
-    --verde-claro: #748c43;
-    --negro-urbano: #1a1a1a;
-    --gris-fondo: #f8f9fa;
+    --primary-color: #4F5D2F;
+    --primary-hover: #3e4a24;
+    --accent-color: #D4A373;
+    --dark-color: #2C3333;
+    --light-bg: #F9FAFB;
+    --white: #ffffff;
+    --text-main: #1f2937; /* Darker gray for main text */
+    --text-muted: #4b5563; /* Darker muted text for better contrast */
+    
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
 }
 
+/* --- RESET & GLOBAL --- */
 body {
-    background-color: var(--gris-fondo);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+a {
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+/* --- UTILS --- */
+.text-white-high {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
 }
 
 /* --- NAVBAR --- */
 .bg-fachero {
-    background-color: var(--verde-fachero) !important;
+    background-color: var(--primary-color) !important;
 }
 
-.navbar-brand img {
+.navbar {
+    padding: 1rem 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.navbar.scrolled {
+    padding: 0.5rem 0;
+    background-color: rgba(79, 93, 47, 0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-md);
+}
+
+.navbar-brand {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    font-size: 1.25rem;
+}
+
+.nav-logo {
     height: 45px;
-    margin-right: 10px;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
 }
 
-/* --- BOTONES --- */
+.navbar-brand:hover .nav-logo {
+    transform: rotate(10deg);
+}
+
+.navbar .nav-link {
+    font-weight: 500;
+    color: rgba(255,255,255,0.85) !important;
+    position: relative;
+    padding: 0.5rem 1rem !important;
+}
+
+.navbar .nav-link:hover, .navbar .nav-link.active {
+    color: var(--white) !important;
+}
+
+/* Mobile Menu Animation */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        background-color: var(--primary-color);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-top: 0.5rem;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    /* Ensure links are white in mobile menu */
+    .navbar-nav .nav-link {
+        color: #ffffff !important;
+        opacity: 1;
+    }
+}
+
+/* Efecto de subrayado en hover para nav links */
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 5px;
+    left: 50%;
+    background-color: var(--accent-color);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 80%;
+}
+
+/* Carrito Button en Nav */
+.btn-cart-nav {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 0.5rem 1.2rem !important;
+    transition: all 0.3s ease;
+}
+
+.btn-cart-nav:hover {
+    background-color: var(--white);
+    color: var(--primary-color) !important;
+}
+.btn-cart-nav::after { display: none; } /* Sin subrayado para el botón */
+
+.cart-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.7rem;
+    transform: translate(25%, -25%);
+}
+
+
+/* --- BUTTONS --- */
 .btn-fachero {
-    background-color: var(--verde-fachero);
-    color: white;
-    border: none;
+    background-color: var(--primary-color) !important;
+    color: var(--white) !important;
+    font-family: var(--font-heading);
+    font-weight: 600;
     text-transform: uppercase;
-    font-weight: bold;
-    letter-spacing: 1px;
-    transition: 0.3s;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .btn-fachero:hover {
-    background-color: var(--verde-claro);
-    color: white;
+    background-color: var(--primary-hover) !important;
+    color: var(--white) !important;
     transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-/* --- TARJETAS Y ALERTAS --- */
-.card-success {
-    border-radius: 0; /* Look más moderno/agresivo */
+.btn-fachero:active {
+    transform: translateY(0);
+}
+
+.btn-outline-fachero {
+    color: var(--primary-color) !important;
+    border: 2px solid var(--primary-color) !important;
+    background: transparent;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    transition: all 0.3s;
+}
+
+.btn-outline-fachero:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--white) !important;
+}
+
+/* Placeholder Contrast */
+::placeholder {
+    color: #6b7280 !important; /* Darker gray for placeholders */
+    opacity: 1;
+}
+
+/* --- CARDS & PRODUCTOS --- */
+.card {
     border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--white);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
-.alert-pago {
-    background-color: #e9ecef;
-    border-left: 5px solid var(--verde-fachero);
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
 }
+
+.card-img-top {
+    height: 250px; /* Altura fija para uniformidad */
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+
+/* --- ADMIN SPECIFIC --- */
+/* Tablas más limpias */
+.table {
+    border-collapse: separate;
+    border-spacing: 0 0.5rem;
+}
+
+.table thead th {
+    border: none;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--dark-color); /* Darker color for headers */
+    font-weight: 700;
+    background-color: transparent;
+}
+
+.table tbody tr {
+    background-color: var(--white);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
+    transition: transform 0.2s;
+}
+
+.table tbody tr:hover {
+    transform: scale(1.01);
+}
+
+.table td {
+    border: none;
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+.table td:first-child {
+    border-top-left-radius: var(--radius-md);
+    border-bottom-left-radius: var(--radius-md);
+}
+.table td:last-child {
+    border-top-right-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+}
+
 
 /* --- FOOTER --- */
 footer {
-    background-color: var(--negro-urbano);
-    color: white;
+    background-color: var(--dark-color);
+    color: rgba(255,255,255,0.7);
 }
 
-.btn-fachero {
-    background-color: #4b5320; /* Verde militar */
-    color: white;
-    border-radius: 0px; /* Bordes rectos para un look más agresivo/moderno */
-    text-transform: uppercase;
-    font-weight: bold;
+.social-icons a {
+    color: rgba(255,255,255,0.6);
+    margin: 0 10px;
+    font-size: 1.5rem;
+    transition: color 0.3s;
+}
+
+.social-icons a:hover {
+    color: var(--accent-color);
 }

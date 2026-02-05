@@ -1,45 +1,95 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container text-center">
-    <div class="p-5 mb-4 bg-light rounded-3 border border-2" style="border-color: var(--verde-fachero) !important;">
-        <div class="container-fluid py-3">
-            <h1 class="display-5 fw-bold text-uppercase">Más onda a tus outfits ⚡</h1>
-            <p class="col-md-8 fs-5 mx-auto text-muted">
-                Gorras, lentes y las mejores medias de Adolfo Sourdeaux para todo el país.
+<div class="container my-5">
+    <!-- Hero Section -->
+    <div class="p-5 mb-5 rounded-3 text-center position-relative overflow-hidden" 
+         style="background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%); border: 1px solid rgba(0,0,0,0.05);">
+        
+        <!-- Decorative Circle -->
+        <div class="position-absolute top-0 start-0 translate-middle rounded-circle" 
+             style="width: 200px; height: 200px; background: var(--primary-color); opacity: 0.05;"></div>
+        <div class="position-absolute bottom-0 end-0 translate-middle rounded-circle" 
+             style="width: 300px; height: 300px; background: var(--accent-color); opacity: 0.05;"></div>
+
+        <div class="container-fluid py-4 position-relative z-1">
+            <h1 class="display-4 fw-bold text-uppercase mb-3" style="letter-spacing: -1px;">
+                Más onda a tus <span style="color: var(--primary-color);">outfits</span> ⚡
+            </h1>
+            <p class="col-md-8 fs-5 mx-auto text-dark mb-4">
+                Encontrá tu estilo con nuestras Gorras, Lentes y Medias. <br>
+                Envíos desde Adolfo Sourdeaux a todo el país.
             </p>
-            <a href="/productos" class="btn btn-fachero btn-lg mt-3 px-5 rounded-pill shadow">
-                VER EL SHOP <i class="bi bi-arrow-right-short"></i>
-            </a>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="/productos" class="btn btn-fachero btn-lg px-5 rounded-pill shadow-lg">
+                    VER EL SHOP <i class="bi bi-arrow-right-short"></i>
+                </a>
+                <a href="#categorias" class="btn btn-outline-fachero btn-lg px-4 rounded-pill">
+                    Explorar
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 border-0 shadow-sm">
+    <!-- Categorías -->
+    <div id="categorias" class="row g-4 mt-2">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
                 <div class="card-body">
-                    <h3 class="text-success"><i class="bi bi-capslock"></i></h3> <h4>Gorras</h4>
-                    <p>Trucker, Visera Plana y más.</p>
+                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 60px; height: 60px; background-color: var(--primary-color);">
+                        <i class="bi bi-capslock fs-3"></i>
+                    </div>
+                    <h4 class="fw-bold">Gorras</h4>
+                    <p class="text-muted">Trucker, Visera Plana y los mejores diseños.</p>
+                    <a href="/productos?tipo=gorra" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Gorras &rarr;</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 border-0 shadow-sm">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
                 <div class="card-body">
-                    <h3 class="text-success"><i class="bi bi-eyeglasses"></i></h3>
-                    <h4>Lentes</h4>
-                    <p>Para tirar facha este verano.</p>
+                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 60px; height: 60px; background-color: var(--accent-color);">
+                        <i class="bi bi-eyeglasses fs-3"></i>
+                    </div>
+                    <h4 class="fw-bold">Lentes</h4>
+                    <p class="text-muted">Protegé tu vista con toda la facha este verano.</p>
+                    <a href="/productos?tipo=lentes" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Lentes &rarr;</a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100 border-0 shadow-sm">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
                 <div class="card-body">
-                    <h3 class="text-success"><i class="bi bi-emoji-smile"></i></h3>
-                    <h4>Medias</h4>
-                    <p>Packs de soquetes y estilo skate.</p>
+                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 60px; height: 60px; background-color: var(--dark-color);">
+                        <i class="bi bi-emoji-smile fs-3"></i>
+                    </div>
+                    <h4 class="fw-bold">Medias</h4>
+                    <p class="text-muted">Packs de soquetes y estilo skate para todos los días.</p>
+                    <a href="/productos?tipo=medias" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Medias &rarr;</a>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Info Banner -->
+    <div class="row mt-5 py-4 g-4 text-center">
+        <div class="col-md-4">
+            <i class="bi bi-truck fs-2 text-muted"></i>
+            <h6 class="mt-2 fw-bold">Envíos a todo el país</h6>
+            <small class="text-muted">Vía MiCorreo (Correo Argentino)</small>
+        </div>
+        <div class="col-md-4">
+            <i class="bi bi-credit-card fs-2 text-muted"></i>
+            <h6 class="mt-2 fw-bold">Pagos Seguros</h6>
+            <small class="text-muted">Transferencia Bancaria</small>
+        </div>
+        <div class="col-md-4">
+            <i class="bi bi-whatsapp fs-2 text-muted"></i>
+            <h6 class="mt-2 fw-bold">Atención Personalizada</h6>
+            <small class="text-muted">Respondemos tus dudas al instante</small>
         </div>
     </div>
 </div>

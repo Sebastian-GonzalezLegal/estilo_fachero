@@ -70,9 +70,16 @@ function agregarAlCarrito(id, nombre, precio) {
     // Feedback visual
     const btn = document.querySelector(`#btn-agregar-${id}`);
     if(btn) {
-        const original = btn.innerHTML;
-        btn.innerHTML = "¡LISTO! ✅";
-        setTimeout(() => { btn.innerHTML = original; }, 1000);
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> ¡AGREGADO!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-fachero');
+        
+        setTimeout(() => { 
+            btn.innerHTML = originalContent; 
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-fachero');
+        }, 1500);
     }
 }
 
@@ -81,6 +88,7 @@ function eliminar(index) {
     actualizarStorage();
     mostrarCarrito(); // Refresca la tabla y chequea si hay que ocultar el botón
     actualizarBadge();
+    actualizarEstadoProductos();
 }
 
 function actualizarStorage() {
@@ -101,7 +109,7 @@ function actualizarEstadoProductos() {
     } else {
         carrito.forEach(prod => {
             const div = document.getElementById(`en-carrito-${prod.id}`);
-            if (div) div.innerHTML = `<i class="bi bi-bag-check-fill"></i> Tenés ${prod.cantidad}`;
+            if (div) div.innerHTML = `<small class="text-success fw-bold"><i class="bi bi-bag-check-fill"></i> Tenés ${prod.cantidad} en carrito</small>`;
         });
     }
 
@@ -116,26 +124,31 @@ function actualizarEstadoProductos() {
                 btn.disabled = true;
                 btn.classList.add('btn-secondary');
                 btn.classList.remove('btn-fachero');
-                btn.innerHTML = '<i class="bi bi-x-circle"></i> SIN STOCK';
+                btn.innerHTML = 'AGOTADO';
             }
             if (inputCantidad) inputCantidad.disabled = true;
         } else {
-            if (btn) {
+            // Solo restaurar si no está en estado "Agregado" (para no pisar el feedback)
+            if (btn && !btn.classList.contains('btn-success')) {
                 btn.disabled = false;
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-fachero');
-                btn.innerHTML = '<i class="bi bi-bag-plus-fill"></i> AGREGAR';
+                // Mantenemos el HTML original del template si es posible, o ponemos uno genérico
+                if(!btn.innerHTML.includes('AGREGAR') && !btn.innerHTML.includes('AGOTADO')) {
+                     // No hacemos nada para no romper iconos custom
+                }
             }
             if (inputCantidad) inputCantidad.disabled = false;
         }
     });
 }
 
-// --- ACÁ ESTÁ LA MAGIA ---
 function mostrarCarrito() {
     const tabla = document.getElementById('tabla-carrito');
     const totalSpan = document.getElementById('total-compra');
-    const panelCompra = document.getElementById('panel-compra-final'); // Buscamos por el ID nuevo
+    const panelCompra = document.getElementById('panel-compra-final');
+    const mensajeVacio = document.getElementById('mensaje-carrito-vacio');
+    const tablaContainer = document.querySelector('.table-responsive').parentNode; // Card container
     
     if (!tabla) return;
 
@@ -144,22 +157,32 @@ function mostrarCarrito() {
     
     // SI ESTÁ VACÍO
     if (carrito.length === 0) {
-        tabla.innerHTML = '<tr><td colspan="5" class="text-center py-5 fs-5">Tu carrito está vacío 😔 <br> <a href="/productos" class="btn btn-link mt-2">¡Ir a buscar facha!</a></td></tr>';
+        // Mostrar mensaje vacío, ocultar tabla y panel compra
+        if(mensajeVacio) {
+            mensajeVacio.classList.remove('d-none');
+            tabla.parentElement.classList.add('d-none'); // Ocultar div .table-responsive
+        } else {
+            // Fallback si no existe el elemento
+            tabla.innerHTML = '<tr><td colspan="5" class="text-center py-5">Carrito vacío</td></tr>';
+        }
+
         if(totalSpan) totalSpan.innerText = 0;
         
-        // OCULTAMOS EL PANEL
         if(panelCompra) {
             panelCompra.classList.add('d-none');
-            panelCompra.classList.remove('d-flex');
         }
         return;
     }
 
     // SI HAY COSAS
-    // MOSTRAMOS EL PANEL
+    if(mensajeVacio) {
+        mensajeVacio.classList.add('d-none');
+        tabla.parentElement.classList.remove('d-none');
+    }
+
     if(panelCompra) {
         panelCompra.classList.remove('d-none');
-        panelCompra.classList.add('d-flex');
+        // panelCompra.classList.add('d-flex'); // Quitamos esto porque ahora es un bloque normal
     }
 
     carrito.forEach((prod, index) => {
@@ -168,12 +191,14 @@ function mostrarCarrito() {
         
         let row = `
             <tr>
-                <td class="align-middle">${prod.nombre}</td>
+                <td class="align-middle fw-bold ps-4">${prod.nombre}</td>
                 <td class="align-middle">$${prod.precio}</td>
-                <td class="align-middle">${prod.cantidad}</td>
-                <td class="align-middle fw-bold">$${subtotal}</td>
-                <td class="align-middle text-end">
-                    <button onclick="eliminar(${index})" class="btn btn-outline-danger btn-sm">
+                <td class="align-middle text-center">
+                    <span class="badge bg-light text-dark border">${prod.cantidad}</span>
+                </td>
+                <td class="align-middle fw-bold text-success">$${subtotal}</td>
+                <td class="align-middle text-end pe-4">
+                    <button onclick="eliminar(${index})" class="btn btn-link text-danger p-0" title="Eliminar">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>

@@ -1,85 +1,98 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Nuestros Productos</h2>
-        <div class="btn-group">
-            <a href="/productos" class="btn btn-outline-dark">Todo</a>
+<div class="container mt-4 mb-5">
+    <!-- Header de Productos -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Nuestros Productos</h2>
+            <p class="text-muted mb-0">Explorá nuestra colección seleccionada.</p>
+        </div>
+        <div class="btn-group mt-3 mt-md-0 shadow-sm" role="group">
+            <a href="/productos" class="btn {{ 'btn-dark' if not request.args.get('tipo') else 'btn-outline-dark bg-white' }}">Todo</a>
             {% for t in tipos %}
-            <a href="/productos?tipo={{ t }}" class="btn btn-outline-dark">{{ t|capitalize }}</a>
+            <a href="/productos?tipo={{ t }}" class="btn {{ 'btn-dark' if request.args.get('tipo') == t else 'btn-outline-dark bg-white' }} text-capitalize">{{ t }}</a>
             {% endfor %}
         </div>
     </div>
 
-    <div class="row">
+    <div class="row g-4">
         {% for prod in productos %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="bg-light text-center py-5 rounded-top position-relative" style="min-height: 200px;">
-                    {% if prod.primera_foto() %}
-                    {% set foto = prod.primera_foto() %}
-                    {% if foto.startswith('http') %}
-                    <img src="{{ foto }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
-                    {% else %}
-                    <img src="{{ url_for('imagen_producto', filename=foto) }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
-                    {% endif %}
-                    {% else %}
-                    <i class="bi bi-camera fs-1 text-muted"></i>
-                    {% endif %}
-                    <span class="position-absolute top-0 end-0 badge bg-dark m-2">{{ prod.tipo }}</span>
-                    {% if prod.stock <= 0 %}
-                    <span class="position-absolute top-0 start-0 badge bg-danger m-2">Sin stock</span>
-                    {% endif %}
+        <div class="col-md-6 col-lg-4 col-xl-3 fade-in-up" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+            <div class="card h-100 border-0 shadow-sm product-card position-relative">
+                
+                <!-- Badge Stock/Tipo -->
+                <span class="position-absolute top-0 start-0 m-3 badge bg-white text-dark shadow-sm text-uppercase" style="font-size: 0.7rem; z-index: 2;">{{ prod.tipo }}</span>
+                {% if prod.stock <= 0 %}
+                <div class="position-absolute top-0 end-0 m-3 badge bg-danger shadow-sm" style="z-index: 2;">SIN STOCK</div>
+                {% endif %}
+
+                <!-- Imagen Wrapper -->
+                <div class="position-relative overflow-hidden bg-white rounded-top" style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                    <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="d-block w-100 h-100">
+                        {% if prod.primera_foto() %}
+                            {% set foto = prod.primera_foto() %}
+                            <img src="{{ foto if foto.startswith('http') else url_for('imagen_producto', filename=foto) }}" 
+                                 alt="{{ prod.nombre }}" 
+                                 class="img-fluid w-100 h-100" 
+                                 style="object-fit: contain; transition: transform 0.5s ease;">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center h-100 bg-light text-muted">
+                                <i class="bi bi-camera fs-1"></i>
+                            </div>
+                        {% endif %}
+                    </a>
                 </div>
                 
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title fw-bold">
-                        <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-decoration-none text-dark">
+                <!-- Card Body -->
+                <div class="card-body d-flex flex-column pt-3">
+                    <h5 class="card-title fw-bold mb-1" style="font-size: 1rem;">
+                        <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-decoration-none text-dark stretched-link">
                             {{ prod.nombre }}
                         </a>
                     </h5>
-                    {% if prod.descripcion %}
-                    <p class="card-text text-muted small mb-2">{{ prod.descripcion | truncate(80) }}</p>
-                    {% endif %}
-                    <h4 class="text-success mb-2">${{ "%.0f"|format(prod.precio) }}</h4>
-                    {% if prod.stock > 0 %}
-                    <small class="text-muted mb-2">Stock: {{ prod.stock }}</small>
-                    {% endif %}
                     
-                    <div class="mt-auto">
-                        <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
-                            <i class="bi bi-eye"></i> Ver Detalle
-                        </a>
-                        
-                        <div class="d-flex align-items-center mb-2">
-                            <label class="me-2 text-muted small">Cant:</label>
-                            <input type="number" 
+                    <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+                        <span class="h5 mb-0 fw-bold text-success">${{ "%.0f"|format(prod.precio) }}</span>
+                        {% if prod.stock > 0 %}
+                            <small class="text-muted" style="font-size: 0.8rem;">{{ prod.stock }} disp.</small>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-auto position-relative" style="z-index: 5;"> <!-- z-index para que los botones funcionen sobre el stretched-link -->
+                        {% if prod.stock > 0 %}
+                        <div class="d-flex gap-2">
+                             <input type="number" 
                                    id="cantidad-{{ prod.id }}" 
-                                   class="form-control form-control-sm text-center" 
+                                   class="form-control form-control-sm text-center border-secondary" 
                                    value="1" 
                                    min="1" 
-                                   max="{{ prod.stock if prod.stock > 0 else 999 }}"
-                                   style="max-width: 70px;">
+                                   max="{{ prod.stock }}"
+                                   style="max-width: 60px;">
+                            <button id="btn-agregar-{{ prod.id }}" 
+                                    onclick="agregarAlCarrito({{ prod.id }}, '{{ prod.nombre|e }}', {{ prod.precio }})" 
+                                    class="btn btn-fachero btn-sm w-100 fw-bold d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-cart-plus"></i> AGREGAR
+                            </button>
                         </div>
-                    
-                        <div id="en-carrito-{{ prod.id }}" class="text-success small fw-bold mb-2 text-center" style="min-height: 20px;">
-                            </div>
-                    
-                        {% if prod.stock > 0 %}
-                        <button id="btn-agregar-{{ prod.id }}" 
-                                onclick="agregarAlCarrito({{ prod.id }}, '{{ prod.nombre|e }}', {{ prod.precio }})" 
-                                class="btn btn-fachero w-100 fw-bold">
-                            AGREGAR
-                        </button>
+                        <div id="en-carrito-{{ prod.id }}" class="text-success small fw-bold mt-2 text-center" style="height: 20px;"></div>
                         {% else %}
-                        <button class="btn btn-secondary w-100 fw-bold" disabled>Sin stock</button>
+                        <button class="btn btn-secondary btn-sm w-100 fw-bold" disabled>AGOTADO</button>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="py-5 bg-light rounded-3">
+                <i class="bi bi-search fs-1 text-muted"></i>
+                <h3 class="mt-3">No hay productos disponibles</h3>
+                <p class="text-muted">Intentá cambiar el filtro o volvé más tarde.</p>
+                <a href="/productos" class="btn btn-outline-dark mt-2">Ver Todo</a>
+            </div>
         </div>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

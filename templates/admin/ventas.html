@@ -1,30 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Navegación de Secciones -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" href="{{ url_for('admin_panel') }}" role="tab">
-                    <i class="bi bi-box2"></i> Productos
-                </a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" href="{{ url_for('admin_ventas') }}" role="tab">
-                    <i class="bi bi-receipt"></i> Ventas
-                </a>
-            </li>
-        </ul>
-        <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-box-arrow-right"></i> Salir
-        </a>
+<div class="container my-5 fade-in-up">
+    <!-- Header Admin -->
+    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+        <div>
+            <h2 class="fw-bold mb-0">Gestión de Ventas</h2>
+            <p class="text-muted mb-0">Controla tus pedidos y envíos.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right"></i> Salir
+            </a>
+        </div>
     </div>
+
+    <!-- Navegación -->
+    <ul class="nav nav-pills mb-4 gap-2" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_panel') }}">
+                <i class="bi bi-box2 me-2"></i> Productos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active bg-primary-custom" href="{{ url_for('admin_ventas') }}">
+                <i class="bi bi-receipt me-2"></i> Ventas
+            </a>
+        </li>
+    </ul>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -32,170 +40,111 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Panel de Filtros -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h6 class="mb-0 fw-bold">
-                <i class="bi bi-funnel"></i> Filtros
-            </h6>
-        </div>
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4 border-0 bg-white">
         <div class="card-body">
-            <form method="GET" action="{{ url_for('admin_ventas') }}" class="row g-3">
+            <h6 class="mb-3 text-uppercase small text-dark fw-bold"><i class="bi bi-funnel"></i> Filtrar Pedidos</h6>
+            <form method="GET" action="{{ url_for('admin_ventas') }}" class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label">Nombre del Cliente</label>
-                    <input type="text" class="form-control" name="cliente" placeholder="Buscar por nombre..." value="{{ filtro_cliente or '' }}">
+                    <label class="form-label small">Nombre del Cliente</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="cliente" placeholder="Ej: Juan Perez" value="{{ filtro_cliente or '' }}">
+                    </div>
                 </div>
-                <div class="col-md-5">
-                    <label class="form-label">Fecha</label>
+                <div class="col-md-4">
+                    <label class="form-label small">Fecha</label>
                     <input type="date" class="form-control" name="fecha" value="{{ filtro_fecha or '' }}">
                 </div>
-                <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-fachero w-100">
-                        <i class="bi bi-search"></i> Filtrar
-                    </button>
-                    <a href="{{ url_for('admin_ventas') }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-x"></i> Limpiar
-                    </a>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
+                    {% if filtro_cliente or filtro_fecha %}
+                    <a href="{{ url_for('admin_ventas') }}" class="btn btn-outline-secondary w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Lista de Pedidos -->
     {% if pedidos %}
+        <div class="d-flex flex-column gap-3">
         {% for pedido in pedidos %}
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-fachero text-white">
+        <div class="card shadow-sm border-0 overflow-hidden">
+            <div class="card-header bg-dark text-white p-3">
                 <div class="row align-items-center">
                     <div class="col-md-3">
-                        <h5 class="mb-0">
-                            <i class="bi bi-receipt"></i> Pedido #{{ pedido.id }}
-                        </h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-custom p-2 rounded-circle"><i class="bi bi-receipt"></i></span>
+                            <div>
+                                <h6 class="mb-0 fw-bold text-white">Pedido #{{ pedido.id }}</h6>
+                                <small class="text-white-high">{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</small>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-3">
-                        <small class="text-white-50">Fecha:</small><br>
-                        <strong>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</strong>
+                        <small class="text-white-high d-block">Cliente</small>
+                        <span class="fw-bold">{{ pedido.nombre_cliente }}</span>
                     </div>
                     <div class="col-md-3">
-                        <small class="text-white-50">Cliente:</small><br>
-                        <strong>{{ pedido.nombre_cliente }}</strong>
+                        <small class="text-white-high d-block">Total</small>
+                        <span class="fw-bold text-success fs-5">${{ "%.2f"|format(pedido.total) }}</span>
                     </div>
                     <div class="col-md-3 text-end">
-                        <div class="mb-2">
-                            <small class="text-white-50">Total:</small><br>
-                            <h5 class="mb-0 text-white">${{ "%.2f"|format(pedido.total) }}</h5>
-                        </div>
-                        <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-light text-dark fw-bold">
-                            <i class="bi bi-eye"></i> Ver Detalles
+                        <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-light btn-sm fw-bold shadow-sm">
+                            Ver Detalles <i class="bi bi-arrow-right-short"></i>
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <!-- Datos del Cliente -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-secondary mb-3">📋 Datos del Cliente</h6>
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td class="text-muted" style="width: 120px;"><strong>Email:</strong></td>
-                                <td><a href="mailto:{{ pedido.email_cliente }}">{{ pedido.email_cliente }}</a></td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted"><strong>Teléfono:</strong></td>
-                                <td>{{ pedido.telefono_cliente or 'No proporcionado' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted"><strong>Dirección:</strong></td>
-                                <td>{{ pedido.direccion_cliente or 'No proporcionada' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted"><strong>Código Postal:</strong></td>
-                                <td>{{ pedido.cp_cliente or 'No proporcionado' }}</td>
-                            </tr>
-                        </table>
+            <div class="card-body bg-light-subtle">
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <h6 class="small text-uppercase text-muted fw-bold mb-3">Datos de Contacto</h6>
+                        <ul class="list-unstyled mb-0 small">
+                            <li class="mb-2"><i class="bi bi-envelope me-2 text-primary"></i> <a href="mailto:{{ pedido.email_cliente }}" class="text-decoration-none">{{ pedido.email_cliente }}</a></li>
+                            <li class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i> {{ pedido.telefono_cliente or '-' }}</li>
+                            <li class="mb-0"><i class="bi bi-geo-alt me-2 text-primary"></i> {{ pedido.direccion_cliente or '-' }} (CP: {{ pedido.cp_cliente }})</li>
+                        </ul>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-secondary mb-3">🚚 Datos de Envío</h6>
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td class="text-muted" style="width: 120px;"><strong>Método:</strong></td>
-                                <td>
-                                    {{ pedido.envio_nombre or 'MiCorreo' }}
-                                    {% if pedido.envio_tipo == 'D' %}
-                                        <span class="badge bg-info">A Domicilio</span>
-                                    {% elif pedido.envio_tipo == 'S' %}
-                                        <span class="badge bg-info">Retiro en Sucursal</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text-muted"><strong>Precio Envío:</strong></td>
-                                <td>${{ "%.2f"|format(pedido.envio_precio) }}</td>
-                            </tr>
-                        </table>
+                    <div class="col-md-6 ps-md-4">
+                        <h6 class="small text-uppercase text-muted fw-bold mb-3">Resumen de Envío</h6>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span>Método: <strong>{{ pedido.envio_nombre or 'MiCorreo' }}</strong></span>
+                            {% if pedido.envio_tipo == 'D' %}
+                                <span class="badge bg-info text-dark">Domicilio</span>
+                            {% elif pedido.envio_tipo == 'S' %}
+                                <span class="badge bg-warning text-dark">Sucursal</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span>Costo Envío:</span>
+                            <span class="fw-bold">${{ "%.2f"|format(pedido.envio_precio) }}</span>
+                        </div>
                     </div>
-                </div>
-
-                <hr>
-
-                <!-- Productos del Pedido -->
-                <h6 class="fw-bold text-secondary mb-3">📦 Productos</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Producto</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-right">Precio Unitario</th>
-                                <th class="text-right">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for detalle in pedido.detalles %}
-                            <tr>
-                                <td>{{ detalle.nombre_producto }}</td>
-                                <td class="text-center">{{ detalle.cantidad }}</td>
-                                <td class="text-end">${{ "%.2f"|format(detalle.precio_unitario) }}</td>
-                                <td class="text-end fw-bold">${{ "%.2f"|format(detalle.cantidad * detalle.precio_unitario) }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Subtotal Productos:</strong></td>
-                                <td class="text-end"><strong>${{ "%.2f"|format(pedido.total_productos) }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Envío:</strong></td>
-                                <td class="text-end"><strong>${{ "%.2f"|format(pedido.envio_precio) }}</strong></td>
-                            </tr>
-                            <tr class="table-active">
-                                <td colspan="3" class="text-end"><strong class="fs-5">TOTAL:</strong></td>
-                                <td class="text-end"><strong class="fs-5 text-success">${{ "%.2f"|format(pedido.total) }}</strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
                 </div>
             </div>
         </div>
         {% endfor %}
+        </div>
     {% else %}
-        <div class="card shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                <p class="text-muted mt-3">Aún no hay ventas realizadas.</p>
+        <div class="text-center py-5 bg-white rounded shadow-sm">
+            <div class="mb-3">
+                <i class="bi bi-inbox fs-1 text-muted opacity-25"></i>
             </div>
+            <h5 class="text-muted">No se encontraron ventas</h5>
+            <p class="text-muted small">Intenta ajustar los filtros de búsqueda.</p>
         </div>
     {% endif %}
 </div>
 
 <style>
-    .bg-fachero {
-        background-color: #4f5d2f !important;
+    .bg-primary-custom {
+        background-color: var(--primary-color) !important;
+        color: white !important;
     }
-    
-    .card-header {
-        border-radius: 0.375rem 0.375rem 0 0;
+    .bg-light-subtle {
+        background-color: #f8f9fa !important;
     }
 </style>
 {% endblock %}
