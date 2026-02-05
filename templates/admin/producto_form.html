@@ -46,12 +46,17 @@
                                 <input type="hidden" name="fotos_actuales" value="{{ producto.fotos_lista()|join(',') }}">
                                 <div class="d-flex flex-wrap gap-2 mt-2">
                                     {% for foto in producto.fotos_lista() %}
-                                    <div class="position-relative">
+                                    <div class="position-relative d-inline-block">
                                         {% if foto.startswith('http') %}
                                         <img src="{{ foto }}" alt="Foto" class="rounded border" style="height: 80px; width: auto; object-fit: cover;">
                                         {% else %}
-                                        <img src="{{ url_for('static', filename='img/productos/' + foto) }}" alt="Foto" class="rounded border" style="height: 80px; width: auto; object-fit: cover;">
+                                        <img src="{{ url_for('imagen_producto', filename=foto) }}" alt="Foto" class="rounded border" style="height: 80px; width: auto; object-fit: cover;">
                                         {% endif %}
+                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 p-0" 
+                                                style="width: 20px; height: 20px; line-height: 1;"
+                                                onclick="eliminarFoto({{ producto.id }}, '{{ foto }}', this)">
+                                            &times;
+                                        </button>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -129,5 +134,43 @@ document.getElementById('fotos_nuevas').addEventListener('change', function() {
     for (var i = 0; i < this.files.length; i++) names.push(this.files[i].name);
     document.getElementById('nombres-archivos').textContent = names.length ? names.join(', ') : '';
 });
+
+function eliminarFoto(productoId, filename, btnElement) {
+    if (!confirm('¿Seguro querés eliminar esta foto?')) return;
+
+    fetch(`/admin/productos/${productoId}/eliminar_foto`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filename: filename })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            // Eliminar el elemento del DOM
+            btnElement.closest('.position-relative').remove();
+            
+            // Actualizar el input hidden "fotos_actuales" para que no se vuelva a enviar la foto eliminada si se guarda el form
+            // (Aunque al haberla borrado del backend, el backend ya la sacó, pero por coherencia visual/datos)
+            // En este caso, como recargamos o seguimos editando, lo ideal sería que el backend ya lo haya hecho.
+            // Si el usuario da "Guardar" después, el campo "fotos_actuales" podría tener la foto vieja.
+            // Lo mejor es recargar la página o actualizar el value del input hidden.
+            
+            // Actualizamos el input hidden quitando el nombre
+            const inputFotos = document.querySelector('input[name="fotos_actuales"]');
+            let fotos = inputFotos.value.split(',');
+            fotos = fotos.filter(f => f !== filename);
+            inputFotos.value = fotos.join(',');
+            
+        } else {
+            alert('Error al eliminar foto: ' + (data.error || 'Desconocido'));
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Error de conexión al eliminar foto.');
+    });
+}
 </script>
 {% endblock %}

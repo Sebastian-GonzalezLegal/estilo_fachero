@@ -20,7 +20,7 @@
                     {% if fotos %}
                         {% for foto in fotos %}
                             <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                <img src="{{ url_for('static', filename='img/productos/' + foto) }}" 
+                                <img src="{{ url_for('imagen_producto', filename=foto) }}" 
                                      class="d-block w-100 rounded" 
                                      alt="{{ producto.nombre }}"
                                      style="max-height: 500px; object-fit: contain;">
@@ -50,7 +50,7 @@
             <div class="row mt-3 g-2">
                 {% for foto in fotos %}
                 <div class="col-auto">
-                    <img src="{{ url_for('static', filename='img/productos/' + foto) }}" 
+                    <img src="{{ url_for('imagen_producto', filename=foto) }}" 
                          class="img-thumbnail cursor-pointer" 
                          alt="{{ producto.nombre }}"
                          style="width: 80px; height: 80px; object-fit: contain; cursor: pointer;"
@@ -139,7 +139,7 @@
                     <div class="card h-100 shadow-sm border-0 transition-card">
                         <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
                             {% if prod.primera_foto() %}
-                                <img src="{{ url_for('static', filename='img/productos/' + prod.primera_foto()) }}" 
+                                <img src="{{ url_for('imagen_producto', filename=prod.primera_foto()) }}" 
                                      class="img-fluid" alt="{{ prod.nombre }}" style="max-height: 100%; object-fit: contain;">
                             {% else %}
                                 <span class="text-muted">Sin foto</span>

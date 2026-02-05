@@ -8,7 +8,8 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
-from flask import Flask, render_template, request, json, jsonify, redirect, url_for, flash, session
+from io import BytesIO
+from flask import Flask, render_template, request, json, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -74,6 +75,14 @@ _micorreo_token_expires_at = 0.0
 # --- MODELOS DE BASE DE DATOS ---
 # Tipos de producto permitidos (categorías)
 TIPOS_PRODUCTO = ('gorra', 'lentes', 'medias')
+
+
+class ProductoImagen(db.Model):
+    __tablename__ = 'producto_imagenes'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(255), unique=True, nullable=False)
+    datos = db.Column(db.LargeBinary, nullable=False)
+    mimetype = db.Column(db.String(100), nullable=False)
 
 
 class Producto(db.Model):
@@ -326,6 +335,17 @@ def api_micorreo_rates():
         return jsonify({"ok": True, "dimensions": dims, "rates": resp.get("rates", []), "validTo": resp.get("validTo")})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.route('/imagen_producto/<filename>')
+def imagen_producto(filename):
+    imagen = ProductoImagen.query.filter_by(nombre=filename).first()
+    if imagen:
+        return send_file(BytesIO(imagen.datos), mimetype=imagen.mimetype, as_attachment=False, download_name=imagen.nombre)
+    
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except:
+        return "Imagen no encontrada", 404
 
 @app.route('/')
 def home():
@@ -782,7 +802,7 @@ def api_admin_producto(id):
     html = f"""
     <div class="row">
         <div class="col-md-4">
-            {'<img src="' + url_for('static', filename=f'img/productos/{producto.primera_foto()}') + '" class="img-fluid rounded" alt="' + producto.nombre + '">' if producto.primera_foto() else '<div class="bg-light rounded p-5 text-center">Sin foto</div>'}
+            {'<img src="' + url_for('imagen_producto', filename=producto.primera_foto()) + '" class="img-fluid rounded" alt="' + producto.nombre + '">' if producto.primera_foto() else '<div class="bg-light rounded p-5 text-center">Sin foto</div>'}
         </div>
         <div class="col-md-8">
             <h5><strong>{producto.nombre}</strong></h5>
@@ -839,10 +859,9 @@ def _allowed_file(filename):
 
 def _guardar_fotos_subidas(request):
     """
-    Guarda los archivos subidos en request (name='fotos_nuevas') en static/img/productos.
+    Guarda los archivos subidos en request (name='fotos_nuevas') en la base de datos (ProductoImagen).
     Devuelve lista de nombres de archivo guardados.
     """
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     guardados = []
     files = request.files.getlist('fotos_nuevas')
     for f in files:
@@ -852,12 +871,33 @@ def _guardar_fotos_subidas(request):
             continue
         ext = f.filename.rsplit('.', 1)[1].lower()
         nombre_seguro = f"{uuid4().hex}.{ext}"
-        path = os.path.join(app.config['UPLOAD_FOLDER'], nombre_seguro)
+        
         try:
-            f.save(path)
+            # Leer datos del archivo
+            datos = f.read()
+            mimetype = f.content_type or 'application/octet-stream'
+            
+            # Guardar en DB
+            nueva_imagen = ProductoImagen(
+                nombre=nombre_seguro,
+                datos=datos,
+                mimetype=mimetype
+            )
+            db.session.add(nueva_imagen)
             guardados.append(nombre_seguro)
-        except Exception:
+        except Exception as e:
+            print(f"Error guardando imagen {f.filename}: {e}")
             pass
+            
+    # No hacemos commit aquí para que sea atómico con la operación principal
+    # if guardados:
+    #     try:
+    #         db.session.commit()
+    #     except Exception as e:
+    #         print(f"Error haciendo commit de imagenes: {e}")
+    #         db.session.rollback()
+    #         return []
+
     return guardados
 
 
@@ -974,6 +1014,39 @@ def admin_producto_activar(id):
     db.session.commit()
     flash('Producto activado exitosamente', 'success')
     return redirect(url_for('admin_panel'))
+
+
+@app.route('/admin/productos/<int:id>/eliminar_foto', methods=['POST'])
+@login_required
+def admin_producto_eliminar_foto(id):
+    producto = Producto.query.get_or_404(id)
+    data = request.get_json()
+    filename = data.get('filename')
+    
+    if not filename:
+        return jsonify({'ok': False, 'error': 'Falta filename'}), 400
+        
+    # Eliminar de la lista de fotos del producto
+    fotos = producto.fotos_lista()
+    if filename in fotos:
+        fotos.remove(filename)
+        producto.fotos = fotos if fotos else None
+        
+        # Eliminar de la tabla ProductoImagen (si existe)
+        ProductoImagen.query.filter_by(nombre=filename).delete()
+        
+        # Intentar borrar de disco si existe (para limpiar legacy)
+        try:
+            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception:
+            pass
+            
+        db.session.commit()
+        return jsonify({'ok': True})
+    
+    return jsonify({'ok': False, 'error': 'La foto no pertenece al producto'}), 404
 
 
 # --- API para obtener productos (para compatibilidad con JS) ---

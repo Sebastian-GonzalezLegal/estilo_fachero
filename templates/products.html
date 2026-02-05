@@ -22,7 +22,7 @@
                     {% if foto.startswith('http') %}
                     <img src="{{ foto }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
                     {% else %}
-                    <img src="{{ url_for('static', filename='img/productos/' + foto) }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
+                    <img src="{{ url_for('imagen_producto', filename=foto) }}" alt="{{ prod.nombre }}" class="img-fluid" style="max-height: 200px; object-fit: contain;">
                     {% endif %}
                     {% else %}
                     <i class="bi bi-camera fs-1 text-muted"></i>
