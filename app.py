@@ -1,4 +1,5 @@
 import base64
+import math
 import os
 import smtplib
 import time
@@ -62,20 +63,6 @@ MI_PASSWORD = "tfxb osfn jrrm xfyq"
 WHATSAPP_NUMERO = "+54 9 11 1234-5678"
 WHATSAPP_LINK = "https://wa.me/5491112345678"
 
-# --- MiCorreo (Correo Argentino) - Cotización de envíos ---
-# Documentación: https://www.correoargentino.com.ar/MiCorreo/public/img/pag/apiMiCorreo.pdf
-# Recomendado: configurar por variables de entorno (NO hardcodear credenciales).
-MICORREO_BASE_URL = os.getenv("MICORREO_BASE_URL", "https://api.correoargentino.com.ar/micorreo/v1")
-MICORREO_USER = os.getenv("MICORREO_USER", "0001283345")
-MICORREO_PASSWORD = os.getenv("MICORREO_PASSWORD", "ceciyam7")
-MICORREO_CUSTOMER_ID = os.getenv("MICORREO_CUSTOMER_ID", "0001283345")
-
-# Código postal del ORIGEN (tu local / depósito).
-MICORREO_CP_ORIGEN = os.getenv("MICORREO_CP_ORIGEN", "1612")
-
-_micorreo_token = None
-_micorreo_token_expires_at = 0.0
-
 # --- MODELOS DE BASE DE DATOS ---
 # Tipos de producto permitidos (categorías)
 TIPOS_PRODUCTO = ('gorra', 'lentes', 'medias')
@@ -87,6 +74,22 @@ class ProductoImagen(db.Model):
     nombre = db.Column(db.String(255), unique=True, nullable=False)
     datos = db.Column(db.LargeBinary, nullable=False)
     mimetype = db.Column(db.String(100), nullable=False)
+
+
+class TipoEnvio(db.Model):
+    __tablename__ = 'tipos_envio'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    precio = db.Column(db.Float, nullable=False, default=0.0)
+    activo = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "precio": self.precio,
+            "activo": self.activo
+        }
 
 
 class Producto(db.Model):
@@ -240,142 +243,11 @@ def inject_globals():
     )
 
 
-def _calcular_paquete_desde_carrito(carrito: list) -> dict:
-    """
-    Devuelve dimensiones aproximadas del paquete para cotización MiCorreo.
-    MiCorreo requiere enteros: weight (g), height/width/length (cm).
-    """
-    peso_g = 10
-    ancho_cm = 10
-    largo_cm = 10
-    alto_cm = 10
-
-    for item in carrito or []:
-        try:
-            pid = int(item.get("id"))
-            cant = int(item.get("cantidad", 1))
-        except Exception:
-            continue
-
-        if cant < 1:
-            continue
-
-        prod = Producto.query.get(pid)
-        if not prod or not prod.activo:
-            continue
-
-        peso_g += int(prod.peso_g or 0) * cant
-        ancho_cm = max(ancho_cm, int(prod.ancho_cm or 0))
-        largo_cm = max(largo_cm, int(prod.largo_cm or 0))
-        # apilamos alturas para aproximar (simple)
-        alto_cm += int(prod.alto_cm or 0) * cant
-
-    # Valores mínimos para no romper validaciones
-    peso_g = max(1, min(25000, int(peso_g) if peso_g else 1000))
-    ancho_cm = max(1, min(150, int(ancho_cm) if ancho_cm else 20))
-    largo_cm = max(1, min(150, int(largo_cm) if largo_cm else 30))
-    alto_cm = max(1, min(150, int(alto_cm) if alto_cm else 10))
-
-    return {"weight": peso_g, "height": alto_cm, "width": ancho_cm, "length": largo_cm}
-
-
-def _micorreo_config_ok() -> bool:
-    return bool(MICORREO_BASE_URL and MICORREO_USER and MICORREO_PASSWORD and MICORREO_CUSTOMER_ID and MICORREO_CP_ORIGEN)
-
-
-def _micorreo_get_token() -> str:
-    global _micorreo_token, _micorreo_token_expires_at
-
-    now = time.time()
-    if _micorreo_token and now < (_micorreo_token_expires_at - 60):
-        return _micorreo_token
-
-    url = MICORREO_BASE_URL.rstrip("/") + "/token"
-    req = urllib.request.Request(url, method="POST")
-    basic = base64.b64encode(f"{MICORREO_USER}:{MICORREO_PASSWORD}".encode("utf-8")).decode("ascii")
-    req.add_header("Authorization", f"Basic {basic}")
-
-    try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            raw = resp.read().decode("utf-8")
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else ""
-        raise RuntimeError(f"MiCorreo token HTTP {e.code}: {body}") from e
-
-    data = json.loads(raw) if raw else {}
-    token = data.get("token")
-    expires = data.get("expires")  # "YYYY-MM-DD HH:MM:SS"
-
-    if not token:
-        raise RuntimeError(f"MiCorreo token inválido: {data}")
-
-    # Guardamos expiración (si falla el parseo, cacheamos por 10 min)
-    try:
-        dt = datetime.strptime(expires, "%Y-%m-%d %H:%M:%S")
-        _micorreo_token_expires_at = time.mktime(dt.timetuple())
-    except Exception:
-        _micorreo_token_expires_at = now + 600
-
-    _micorreo_token = token
-    return token
-
-
-def _micorreo_post_json(path: str, payload: dict) -> dict:
-    token = _micorreo_get_token()
-    url = MICORREO_BASE_URL.rstrip("/") + path
-    data_bytes = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data_bytes, method="POST")
-    req.add_header("Authorization", f"Bearer {token}")
-    req.add_header("Content-Type", "application/json")
-
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            raw = resp.read().decode("utf-8")
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else ""
-        raise RuntimeError(f"MiCorreo {path} HTTP {e.code}: {body}") from e
-
-
-def micorreo_cotizar_rates(postal_code_destination: str, dimensions: dict) -> dict:
-    payload = {
-        "customerId": MICORREO_CUSTOMER_ID,
-        "postalCodeOrigin": str(MICORREO_CP_ORIGEN),
-        "postalCodeDestination": str(postal_code_destination),
-        "dimensions": {
-            "weight": int(dimensions["weight"]),
-            "height": int(dimensions["height"]),
-            "width": int(dimensions["width"]),
-            "length": int(dimensions["length"]),
-        },
-    }
-    return _micorreo_post_json("/rates", payload)
-
-
-@app.route("/api/micorreo/rates", methods=["POST"])
-def api_micorreo_rates():
-    if not _micorreo_config_ok():
-        return jsonify(
-            {
-                "ok": False,
-                "error": "MiCorreo no está configurado. Definí MICORREO_BASE_URL, MICORREO_USER, MICORREO_PASSWORD, MICORREO_CUSTOMER_ID y MICORREO_CP_ORIGEN.",
-            }
-        ), 400
-
-    data = request.get_json(silent=True) or {}
-    cp_dest = str(data.get("postalCodeDestination", "")).strip()
-    carrito = data.get("carrito") or []
-
-    if not cp_dest:
-        return jsonify({"ok": False, "error": "Falta postalCodeDestination"}), 400
-
-    dims = _calcular_paquete_desde_carrito(carrito)
-
-    try:
-        resp = micorreo_cotizar_rates(cp_dest, dims)
-        return jsonify({"ok": True, "dimensions": dims, "rates": resp.get("rates", []), "validTo": resp.get("validTo")})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+@app.route("/api/envios", methods=["GET"])
+def api_envios():
+    """Devuelve la lista de tipos de envío activos."""
+    tipos = TipoEnvio.query.filter_by(activo=True).all()
+    return jsonify([t.to_dict() for t in tipos])
 
 @app.route('/imagen_producto/<filename>')
 def imagen_producto(filename):
@@ -504,7 +376,7 @@ def checkout():
             except Exception:
                 return render_template('checkout.html')  # Error en validación
             
-            producto = Producto.query.get(pid)
+            producto = db.session.get(Producto, pid)
             if not producto or not producto.activo:
                 flash(f'El producto "{item.get("nombre", "")}" no está disponible.', 'error')
                 return redirect(url_for('cart'))
@@ -521,7 +393,7 @@ def checkout():
             except Exception:
                 continue
             
-            producto = Producto.query.get(pid)
+            producto = db.session.get(Producto, pid)
             if producto:
                 producto.stock -= cant_pedida
         
@@ -1135,6 +1007,76 @@ def admin_producto_eliminar_foto(id):
     
     return jsonify({'ok': False, 'error': 'La foto no pertenece al producto'}), 404
 
+# --- RUTAS ADMIN ENVÍOS ---
+@app.route('/admin/envios')
+@login_required
+def admin_envios():
+    envios = TipoEnvio.query.order_by(TipoEnvio.id.desc()).all()
+    return render_template('admin/envios.html', envios=envios)
+
+@app.route('/admin/envios/nuevo', methods=['POST'])
+@login_required
+def admin_envio_nuevo():
+    nombre = request.form.get('nombre', '').strip()
+    precio = request.form.get('precio', '0')
+    
+    try:
+        precio = float(precio)
+    except ValueError:
+        flash('Error en el precio', 'error')
+        return redirect(url_for('admin_envios'))
+        
+    if not nombre:
+        flash('Falta nombre del envío', 'error')
+        return redirect(url_for('admin_envios'))
+        
+    nuevo = TipoEnvio(nombre=nombre, precio=precio)
+    db.session.add(nuevo)
+    db.session.commit()
+    
+    flash('Tipo de envío agregado', 'success')
+    return redirect(url_for('admin_envios'))
+
+@app.route('/admin/envios/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
+def admin_envio_editar(id):
+    envio = TipoEnvio.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        envio.nombre = request.form.get('nombre', '').strip()
+        try:
+            envio.precio = float(request.form.get('precio', '0'))
+        except ValueError:
+            flash('Error en el precio', 'error')
+            return redirect(url_for('admin_envio_editar', id=id))
+            
+        if not envio.nombre:
+            flash('Falta nombre', 'error')
+            return redirect(url_for('admin_envio_editar', id=id))
+            
+        db.session.commit()
+        flash('Envío actualizado', 'success')
+        return redirect(url_for('admin_envios'))
+        
+    return render_template('admin/envio_form.html', envio=envio)
+
+@app.route('/admin/envios/<int:id>/eliminar', methods=['POST'])
+@login_required
+def admin_envio_eliminar(id):
+    envio = TipoEnvio.query.get_or_404(id)
+    envio.activo = False
+    db.session.commit()
+    flash('Envío desactivado', 'success')
+    return redirect(url_for('admin_envios'))
+
+@app.route('/admin/envios/<int:id>/activar', methods=['POST'])
+@login_required
+def admin_envio_activar(id):
+    envio = TipoEnvio.query.get_or_404(id)
+    envio.activo = True
+    db.session.commit()
+    flash('Envío activado', 'success')
+    return redirect(url_for('admin_envios'))
 
 # --- API para obtener productos (para compatibilidad con JS) ---
 @app.route('/api/productos')
