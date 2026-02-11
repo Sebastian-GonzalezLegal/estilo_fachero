@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4 mb-5">
     <!-- Header de Productos -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-1">Nuestros Productos</h2>
             <p class="text-muted mb-0">Explorá nuestra colección seleccionada.</p>
@@ -15,6 +15,32 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- Buscador -->
+    <div class="row mb-5 justify-content-center">
+        <div class="col-md-6">
+            <form action="/productos" method="GET" class="input-group shadow-sm">
+                {% if request.args.get('tipo') %}
+                <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
+                {% endif %}
+                <input type="text" name="q" class="form-control border-end-0" placeholder="Buscar por nombre o descripción..." value="{{ busqueda or '' }}" aria-label="Buscar">
+                <button class="btn btn-white border border-start-0 bg-white" type="submit">
+                    <i class="bi bi-search text-muted"></i>
+                </button>
+                {% if busqueda %}
+                <a href="/productos{{ '?tipo=' + request.args.get('tipo') if request.args.get('tipo') else '' }}" class="btn btn-light border" title="Limpiar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    {% if busqueda %}
+    <div class="mb-4">
+        <h5 class="text-muted">Resultados para: <span class="fw-bold text-dark">"{{ busqueda }}"</span></h5>
+    </div>
+    {% endif %}
 
     <div class="row g-4">
         {% for prod in productos %}
@@ -52,6 +78,18 @@
                         </a>
                     </h5>
                     
+                    <!-- Estrellas (si tiene) -->
+                    {% if prod.promedio_calificacion() > 0 %}
+                    <div class="text-warning small mb-2">
+                        {% for i in range(prod.promedio_calificacion()|round|int) %}
+                            <i class="bi bi-star-fill"></i>
+                        {% endfor %}
+                        <span class="text-muted ms-1" style="font-size: 0.75rem;">({{ prod.resenas|length }})</span>
+                    </div>
+                    {% else %}
+                    <div class="mb-2" style="height: 19px;"></div> <!-- Espacio reservado para alineación -->
+                    {% endif %}
+
                     <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
                         <span class="h5 mb-0 fw-bold text-success">${{ "%.0f"|format(prod.precio) }}</span>
                         {% if prod.stock > 0 %}

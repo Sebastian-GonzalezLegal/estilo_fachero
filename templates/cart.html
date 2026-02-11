@@ -35,16 +35,56 @@
 
     <div id="panel-compra-final" class="d-none mt-4">
         <div class="row justify-content-end">
-            <div class="col-md-5 col-lg-4">
-                <div class="card border-0 shadow-sm bg-light">
+            
+            <!-- Calculador de Envíos -->
+            <div class="col-md-5 col-lg-4 mb-3">
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <span class="text-muted h5 mb-0">Total</span>
-                            <h3 class="fw-bold text-success mb-0">$<span id="total-compra">0</span></h3>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-truck me-2"></i> Calcular Envío</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" id="cp-destino" class="form-control" placeholder="Tu código postal (Ej: 1612)">
+                            <button class="btn btn-outline-dark" type="button" onclick="calcularEnvio()">Calcular</button>
                         </div>
-                        <a href="/finalizar" class="btn btn-fachero w-100 py-3 shadow-sm hover-lift">
+                        <div id="resultado-envio" class="small">
+                            <!-- Aquí se inyectan las opciones -->
+                        </div>
+                        <div id="error-envio" class="text-danger small fw-bold d-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total y Checkout -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card border-0 shadow-sm bg-light h-100">
+                    <div class="card-body p-4 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Subtotal</span>
+                                <span class="fw-bold">$<span id="subtotal-compra">0</span></span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2 text-primary" id="fila-envio" style="display: none !important;">
+                                <span>Envío (<span id="tipo-envio-seleccionado">Calculando...</span>)</span>
+                                <span class="fw-bold">$<span id="costo-envio">0</span></span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="h4 fw-bold mb-0">Total</span>
+                                <h3 class="fw-bold text-success mb-0">$<span id="total-compra">0</span></h3>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulario oculto para pasar datos a checkout -->
+                        <form action="/finalizar" method="GET" id="form-checkout">
+                             <!-- Datos de envío se inyectan aquí via JS si se selecciona uno -->
+                             <input type="hidden" name="envio_precio" id="input-envio-precio" value="0">
+                             <input type="hidden" name="envio_nombre" id="input-envio-nombre" value="">
+                             <input type="hidden" name="envio_tipo" id="input-envio-tipo" value="">
+                        </form>
+
+                        <button onclick="irACheckout()" class="btn btn-fachero w-100 py-3 shadow-sm hover-lift">
                             INICIAR COMPRA <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
+                        </button>
+                        
                         <div class="text-center mt-3">
                             <a href="/productos" class="text-muted small text-decoration-underline">Seguir comprando</a>
                         </div>

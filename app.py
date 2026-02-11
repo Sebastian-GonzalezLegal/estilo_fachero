@@ -104,6 +104,13 @@ class Producto(db.Model):
     largo_cm = db.Column(db.Integer, default=10)
     activo = db.Column(db.Boolean, default=True)
 
+    def promedio_calificacion(self):
+        """Devuelve el promedio de estrellas."""
+        if not self.resenas:
+            return 0
+        total = sum([r.calificacion for r in self.resenas])
+        return round(total / len(self.resenas), 1)
+
     def fotos_lista(self):
         """Devuelve la lista de fotos (si fotos es None, lista vacía)."""
         if self.fotos is None:
@@ -198,9 +205,39 @@ class DetallePedido(db.Model):
         }
 
 
+class Resena(db.Model):
+    __tablename__ = 'resenas'
+    id = db.Column(db.Integer, primary_key=True)
+    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id'), nullable=False)
+    nombre_cliente = db.Column(db.String(100), nullable=False)
+    calificacion = db.Column(db.Integer, nullable=False)  # 1 a 5
+    comentario = db.Column(db.Text)
+    fecha = db.Column(db.DateTime, default=datetime.now)
+
+    producto = db.relationship('Producto', backref=db.backref('resenas', lazy=True, cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre_cliente": self.nombre_cliente,
+            "calificacion": self.calificacion,
+            "comentario": self.comentario,
+            "fecha": self.fecha.strftime('%d/%m/%Y')
+        }
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return Admin.query.get(int(user_id))
+
+
+@app.context_processor
+def inject_globals():
+    return dict(
+        whatsapp_link=WHATSAPP_LINK,
+        whatsapp_numero=WHATSAPP_NUMERO,
+        email_contacto=MI_EMAIL
+    )
 
 
 def _calcular_paquete_desde_carrito(carrito: list) -> dict:
@@ -355,16 +392,29 @@ def imagen_producto(filename):
 def home():
     return render_template('index.html')
 
+@app.route('/contacto')
+def contacto():
+    return render_template('contacto.html')
+
 @app.route('/productos')
 def productos():
     tipo_filtro = request.args.get('tipo', '').strip().lower()
+    busqueda = request.args.get('q', '').strip()
+    
     query = Producto.query.filter_by(activo=True)
     
     if tipo_filtro and tipo_filtro in TIPOS_PRODUCTO:
         query = query.filter_by(tipo=tipo_filtro)
     
+    if busqueda:
+        # Buscamos en nombre o descripción (insensible a mayúsculas/minúsculas)
+        query = query.filter(
+            (Producto.nombre.ilike(f'%{busqueda}%')) | 
+            (Producto.descripcion.ilike(f'%{busqueda}%'))
+        )
+    
     productos_list = query.all()
-    return render_template('products.html', productos=productos_list, tipos=TIPOS_PRODUCTO)
+    return render_template('products.html', productos=productos_list, tipos=TIPOS_PRODUCTO, busqueda=busqueda)
 
 
 @app.route('/productos/<int:id>')
@@ -382,6 +432,39 @@ def producto_detalle(id):
     return render_template('producto_detalle.html', 
                          producto=producto,
                          query_productos_por_tipo=query_productos_por_tipo)
+
+
+@app.route('/api/productos/<int:id>/resenas', methods=['POST'])
+def agregar_resena(id):
+    producto = Producto.query.filter_by(id=id, activo=True).first_or_404()
+    
+    nombre = request.form.get('nombre', '').strip()
+    calificacion = request.form.get('calificacion', '5')
+    comentario = request.form.get('comentario', '').strip()
+    
+    if not nombre or not comentario:
+        flash('Por favor completá tu nombre y comentario.', 'error')
+        return redirect(url_for('producto_detalle', id=id))
+        
+    try:
+        calificacion = int(calificacion)
+        if calificacion < 1: calificacion = 1
+        if calificacion > 5: calificacion = 5
+    except:
+        calificacion = 5
+
+    nueva_resena = Resena(
+        producto_id=id,
+        nombre_cliente=nombre,
+        calificacion=calificacion,
+        comentario=comentario
+    )
+    
+    db.session.add(nueva_resena)
+    db.session.commit()
+    
+    flash('¡Gracias por tu reseña!', 'success')
+    return redirect(url_for('producto_detalle', id=id))
 
 
 # ESTA ES LA RUTA QUE TE FALTABA

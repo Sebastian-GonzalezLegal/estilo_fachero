@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 fade-in-up">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold mb-3">Centro de Ayuda y Contacto</h1>
+        <p class="text-muted fs-5">¿Tenés alguna duda? Estamos para ayudarte.</p>
+    </div>
+
+    <div class="row g-5">
+        <!-- Contacto Directo -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4"><i class="bi bi-chat-left-dots text-primary me-2"></i> Contactanos</h4>
+                    
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-light rounded-circle p-3 me-3 text-success">
+                            <i class="bi bi-whatsapp fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold">WhatsApp</h6>
+                            <p class="text-muted mb-0 small">Respuesta rápida</p>
+                            <a href="{{ whatsapp_link }}" target="_blank" class="text-decoration-none fw-bold text-success">{{ whatsapp_numero }}</a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-light rounded-circle p-3 me-3 text-primary">
+                            <i class="bi bi-envelope fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold">Email</h6>
+                            <p class="text-muted mb-0 small">Consultas generales</p>
+                            <a href="mailto:{{ email_contacto }}" class="text-decoration-none fw-bold text-primary">{{ email_contacto }}</a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light rounded-circle p-3 me-3 text-dark">
+                            <i class="bi bi-geo-alt fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold">Ubicación</h6>
+                            <p class="text-muted mb-0 small">Solo envíos / Showroom</p>
+                            <span class="fw-bold">Adolfo Sourdeaux, Bs As.</span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="fw-bold mb-3">Redes Sociales</h5>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn btn-outline-dark rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-outline-primary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-facebook"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preguntas Frecuentes -->
+        <div class="col-lg-7">
+            <h4 class="fw-bold mb-4"><i class="bi bi-question-circle text-muted me-2"></i> Preguntas Frecuentes</h4>
+            
+            <div class="accordion shadow-sm" id="faqAccordion">
+                
+                <!-- Envíos -->
+                <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            <i class="bi bi-truck me-2 text-primary"></i> ¿Cómo realizan los envíos?
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            Hacemos envíos a todo el país a través de <strong>Correo Argentino (MiCorreo)</strong>. Podés elegir envío a domicilio o retiro en sucursal más cercana. El costo se calcula automáticamente en el carrito ingresando tu código postal.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagos -->
+                <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            <i class="bi bi-credit-card me-2 text-primary"></i> ¿Cuáles son los medios de pago?
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            Actualmente aceptamos <strong>Transferencia Bancaria</strong>. Al finalizar tu compra, recibirás los datos de la cuenta y, una vez realizado el pago, deberás enviarnos el comprobante por WhatsApp o respondiendo al mail de confirmación para que despachemos tu pedido.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cambios -->
+                <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                            <i class="bi bi-arrow-repeat me-2 text-primary"></i> ¿Tienen cambio los productos?
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            Sí, todos nuestros productos tienen cambio por falla o talle dentro de los <strong>15 días</strong> de recibida la compra. El producto debe estar sin uso y en perfectas condiciones. Los costos de envío por cambio de talle corren por cuenta del cliente, salvo que sea por una falla nuestra.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tiempos -->
+                <div class="accordion-item border-0 mb-3 rounded overflow-hidden">
+                    <h2 class="accordion-header" id="headingFour">
+                        <button class="accordion-button collapsed fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                            <i class="bi bi-clock me-2 text-primary"></i> ¿Cuánto tarda en llegar mi pedido?
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-muted">
+                            El tiempo de despacho es de 24 a 48hs hábiles luego de acreditado el pago. Una vez despachado, Correo Argentino suele demorar entre <strong>3 a 6 días hábiles</strong> dependiendo de tu ubicación. Te enviaremos un código de seguimiento para que veas dónde está tu paquete.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

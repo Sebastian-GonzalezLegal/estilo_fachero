@@ -208,4 +208,153 @@ function mostrarCarrito() {
     });
     
     if(totalSpan) totalSpan.innerText = total;
+    if(document.getElementById('subtotal-compra')) {
+        document.getElementById('subtotal-compra').innerText = total;
+    }
+}
+
+// --- LÓGICA DE ENVÍOS (MiCorreo) ---
+
+async function calcularEnvio() {
+    const cp = document.getElementById('cp-destino').value;
+    const resultadoDiv = document.getElementById('resultado-envio');
+    const errorDiv = document.getElementById('error-envio');
+    
+    if (!cp || cp.length < 4) {
+        errorDiv.innerText = "Ingresá un código postal válido.";
+        errorDiv.classList.remove('d-none');
+        return;
+    }
+
+    errorDiv.classList.add('d-none');
+    resultadoDiv.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"></div> Calculando...';
+
+    try {
+        const response = await fetch('/api/micorreo/rates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                postalCodeDestination: cp,
+                carrito: carrito // Enviamos el carrito para calcular peso y dimensiones
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.ok) {
+            resultadoDiv.innerHTML = '';
+            errorDiv.innerText = "Error al cotizar: " + (data.error || "Intente nuevamente.");
+            errorDiv.classList.remove('d-none');
+            return;
+        }
+
+        if (!data.rates || data.rates.length === 0) {
+            resultadoDiv.innerHTML = '<span class="text-muted">No hay envíos disponibles para esta zona.</span>';
+            return;
+        }
+
+        // Renderizar opciones
+        let html = '<ul class="list-group list-group-flush">';
+        data.rates.forEach((rate, index) => {
+            // rate suele tener: { "serviceType": "S"|"D", "price": 1234.50, "deliveryTime": "3 a 6 días" ... }
+            // Ajustar según respuesta real de MiCorreo (a veces es 'zoneId', 'totalPrice', etc. Chequear API o respuesta real)
+            // Asumimos respuesta estandarizada en backend o la que devuelve la API directa.
+            
+            // Mapeo simple si la API devuelve crudo
+            const precio = rate.totalPrice || rate.price || 0;
+            const tipo = rate.serviceType === 'D' ? 'A Domicilio' : 'Retiro en Sucursal';
+            const demora = rate.deliveryTime || '3-6 días';
+            
+            html += `
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="envio_opcion" id="envio_${index}" 
+                                   value="${precio}" 
+                                   data-nombre="MiCorreo - ${tipo}" 
+                                   data-tipo="${rate.serviceType}"
+                                   onchange="seleccionarEnvio(this)">
+                            <label class="form-check-label" for="envio_${index}">
+                                <strong>MiCorreo ${tipo}</strong><br>
+                                <small class="text-muted">Llega en ${demora}</small>
+                            </label>
+                        </div>
+                    </div>
+                    <span class="fw-bold text-primary">$${precio}</span>
+                </li>
+            `;
+        });
+        html += '</ul>';
+        resultadoDiv.innerHTML = html;
+
+    } catch (e) {
+        console.error(e);
+        resultadoDiv.innerHTML = '';
+        errorDiv.innerText = "Error de conexión. Intente más tarde.";
+        errorDiv.classList.remove('d-none');
+    }
+}
+
+function seleccionarEnvio(radio) {
+    const precio = parseFloat(radio.value);
+    const nombre = radio.getAttribute('data-nombre');
+    const tipo = radio.getAttribute('data-tipo');
+    
+    // Actualizar UI visual
+    document.getElementById('fila-envio').style.display = 'flex'; // remove !important with style property if inline
+    document.getElementById('fila-envio').style.setProperty('display', 'flex', 'important');
+    document.getElementById('tipo-envio-seleccionado').innerText = nombre;
+    document.getElementById('costo-envio').innerText = precio;
+    
+    // Actualizar inputs ocultos para el form
+    document.getElementById('input-envio-precio').value = precio;
+    document.getElementById('input-envio-nombre').value = nombre;
+    document.getElementById('input-envio-tipo').value = tipo;
+
+    // Recalcular Total
+    recalcularTotalCarrito(precio);
+}
+
+function recalcularTotalCarrito(costoEnvio = 0) {
+    const subtotal = carrito.reduce((acc, prod) => acc + (prod.precio * prod.cantidad), 0);
+    const total = subtotal + costoEnvio;
+    
+    // Actualizar DOM
+    if(document.getElementById('subtotal-compra')) document.getElementById('subtotal-compra').innerText = subtotal;
+    if(document.getElementById('total-compra')) document.getElementById('total-compra').innerText = total;
+}
+
+function irACheckout() {
+    // Validar si seleccionó envío si cotizó
+    const envioPrecio = document.getElementById('input-envio-precio').value;
+    const form = document.getElementById('form-checkout');
+    
+    // Inyectamos el carrito como JSON en el form GET para procesarlo en /finalizar (aunque lo ideal seria POST o usar session)
+    // Como /finalizar espera POST en tu app original, vamos a cambiar el metodo del form a POST dinamicamente o agregar input hidden
+    
+    // Crear input hidden para el carrito
+    let inputCarrito = document.getElementById('input-carrito-data');
+    if (!inputCarrito) {
+        inputCarrito = document.createElement('input');
+        inputCarrito.type = 'hidden';
+        inputCarrito.name = 'carrito_data';
+        inputCarrito.id = 'input-carrito-data';
+        form.appendChild(inputCarrito);
+    }
+    inputCarrito.value = JSON.stringify(carrito);
+
+    // Cambiar method a POST porque /finalizar espera POST para procesar la compra? 
+    // Mmm, en app.py: @app.route('/finalizar', methods=['GET', 'POST'])
+    // Si es GET -> render_template('checkout.html')
+    // Si es POST -> procesa la compra.
+    
+    // Mi lógica: El botón "Iniciar Compra" del carrito debería llevar a la pantalla de Checkout (GET), 
+    // y AHÍ el usuario llena sus datos. 
+    // PERO acá estamos calculando el envío en el carrito.
+    // Si queremos persistir el envío seleccionado, debemos pasarlo como query params al GET de checkout.
+    
+    // Ajuste: Vamos a mandar al usuario a checkout.html CON los datos pre-cargados en la URL o sessionStorage.
+    // Para simplificar, usaremos query params ya que el form es method="GET".
+    
+    form.submit();
 }

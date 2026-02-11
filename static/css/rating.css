@@ -1,0 +1,49 @@
+
+/* RATING SYSTEM */
+.rating-css div {
+    color: #ffe400;
+    font-size: 30px;
+    font-family: sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.rating-css input {
+    display: none;
+}
+
+.rating-css input + label {
+    font-size: 30px;
+    text-shadow: 1px 1px 0 #8f8420;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+/* Opción más robusta: flex-direction: row-reverse */
+.star-icon {
+    display: flex;
+    flex-direction: row-reverse; /* 1 visualmente a la izquierda, 5 a la derecha */
+    justify-content: flex-end;   /* Alineado a la izquierda */
+    gap: 5px;
+}
+
+/* Por defecto, todas las estrellas en gris */
+.star-icon label {
+    color: #ccc; /* Gris desactivado */
+    text-shadow: none;
+}
+
+/* Al pasar el mouse sobre una estrella, esa y todas las SIGUIENTES (visualmente anteriores por row-reverse) se ponen amarillas */
+/* Esto se debe leer como: cuando haces hover en un label, todos sus hermanos siguientes (~) también cambian.
+   Como usamos row-reverse, los hermanos "siguientes" en el DOM son los que están visualmente a la izquierda. */
+.star-icon label:hover,
+.star-icon label:hover ~ label,
+.star-icon input:checked ~ label {
+    color: #ffe400;
+    text-shadow: 1px 1px 0 #8f8420;
+}
+
+/* Efecto click */
+.rating-css label:active {
+    transform: scale(0.8);
+}
