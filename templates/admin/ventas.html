@@ -92,13 +92,25 @@
                         <span class="fw-bold">{{ pedido.nombre_cliente }}</span>
                     </div>
                     <div class="col-md-3">
-                        <small class="text-white-high d-block">Total</small>
-                        <span class="fw-bold text-success fs-5">${{ "%.2f"|format(pedido.total) }}</span>
+                        <small class="text-white-high d-block">Estado</small>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge {{ 'bg-warning text-dark' if pedido.estado == 'Pendiente' else 'bg-info text-dark' if pedido.estado == 'En Aprobación' else 'bg-primary' if pedido.estado == 'Enviado' else 'bg-success' if pedido.estado == 'Entregado' else 'bg-secondary' }}">
+                                {{ pedido.estado or 'Pendiente' }}
+                            </span>
+                            {% if pedido.pagado %}
+                                <span class="badge bg-success" title="Pagado"><i class="bi bi-cash"></i></span>
+                            {% else %}
+                                <span class="badge bg-danger" title="Pendiente de Pago"><i class="bi bi-hourglass"></i></span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="col-md-3 text-end">
-                        <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-light btn-sm fw-bold shadow-sm">
-                            Ver Detalles <i class="bi bi-arrow-right-short"></i>
-                        </a>
+                        <div class="d-flex flex-column align-items-end">
+                            <span class="fw-bold text-success fs-5 mb-1">${{ "%.2f"|format(pedido.total) }}</span>
+                            <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-light btn-sm fw-bold shadow-sm">
+                                Ver Detalles <i class="bi bi-arrow-right-short"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

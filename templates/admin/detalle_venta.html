@@ -34,6 +34,60 @@
     <div class="row g-4">
         <!-- Columna Izquierda: Detalles del Cliente y Envío -->
         <div class="col-lg-4">
+            <!-- Administración del Pedido -->
+            <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+                <div class="card-header bg-fachero text-white border-bottom fw-bold py-3">
+                    <i class="bi bi-gear-fill me-2 text-white"></i> Administrar Pedido
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('admin_actualizar_venta', id=pedido.id) }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Estado del Pedido</label>
+                            <select name="estado" class="form-select" id="selectEstado" onchange="toggleEnvioFields()">
+                                <option value="Pendiente" {% if pedido.estado == 'Pendiente' %}selected{% endif %} {% if pedido.estado in ['Enviado', 'Entregado'] %}disabled{% endif %}>Pendiente</option>
+                                <option value="En Aprobación" {% if pedido.estado == 'En Aprobación' %}selected{% endif %} {% if pedido.estado in ['Enviado', 'Entregado'] %}disabled{% endif %}>En Aprobación</option>
+                                <option value="Enviado" {% if pedido.estado == 'Enviado' %}selected{% endif %}>Enviado</option>
+                                <option value="Entregado" {% if pedido.estado == 'Entregado' %}selected{% endif %}>Entregado</option>
+                                <option value="Cancelado" {% if pedido.estado == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                            {% if pedido.estado in ['Enviado', 'Entregado'] %}
+                                <input type="hidden" name="estado_anterior_bloqueado" value="1">
+                                <small class="text-danger" style="font-size: 0.75rem;"><i class="bi bi-exclamation-circle"></i> No se puede volver a estados anteriores.</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="checkPagado" name="pagado" {% if pedido.pagado %}checked{% endif %}>
+                            <label class="form-check-label" for="checkPagado">Pedido Pagado</label>
+                        </div>
+
+                        <div id="camposEnvio" style="display: none;" class="p-3 bg-light rounded border mb-3">
+                            <h6 class="small fw-bold text-muted mb-3">Datos de Envío</h6>
+                            <div class="mb-2">
+                                <label class="form-label small">Empresa de Envío</label>
+                                <input type="text" class="form-control form-control-sm" name="empresa_envio" value="{{ pedido.empresa_envio or '' }}" placeholder="Ej: Andreani">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Código de Seguimiento</label>
+                                <input type="text" class="form-control form-control-sm" name="codigo_seguimiento" value="{{ pedido.codigo_seguimiento or '' }}" placeholder="Ej: AR123456789">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Link de Seguimiento</label>
+                                <input type="text" class="form-control form-control-sm" name="link_seguimiento" value="{{ pedido.link_seguimiento or '' }}" placeholder="Ej: https://seguimiento.correo.com/...">
+                            </div>
+                            <div class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" id="checkNotificar" name="notificar">
+                                <label class="form-check-label small" for="checkNotificar">
+                                    Enviar mail de notificación al cliente
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-fachero w-100">Actualizar Pedido</button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Información del Cliente -->
             <div class="card shadow-sm border-0 mb-4 overflow-hidden">
                 <div class="card-header bg-white border-bottom fw-bold py-3">
@@ -180,6 +234,20 @@
 {% endfor %}
 
 <script>
+    function toggleEnvioFields() {
+        const estado = document.getElementById('selectEstado').value;
+        const camposEnvio = document.getElementById('camposEnvio');
+        
+        if (estado === 'Enviado') {
+            camposEnvio.style.display = 'block';
+        } else {
+            camposEnvio.style.display = 'none';
+        }
+    }
+    
+    // Ejecutar al cargar
+    document.addEventListener('DOMContentLoaded', toggleEnvioFields);
+
     // Cargar detalles del producto en el modal
     document.addEventListener('DOMContentLoaded', function() {
         const detalles = {{ detalles|tojson }};

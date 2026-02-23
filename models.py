@@ -103,6 +103,13 @@ class Pedido(db.Model):
     total_productos = db.Column(db.Float, nullable=False)
     total = db.Column(db.Float, nullable=False)
     fecha_pedido = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+    # Nuevos campos
+    estado = db.Column(db.String(50), default='Pendiente')
+    pagado = db.Column(db.Boolean, default=False)
+    codigo_seguimiento = db.Column(db.String(100))
+    empresa_envio = db.Column(db.String(100))
+
     detalles = db.relationship('DetallePedido', backref='pedido', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):

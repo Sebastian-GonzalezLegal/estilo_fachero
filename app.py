@@ -620,6 +620,114 @@ def admin_detalle_venta(id):
     return render_template('admin/detalle_venta.html', pedido=pedido, detalles=detalles_dict)
 
 
+def enviar_mail_despacho(pedido):
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(MI_EMAIL, MI_PASSWORD)
+
+        logo_data = None
+        try:
+            with open("static/img/logo.png", "rb") as f_logo:
+                logo_data = f_logo.read()
+        except Exception as e_logo:
+            print(f"No se pudo cargar el logo: {e_logo}")
+
+        cuerpo_html = f"""
+        <html>
+          <body style="font-family:Arial,Helvetica,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
+            <table width="600" align="center" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+              <tr>
+                <td style="background:#4f5d2f;color:#ffffff;padding:16px 24px;border-bottom:4px solid #4F5D2F;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="left" style="vertical-align:middle;">
+                        <h2 style="margin:0;font-size:18px;">¡Tu pedido está en camino! 🚚</h2>
+                      </td>
+                      <td align="right" style="vertical-align:middle;">
+                        <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:24px;color:#111827;">
+                  <p>Hola <strong>{pedido.nombre_cliente}</strong>,</p>
+                  <p>Te avisamos que tu pedido <strong>#{pedido.id}</strong> ha sido despachado.</p>
+                  
+                  <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
+                    <h3 style="margin-top:0;font-size:16px;">Detalles del Envío</h3>
+                    <p style="margin:5px 0;"><strong>Empresa de Envío:</strong> {pedido.empresa_envio or 'No especificada'}</p>
+                    <p style="margin:5px 0;"><strong>Código de Seguimiento:</strong> {pedido.codigo_seguimiento or 'No disponible'}</p>
+                    {f'<p style="margin:10px 0;"><a href="{pedido.link_seguimiento}" style="display:inline-block;padding:10px 18px;background-color:#4F5D2F;color:#ffffff;text-decoration:none;border-radius:4px;font-weight:bold;">Seguir Paquete</a></p>' if pedido.link_seguimiento else ''}
+                  </div>
+
+                  <p>Si tienes alguna duda, responde a este correo.</p>
+                  <p>¡Gracias por elegir Estilo Fachero!</p>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+        """
+
+        msg = MIMEMultipart('related')
+        msg['Subject'] = f"Tu pedido #{pedido.id} ha sido enviado"
+        msg['To'] = pedido.email_cliente
+        msg['From'] = MI_EMAIL
+        msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
+        
+        if logo_data:
+            img = MIMEImage(logo_data)
+            img.add_header('Content-ID', '<logo_estilo>')
+            img.add_header('Content-Disposition', 'inline', filename="logo.png")
+            msg.attach(img)
+
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Error enviando mail despacho: {e}")
+        return False
+
+
+@app.route('/admin/ventas/<int:id>/actualizar', methods=['POST'])
+@login_required
+def admin_actualizar_venta(id):
+    pedido = Pedido.query.get_or_404(id)
+    
+    # Validar que no se pueda volver atrás si ya está enviado
+    if pedido.estado in ['Enviado', 'Entregado'] and request.form.get('estado') in ['Pendiente', 'En Aprobación']:
+        flash('No se puede volver a un estado anterior una vez enviado.', 'error')
+        return redirect(url_for('admin_detalle_venta', id=id))
+    
+    estado = request.form.get('estado')
+    pagado = request.form.get('pagado') == 'on'
+    codigo_seguimiento = request.form.get('codigo_seguimiento', '').strip()
+    link_seguimiento = request.form.get('link_seguimiento', '').strip()
+    empresa_envio = request.form.get('empresa_envio', '').strip()
+    notificar = request.form.get('notificar') == 'on'
+    
+    pedido.estado = estado
+    pedido.pagado = pagado
+    pedido.codigo_seguimiento = codigo_seguimiento
+    pedido.link_seguimiento = link_seguimiento
+    pedido.empresa_envio = empresa_envio
+    
+    db.session.commit()
+    
+    msg_extra = ""
+    if estado == 'Enviado' and notificar:
+        if enviar_mail_despacho(pedido):
+            msg_extra = " y se notificó al cliente"
+        else:
+            msg_extra = " pero falló el envío del mail"
+            
+    flash(f'Pedido actualizado{msg_extra}.', 'success')
+    return redirect(url_for('admin_detalle_venta', id=id))
+
+
 @app.route('/api/admin/producto/<int:id>')
 @login_required
 def api_admin_producto(id):
@@ -956,6 +1064,21 @@ def api_productos():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
+        # --- Migración automática de base de datos ---
+        try:
+            with db.engine.connect() as connection:
+                from sqlalchemy import text
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS estado VARCHAR(50) DEFAULT 'Pendiente'"))
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagado BOOLEAN DEFAULT FALSE"))
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS codigo_seguimiento VARCHAR(100)"))
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS link_seguimiento VARCHAR(300)"))
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_envio VARCHAR(100)"))
+                connection.commit()
+                print("Base de datos actualizada: Columnas nuevas verificadas.")
+        except Exception as e:
+            print(f"Nota: No se pudo actualizar la estructura de la DB automáticamente (puede que ya esté actualizada): {e}")
+
         # Crear usuario admin por defecto si no existe
         if not Admin.query.first():
             admin = Admin(email=os.getenv('ADMIN_EMAIL', 'admin@estilofachero.com'))
