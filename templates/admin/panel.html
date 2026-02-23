@@ -3,12 +3,15 @@
 {% block content %}
 <div class="container my-5 fade-in-up">
     <!-- Header Admin -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
         <div>
             <h2 class="fw-bold mb-0">Panel de Administración</h2>
-            <p class="text-muted mb-0">Gestiona tus productos, ventas y envíos.</p>
+            <p class="text-muted mb-0">Resumen de actividad y gestión.</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-eye"></i> Ver Web
+            </a>
             <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
@@ -16,10 +19,10 @@
     </div>
 
     <!-- Navegación -->
-    <ul class="nav nav-pills mb-4 gap-2" role="tablist">
+    <ul class="nav nav-pills mb-4 gap-2">
         <li class="nav-item">
-            <a class="nav-link active bg-primary-custom" href="{{ url_for('admin_panel') }}">
-                <i class="bi bi-box2 me-2"></i> Productos
+            <a class="nav-link active bg-fachero" href="{{ url_for('admin_panel') }}">
+                <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
         </li>
         <li class="nav-item">
@@ -29,30 +32,74 @@
         </li>
         <li class="nav-item">
             <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_envios') }}">
-                <i class="bi bi-truck me-2"></i> Tipos de Envío
+                <i class="bi bi-truck me-2"></i> Envíos
             </a>
         </li>
     </ul>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
+                        <i class="bi bi-currency-dollar fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Ventas Totales</h6>
+                        <h3 class="fw-bold mb-0">${{ total_ventas }}</h3>
+                    </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
+                        <i class="bi bi-bag-check fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Pedidos Totales</h6>
+                        <h3 class="fw-bold mb-0">{{ total_pedidos }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Bajo Stock</h6>
+                        <h3 class="fw-bold mb-0">{{ productos_bajo_stock }}</h3>
+                        <small class="text-muted">Productos &lt; 5 unid.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Chart Section -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="salesChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Product List -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Productos</h4>
+        <h4 class="fw-bold">Gestión de Productos</h4>
         <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-fachero shadow-sm">
             <i class="bi bi-plus-lg"></i> Nuevo Producto
         </a>
     </div>
 
-    <div class="card shadow-sm border-0">
+    <div class="card shadow-sm border-0 mb-5">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -81,12 +128,12 @@
                                     </div>
                                 {% endif %}
                             </td>
-                            <td>{{ producto.nombre }}</td>
+                            <td class="fw-bold text-dark">{{ producto.nombre }}</td>
                             <td><span class="badge bg-light text-dark border">{{ producto.tipo }}</span></td>
                             <td class="fw-bold">${{ producto.precio }}</td>
                             <td>
-                                <span class="badge {% if producto.stock > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %}">
-                                    {{ producto.stock }}
+                                <span class="badge {% if producto.stock > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} border border-opacity-10">
+                                    {{ producto.stock }} unid.
                                 </span>
                             </td>
                             <td>
@@ -98,18 +145,18 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <a href="{{ url_for('admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                    <a href="{{ url_for('admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded" title="Editar">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     {% if producto.activo %}
                                     <form action="{{ url_for('admin_producto_eliminar', id=producto.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este producto?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded" title="Desactivar">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
                                     {% else %}
                                     <form action="{{ url_for('admin_producto_activar', id=producto.id) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Activar">
+                                        <button type="submit" class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded" title="Activar">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
                                     </form>
@@ -132,10 +179,49 @@
     </div>
 </div>
 
-<style>
-    .bg-primary-custom {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-    }
-</style>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ fechas_grafico | tojson }},
+            datasets: [{
+                label: 'Ventas ($)',
+                data: {{ valores_grafico | tojson }},
+                borderColor: '#4F5D2F',
+                backgroundColor: 'rgba(79, 93, 47, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#4F5D2F',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        borderDash: [2, 4],
+                        color: '#f0f0f0'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

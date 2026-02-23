@@ -10,6 +10,14 @@ document.addEventListener("DOMContentLoaded", function() {
     if(document.getElementById('tabla-carrito')){
         mostrarCarrito();
     }
+
+    // Inicializar offcanvas listener para actualizar contenido al abrir
+    const offcanvasEl = document.getElementById('offcanvasCart');
+    if (offcanvasEl) {
+        offcanvasEl.addEventListener('show.bs.offcanvas', function () {
+            actualizarOffcanvas();
+        });
+    }
 });
 
 // Cargar productos con stock desde la API
@@ -30,18 +38,36 @@ function agregarAlCarrito(id, nombre, precio) {
     const inputCantidad = document.getElementById('cantidad-' + id);
     const cantidadElegida = inputCantidad ? parseInt(inputCantidad.value) : 1;
 
-    if (cantidadElegida < 1) { alert("Cantidad no válida"); return; }
+    if (cantidadElegida < 1) { 
+        Swal.fire({
+            icon: 'error',
+            title: 'Ups...',
+            text: 'La cantidad debe ser al menos 1.',
+            confirmButtonColor: '#4F5D2F'
+        });
+        return; 
+    }
 
     // Validar stock disponible
     const producto = productosDisponibles[id];
     if (!producto) {
-        alert("Producto no disponible. Cargando datos...");
+        Swal.fire({
+            icon: 'info',
+            text: 'Cargando información del producto...',
+            timer: 1500,
+            showConfirmButton: false
+        });
         cargarProductos();
         return;
     }
 
     if (producto.stock <= 0) {
-        alert("Lo sentimos, este producto no tiene stock en este momento.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Agotado',
+            text: 'Lo sentimos, este producto no tiene stock en este momento.',
+            confirmButtonColor: '#4F5D2F'
+        });
         return;
     }
 
@@ -51,7 +77,12 @@ function agregarAlCarrito(id, nombre, precio) {
 
     // Validar que no supere el stock disponible
     if (cantidadTotal > producto.stock) {
-        alert(`Stock insuficiente. Disponibles: ${producto.stock}`);
+        Swal.fire({
+            icon: 'warning',
+            title: 'Stock Limitado',
+            text: `Solo quedan ${producto.stock} unidades disponibles.`,
+            confirmButtonColor: '#4F5D2F'
+        });
         return;
     }
 
@@ -67,18 +98,23 @@ function agregarAlCarrito(id, nombre, precio) {
     actualizarBadge();
     actualizarEstadoProductos();
     
-    // Feedback visual
+    // Open Offcanvas
+    const offcanvasEl = document.getElementById('offcanvasCart');
+    if (offcanvasEl) {
+        const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+        offcanvas.show();
+    }
+
+    // Feedback visual (opcional, ya que se abre el offcanvas)
     const btn = document.querySelector(`#btn-agregar-${id}`);
     if(btn) {
         const originalContent = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check-lg"></i> ¡AGREGADO!';
+        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
         btn.classList.add('btn-success');
-        btn.classList.remove('btn-fachero');
         
         setTimeout(() => { 
             btn.innerHTML = originalContent; 
             btn.classList.remove('btn-success');
-            btn.classList.add('btn-fachero');
         }, 1500);
     }
 }
@@ -89,6 +125,7 @@ function eliminar(index) {
     mostrarCarrito(); // Refresca la tabla y chequea si hay que ocultar el botón
     actualizarBadge();
     actualizarEstadoProductos();
+    actualizarOffcanvas(); // Forzar actualización del offcanvas
 }
 
 function actualizarStorage() {
@@ -101,6 +138,61 @@ function actualizarBadge() {
     const totalItems = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
     badge.innerText = totalItems;
     badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+    
+    // Si el offcanvas está abierto, actualizar su contenido también
+    const offcanvasEl = document.getElementById('offcanvasCart');
+    if (offcanvasEl && offcanvasEl.classList.contains('show')) {
+        actualizarOffcanvas();
+    }
+}
+
+function actualizarOffcanvas() {
+    const container = document.getElementById('cart-items-container');
+    const totalEl = document.getElementById('offcanvas-cart-total');
+    const footerActions = document.getElementById('cart-footer-actions');
+    
+    if(!container || !totalEl) return;
+    
+    container.innerHTML = '';
+    let total = 0;
+
+    if (carrito.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-basket fs-1 mb-3 opacity-25"></i>
+                <p class="mb-0">Tu carrito está vacío.</p>
+                <small>¡Agregá algo con mucha onda!</small>
+            </div>
+        `;
+        totalEl.innerText = '$0';
+        if(footerActions) footerActions.classList.add('d-none');
+        return;
+    }
+    
+    if(footerActions) footerActions.classList.remove('d-none');
+
+    carrito.forEach((prod, index) => {
+        let subtotal = prod.precio * prod.cantidad;
+        total += subtotal;
+        
+        let item = `
+            <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 fw-bold">${prod.nombre}</h6>
+                    <small class="text-muted">${prod.cantidad} x $${prod.precio}</small>
+                </div>
+                <div class="text-end">
+                    <span class="d-block fw-bold text-success">$${subtotal}</span>
+                    <button onclick="eliminar(${index})" class="btn btn-sm text-danger p-0 mt-1 text-decoration-none" title="Eliminar">
+                        <small><i class="bi bi-trash"></i> Eliminar</small>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.innerHTML += item;
+    });
+    
+    totalEl.innerText = '$' + total;
 }
 
 function actualizarEstadoProductos() {
@@ -148,7 +240,6 @@ function mostrarCarrito() {
     const totalSpan = document.getElementById('total-compra');
     const panelCompra = document.getElementById('panel-compra-final');
     const mensajeVacio = document.getElementById('mensaje-carrito-vacio');
-    const tablaContainer = document.querySelector('.table-responsive').parentNode; // Card container
     
     if (!tabla) return;
 
@@ -160,7 +251,9 @@ function mostrarCarrito() {
         // Mostrar mensaje vacío, ocultar tabla y panel compra
         if(mensajeVacio) {
             mensajeVacio.classList.remove('d-none');
-            tabla.parentElement.classList.add('d-none'); // Ocultar div .table-responsive
+            if (tabla.parentElement) {
+                tabla.parentElement.classList.add('d-none'); // Ocultar div .table-responsive
+            }
         } else {
             // Fallback si no existe el elemento
             tabla.innerHTML = '<tr><td colspan="5" class="text-center py-5">Carrito vacío</td></tr>';
@@ -177,7 +270,9 @@ function mostrarCarrito() {
     // SI HAY COSAS
     if(mensajeVacio) {
         mensajeVacio.classList.add('d-none');
-        tabla.parentElement.classList.remove('d-none');
+        if (tabla.parentElement) {
+            tabla.parentElement.classList.remove('d-none');
+        }
     }
 
     if(panelCompra) {
