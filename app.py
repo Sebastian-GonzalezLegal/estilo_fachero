@@ -734,45 +734,59 @@ def api_admin_producto(id):
     """Obtiene detalles del producto para mostrar en modal"""
     producto = Producto.query.get_or_404(id)
     
+    # Determinar clases y textos
+    estado_class = 'success' if producto.activo else 'danger'
+    estado_text = 'Activo' if producto.activo else 'Inactivo'
+    stock_color = 'text-success' if producto.stock > 5 else 'text-danger'
+    
+    imagen_html = ""
+    if producto.primera_foto():
+        img_src = url_for('imagen_producto', filename=producto.primera_foto())
+        imagen_html = f'<img src="{img_src}" class="img-fluid rounded shadow-sm border" alt="{producto.nombre}">'
+    else:
+        imagen_html = '<div class="bg-light rounded p-5 text-center text-muted border"><i class="bi bi-image fs-1 opacity-25"></i><p class="mb-0 mt-2 small">Sin imagen</p></div>'
+
     html = f"""
-    <div class="row">
-        <div class="col-md-4">
-            {'<img src="' + url_for('imagen_producto', filename=producto.primera_foto()) + '" class="img-fluid rounded" alt="' + producto.nombre + '">' if producto.primera_foto() else '<div class="bg-light rounded p-5 text-center">Sin foto</div>'}
+    <div class="row g-4 text-start">
+        <div class="col-sm-5 text-center">
+            {imagen_html}
         </div>
-        <div class="col-md-8">
-            <h5><strong>{producto.nombre}</strong></h5>
-            <p class="text-muted">{producto.descripcion or 'Sin descripción'}</p>
+        <div class="col-sm-7">
+            <h4 class="fw-bold mb-2 text-dark">{producto.nombre}</h4>
+            <div class="mb-3 d-flex align-items-center gap-2">
+                <span class="status-badge {estado_class}"><span class="status-dot"></span>{estado_text}</span>
+                <span class="badge bg-light text-dark border fw-normal text-uppercase" style="letter-spacing: 1px;">{producto.tipo}</span>
+            </div>
             
-            <table class="table table-sm table-borderless">
-                <tr>
-                    <td><strong>Tipo:</strong></td>
-                    <td><span class="badge bg-secondary">{producto.tipo}</span></td>
-                </tr>
-                <tr>
-                    <td><strong>Precio Actual:</strong></td>
-                    <td>${producto.precio:.2f}</td>
-                </tr>
-                <tr>
-                    <td><strong>Stock Actual:</strong></td>
-                    <td>{producto.stock} unidades</td>
-                </tr>
-                <tr>
-                    <td><strong>Peso:</strong></td>
-                    <td>{producto.peso_g}g</td>
-                </tr>
-                <tr>
-                    <td><strong>Dimensiones:</strong></td>
-                    <td>{producto.alto_cm}cm (alto) × {producto.ancho_cm}cm (ancho) × {producto.largo_cm}cm (largo)</td>
-                </tr>
-                <tr>
-                    <td><strong>Estado:</strong></td>
-                    <td>
-                        <span class="badge {'bg-success' if producto.activo else 'bg-danger'}">
-                            {'Activo' if producto.activo else 'Inactivo'}
-                        </span>
-                    </td>
-                </tr>
-            </table>
+            <p class="text-muted small mb-4">{producto.descripcion or 'Sin descripción disponible.'}</p>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border text-center h-100 d-flex flex-column justify-content-center">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem; letter-spacing: 1px;">Precio</small>
+                        <div class="fs-4 fw-bold text-dark mt-1">${producto.precio:.2f}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-3 bg-light rounded border text-center h-100 d-flex flex-column justify-content-center">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.65rem; letter-spacing: 1px;">Stock</small>
+                        <div class="fs-4 fw-bold {stock_color} mt-1">{producto.stock}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <h6 class="small fw-bold text-uppercase text-muted border-bottom pb-2 mb-3">Detalles de Envío</h6>
+            <div class="row g-2 small text-muted">
+                <div class="col-6">
+                    <i class="bi bi-box-seam me-2"></i><strong>Peso:</strong> {producto.peso_g}g
+                </div>
+                <div class="col-6">
+                    <i class="bi bi-arrows-fullscreen me-2"></i><strong>Dimensiones:</strong>
+                </div>
+                <div class="col-12 ps-4">
+                    {producto.alto_cm}cm (alto) × {producto.ancho_cm}cm (ancho) × {producto.largo_cm}cm (largo)
+                </div>
+            </div>
         </div>
     </div>
     """

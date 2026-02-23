@@ -136,6 +136,7 @@ a {
     transform: rotate(15deg) scale(1.1);
 }
 
+/* Scoped nav-link for main Navbar */
 .navbar .nav-link {
     font-weight: 500;
     color: rgba(255,255,255,0.85) !important;
@@ -149,8 +150,8 @@ a {
     color: var(--white) !important;
 }
 
-/* Link Underline Animation */
-.navbar-nav .nav-link::after {
+/* Link Underline Animation for main Navbar */
+.navbar .navbar-nav .nav-link::after {
     content: '';
     position: absolute;
     width: 0;
@@ -163,8 +164,8 @@ a {
     border-radius: 2px;
 }
 
-.navbar-nav .nav-link:hover::after,
-.navbar-nav .nav-link.active::after {
+.navbar .navbar-nav .nav-link:hover::after,
+.navbar .navbar-nav .nav-link.active::after {
     width: 25px;
 }
 
@@ -347,26 +348,172 @@ footer {
     transform: translateY(-3px);
 }
 
-/* --- ADMIN --- */
-.table thead th {
-    color: var(--text-muted);
+/* --- ADMIN PRO --- */
+
+/* Admin Header Section */
+.admin-header {
+    background: var(--white);
+    padding: 1.5rem 2rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.admin-nav .nav-link {
+    color: var(--text-muted) !important;
+    border-radius: 50px;
+    padding: 0.6rem 1.5rem;
     font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    padding-bottom: 1rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
-.table tbody tr {
-    transition: transform 0.2s, box-shadow 0.2s;
+.admin-nav .nav-link:hover {
+    color: var(--primary-color) !important;
+    background-color: rgba(79, 93, 47, 0.05);
 }
 
-.table tbody tr:hover {
-    transform: scale(1.005);
-    z-index: 10;
+.admin-nav .nav-link.active {
+    background-color: var(--primary-color) !important;
+    color: var(--white) !important;
+    box-shadow: 0 2px 5px rgba(79, 93, 47, 0.2);
+}
+
+.admin-nav .nav-link::after {
+    display: none !important;
+}
+
+/* Admin Cards */
+.admin-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    border: 1px solid #e5e7eb;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-card:hover {
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
-.table td {
-    padding: 1.25rem 1rem;
+.admin-card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #fafafa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-card-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+/* Stats Card */
+.stats-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin-right: 1.25rem;
+    flex-shrink: 0;
+}
+
+/* Admin Tables */
+.admin-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid #e5e7eb;
+}
+
+.admin-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-table thead th {
+    background-color: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
     color: var(--text-main);
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.95rem;
+}
+
+.admin-table tr:hover td {
+    background-color: #fcfcfc;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.35em 0.8em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.status-badge.success { background-color: #d1fae5; color: #065f46; }
+.status-badge.warning { background-color: #fef3c7; color: #92400e; }
+.status-badge.danger { background-color: #fee2e2; color: #991b1b; }
+.status-badge.info { background-color: #dbeafe; color: #1e40af; }
+.status-badge.secondary { background-color: #f3f4f6; color: #374151; }
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/* Avatar */
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: cover;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e5e7eb;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
 }

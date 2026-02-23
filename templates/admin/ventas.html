@@ -3,41 +3,44 @@
 {% block content %}
 <div class="container my-5 fade-in-up">
     <!-- Header Admin -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h2 class="fw-bold mb-0">Gestión de Ventas</h2>
-            <p class="text-muted mb-0">Controla tus pedidos y envíos.</p>
+            <h2 class="fw-bold mb-1 text-dark">Gestión de Ventas</h2>
+            <p class="text-muted mb-0">Controla y administra los pedidos de tus clientes.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
     </div>
 
     <!-- Navegación -->
-    <ul class="nav nav-pills mb-4 gap-2" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_panel') }}">
-                <i class="bi bi-box2 me-2"></i> Productos
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active bg-primary-custom" href="{{ url_for('admin_ventas') }}">
-                <i class="bi bi-receipt me-2"></i> Ventas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_envios') }}">
-                <i class="bi bi-truck me-2"></i> Tipos de Envío
-            </a>
-        </li>
-    </ul>
+    <div class="mb-5">
+        <ul class="nav admin-nav d-flex gap-2">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_panel') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin_ventas') }}">
+                    <i class="bi bi-receipt me-2"></i> Ventas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_envios') }}">
+                    <i class="bi bi-truck me-2"></i> Envíos
+                </a>
+            </li>
+        </ul>
+    </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -46,122 +49,104 @@
     {% endwith %}
 
     <!-- Filtros -->
-    <div class="card shadow-sm mb-4 border-0 bg-white">
-        <div class="card-body">
-            <h6 class="mb-3 text-uppercase small text-dark fw-bold"><i class="bi bi-funnel"></i> Filtrar Pedidos</h6>
+    <div class="admin-card mb-5">
+        <div class="card-body p-4">
+            <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Pedidos</h6>
             <form method="GET" action="{{ url_for('admin_ventas') }}" class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label small">Nombre del Cliente</label>
+                    <label class="form-label small fw-bold text-muted">Cliente</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" name="cliente" placeholder="Ej: Juan Perez" value="{{ filtro_cliente or '' }}">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="cliente" placeholder="Nombre..." value="{{ filtro_cliente or '' }}">
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small">Fecha</label>
+                    <label class="form-label small fw-bold text-muted">Fecha</label>
                     <input type="date" class="form-control" name="fecha" value="{{ filtro_fecha or '' }}">
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
                     {% if filtro_cliente or filtro_fecha %}
-                    <a href="{{ url_for('admin_ventas') }}" class="btn btn-outline-secondary w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    <a href="{{ url_for('admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
                     {% endif %}
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Lista de Pedidos -->
-    {% if pedidos %}
-        <div class="d-flex flex-column gap-3">
-        {% for pedido in pedidos %}
-        <div class="card shadow-sm border-0 overflow-hidden">
-            <div class="card-header bg-dark text-white p-3">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary-custom p-2 rounded-circle"><i class="bi bi-receipt"></i></span>
+    <!-- Lista de Pedidos (Tabla) -->
+    <div class="admin-table-wrapper shadow-sm bg-white mb-5">
+        <table class="admin-table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="ps-4">Pedido / Fecha</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Pago</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pedido in pedidos %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-5">
+                                #{{ pedido.id }}
+                            </div>
                             <div>
-                                <h6 class="mb-0 fw-bold text-white">Pedido #{{ pedido.id }}</h6>
-                                <small class="text-white-high">{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</small>
+                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ pedido.fecha_pedido.strftime('%d %b %Y') }}</div>
+                                <div class="small text-muted">{{ pedido.fecha_pedido.strftime('%H:%M') }} hs</div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <small class="text-white-high d-block">Cliente</small>
-                        <span class="fw-bold">{{ pedido.nombre_cliente }}</span>
-                    </div>
-                    <div class="col-md-3">
-                        <small class="text-white-high d-block">Estado</small>
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="badge {{ 'bg-warning text-dark' if pedido.estado == 'Pendiente' else 'bg-info text-dark' if pedido.estado == 'En Aprobación' else 'bg-primary' if pedido.estado == 'Enviado' else 'bg-success' if pedido.estado == 'Entregado' else 'bg-secondary' }}">
-                                {{ pedido.estado or 'Pendiente' }}
-                            </span>
-                            {% if pedido.pagado %}
-                                <span class="badge bg-success" title="Pagado"><i class="bi bi-cash"></i></span>
-                            {% else %}
-                                <span class="badge bg-danger" title="Pendiente de Pago"><i class="bi bi-hourglass"></i></span>
-                            {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">{{ pedido.nombre_cliente }}</div>
+                        <div class="small text-muted"><a href="mailto:{{ pedido.email_cliente }}" class="text-muted text-decoration-none">{{ pedido.email_cliente }}</a></div>
+                    </td>
+                    <td>
+                        {% if pedido.estado == 'Pendiente' %}
+                            <span class="status-badge warning"><span class="status-dot"></span>Pendiente</span>
+                        {% elif pedido.estado == 'En Aprobación' %}
+                            <span class="status-badge info"><span class="status-dot"></span>En Aprobación</span>
+                        {% elif pedido.estado == 'Enviado' %}
+                            <span class="status-badge primary" style="background-color: #e0e7ff; color: #3730a3;"><span class="status-dot"></span>Enviado</span>
+                        {% elif pedido.estado == 'Entregado' %}
+                            <span class="status-badge success"><span class="status-dot"></span>Entregado</span>
+                        {% else %}
+                            <span class="status-badge secondary"><span class="status-dot"></span>{{ pedido.estado or 'Desconocido' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pedido.pagado %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3"><i class="bi bi-check-circle-fill me-1"></i> Pagado</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3"><i class="bi bi-hourglass-split me-1"></i> Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end fw-bold text-dark fs-6">
+                        ${{ "%.2f"|format(pedido.total) }}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
+                            Ver <i class="bi bi-arrow-right-short"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="text-muted opacity-25 mb-3">
+                            <i class="bi bi-inbox fs-1"></i>
                         </div>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <div class="d-flex flex-column align-items-end">
-                            <span class="fw-bold text-success fs-5 mb-1">${{ "%.2f"|format(pedido.total) }}</span>
-                            <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-light btn-sm fw-bold shadow-sm">
-                                Ver Detalles <i class="bi bi-arrow-right-short"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body bg-light-subtle">
-                <div class="row">
-                    <div class="col-md-6 border-end">
-                        <h6 class="small text-uppercase text-muted fw-bold mb-3">Datos de Contacto</h6>
-                        <ul class="list-unstyled mb-0 small">
-                            <li class="mb-2"><i class="bi bi-envelope me-2 text-primary"></i> <a href="mailto:{{ pedido.email_cliente }}" class="text-decoration-none">{{ pedido.email_cliente }}</a></li>
-                            <li class="mb-2"><i class="bi bi-telephone me-2 text-primary"></i> {{ pedido.telefono_cliente or '-' }}</li>
-                            <li class="mb-0"><i class="bi bi-geo-alt me-2 text-primary"></i> {{ pedido.direccion_cliente or '-' }} (CP: {{ pedido.cp_cliente }})</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6 ps-md-4">
-                        <h6 class="small text-uppercase text-muted fw-bold mb-3">Resumen de Envío</h6>
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span>Método: <strong>{{ pedido.envio_nombre or 'MiCorreo' }}</strong></span>
-                            {% if pedido.envio_tipo == 'D' %}
-                                <span class="badge bg-info text-dark">Domicilio</span>
-                            {% elif pedido.envio_tipo == 'S' %}
-                                <span class="badge bg-warning text-dark">Sucursal</span>
-                            {% endif %}
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span>Costo Envío:</span>
-                            <span class="fw-bold">${{ "%.2f"|format(pedido.envio_precio) }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        </div>
-    {% else %}
-        <div class="text-center py-5 bg-white rounded shadow-sm">
-            <div class="mb-3">
-                <i class="bi bi-inbox fs-1 text-muted opacity-25"></i>
-            </div>
-            <h5 class="text-muted">No se encontraron ventas</h5>
-            <p class="text-muted small">Intenta ajustar los filtros de búsqueda.</p>
-        </div>
-    {% endif %}
+                        <h6 class="text-muted fw-bold">No se encontraron ventas</h6>
+                        <p class="text-muted small mb-0">Intenta ajustar los filtros de búsqueda.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<style>
-    .bg-primary-custom {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-    }
-    .bg-light-subtle {
-        background-color: #f8f9fa !important;
-    }
-</style>
 {% endblock %}

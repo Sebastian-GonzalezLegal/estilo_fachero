@@ -3,88 +3,84 @@
 {% block content %}
 <div class="container my-5 fade-in-up">
     <!-- Header Admin -->
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h2 class="fw-bold mb-0">Panel de Administración</h2>
-            <p class="text-muted mb-0">Resumen de actividad y gestión.</p>
+            <h2 class="fw-bold mb-1 text-dark">Panel de Administración</h2>
+            <p class="text-muted mb-0">Resumen de actividad y gestión de la tienda.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-eye"></i> Ver Web
+            <a href="{{ url_for('home') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+                <i class="bi bi-eye"></i> Ver Tienda
             </a>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
     </div>
 
     <!-- Navegación -->
-    <ul class="nav nav-pills mb-4 gap-2">
-        <li class="nav-item">
-            <a class="nav-link active bg-fachero" href="{{ url_for('admin_panel') }}">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_ventas') }}">
-                <i class="bi bi-receipt me-2"></i> Ventas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_envios') }}">
-                <i class="bi bi-truck me-2"></i> Envíos
-            </a>
-        </li>
-    </ul>
+    <div class="mb-5">
+        <ul class="nav admin-nav d-flex gap-2">
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin_panel') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_ventas') }}">
+                    <i class="bi bi-receipt me-2"></i> Ventas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_envios') }}">
+                    <i class="bi bi-truck me-2"></i> Envíos
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <!-- KPI Cards -->
-    <div class="row g-3 mb-5">
+    <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3 text-success">
-                        <i class="bi bi-currency-dollar fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Ventas Totales</h6>
-                        <h3 class="fw-bold mb-0">${{ total_ventas }}</h3>
-                    </div>
+            <div class="admin-card stats-card h-100">
+                <div class="stats-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Ventas Totales</h6>
+                    <h3 class="fw-bold mb-0 text-dark">${{ total_ventas }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary">
-                        <i class="bi bi-bag-check fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Pedidos Totales</h6>
-                        <h3 class="fw-bold mb-0">{{ total_pedidos }}</h3>
-                    </div>
+            <div class="admin-card stats-card h-100">
+                <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Pedidos Totales</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ total_pedidos }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3 text-warning">
-                        <i class="bi bi-exclamation-triangle fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-0 text-uppercase small fw-bold">Bajo Stock</h6>
-                        <h3 class="fw-bold mb-0">{{ productos_bajo_stock }}</h3>
-                        <small class="text-muted">Productos &lt; 5 unid.</small>
-                    </div>
+            <div class="admin-card stats-card h-100">
+                <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Bajo Stock</h6>
+                    <h3 class="fw-bold mb-0 text-dark">{{ productos_bajo_stock }}</h3>
+                    <small class="text-danger fw-bold" style="font-size: 0.75rem;">&lt; 5 unidades</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Chart Section -->
-    <div class="card border-0 shadow-sm mb-5">
-        <div class="card-header bg-white border-0 py-3">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)</h5>
+    <div class="admin-card mb-5">
+        <div class="admin-card-header">
+            <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)</h5>
         </div>
         <div class="card-body">
             <canvas id="salesChart" height="80"></canvas>
@@ -92,90 +88,96 @@
     </div>
 
     <!-- Product List -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold">Gestión de Productos</h4>
-        <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-fachero shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold text-dark mb-0">Gestión de Productos</h4>
+        <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-fachero shadow-sm d-flex align-items-center gap-2">
             <i class="bi bi-plus-lg"></i> Nuevo Producto
         </a>
     </div>
 
-    <div class="card shadow-sm border-0 mb-5">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Foto</th>
-                            <th>Nombre</th>
-                            <th>Tipo</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Estado</th>
-                            <th class="text-end pe-4">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for producto in productos %}
-                        <tr>
-                            <td class="ps-4">
-                                {% if producto.primera_foto() %}
-                                    <img src="{{ url_for('imagen_producto', filename=producto.primera_foto()) }}" 
-                                         class="rounded" style="width: 40px; height: 40px; object-fit: cover;">
-                                {% else %}
-                                    <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted small" 
-                                         style="width: 40px; height: 40px;">
-                                        <i class="bi bi-image"></i>
-                                    </div>
-                                {% endif %}
-                            </td>
-                            <td class="fw-bold text-dark">{{ producto.nombre }}</td>
-                            <td><span class="badge bg-light text-dark border">{{ producto.tipo }}</span></td>
-                            <td class="fw-bold">${{ producto.precio }}</td>
-                            <td>
-                                <span class="badge {% if producto.stock > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} border border-opacity-10">
-                                    {{ producto.stock }} unid.
-                                </span>
-                            </td>
-                            <td>
-                                {% if producto.activo %}
-                                    <span class="badge bg-success">Activo</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Inactivo</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="{{ url_for('admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded" title="Editar">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    {% if producto.activo %}
-                                    <form action="{{ url_for('admin_producto_eliminar', id=producto.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este producto?');">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded" title="Desactivar">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                    {% else %}
-                                    <form action="{{ url_for('admin_producto_activar', id=producto.id) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded" title="Activar">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
+    <div class="admin-table-wrapper shadow-sm bg-white mb-5">
+        <table class="admin-table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="ps-4">Producto</th>
+                    <th>Tipo</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if producto.primera_foto() %}
+                                <img src="{{ url_for('imagen_producto', filename=producto.primera_foto()) }}" 
+                                     class="avatar shadow-sm" alt="{{ producto.nombre }}">
+                            {% else %}
+                                <div class="avatar bg-light d-flex align-items-center justify-content-center text-muted">
+                                    <i class="bi bi-image"></i>
                                 </div>
-                            </td>
-                        </tr>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold text-dark">{{ producto.nombre }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">{{ producto.descripcion or 'Sin descripción' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border fw-normal text-uppercase">{{ producto.tipo }}</span>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${{ producto.precio }}</div>
+                    </td>
+                    <td>
+                        <span class="fw-bold {% if producto.stock > 5 %}text-success{% elif producto.stock > 0 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ producto.stock }} unid.
+                        </span>
+                    </td>
+                    <td>
+                        {% if producto.activo %}
+                            <span class="status-badge success"><span class="status-dot"></span>Activo</span>
                         {% else %}
-                        <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-box2 fs-1 d-block opacity-25 mb-2"></i>
-                                No hay productos cargados.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                            <span class="status-badge secondary"><span class="status-dot"></span>Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <a href="{{ url_for('admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm" title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            {% if producto.activo %}
+                            <form action="{{ url_for('admin_producto_eliminar', id=producto.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este producto?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded shadow-sm" title="Desactivar">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form action="{{ url_for('admin_producto_activar', id=producto.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded shadow-sm" title="Activar">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="text-muted opacity-50 mb-2">
+                            <i class="bi bi-box2 fs-1"></i>
+                        </div>
+                        <p class="text-muted fw-bold">No hay productos cargados.</p>
+                        <a href="{{ url_for('admin_producto_nuevo') }}" class="btn btn-sm btn-outline-primary mt-2">Cargar el primero</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -191,13 +193,20 @@
                 label: 'Ventas ($)',
                 data: {{ valores_grafico | tojson }},
                 borderColor: '#4F5D2F',
-                backgroundColor: 'rgba(79, 93, 47, 0.1)',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
+                    gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
+                    return gradient;
+                },
                 borderWidth: 2,
                 fill: true,
                 tension: 0.4,
                 pointBackgroundColor: '#fff',
                 pointBorderColor: '#4F5D2F',
-                pointRadius: 4
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: {
@@ -205,20 +214,29 @@
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(44, 51, 51, 0.9)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    titleFont: { family: 'Montserrat', size: 13 },
+                    bodyFont: { family: 'Inter', size: 13 }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: {
-                        borderDash: [2, 4],
-                        color: '#f0f0f0'
-                    }
+                        borderDash: [4, 4],
+                        color: '#f0f0f0',
+                        drawBorder: false
+                    },
+                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    }
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
                 }
             }
         }

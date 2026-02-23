@@ -3,41 +3,44 @@
 {% block content %}
 <div class="container my-5 fade-in-up">
     <!-- Header Admin -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h2 class="fw-bold mb-0">Gestión de Envíos</h2>
-            <p class="text-muted mb-0">Configura tus opciones de envío.</p>
+            <h2 class="fw-bold mb-1 text-dark">Gestión de Envíos</h2>
+            <p class="text-muted mb-0">Configura los métodos y costos de envío para tus clientes.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger">
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
     </div>
 
     <!-- Navegación -->
-    <ul class="nav nav-pills mb-4 gap-2" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_panel') }}">
-                <i class="bi bi-box2 me-2"></i> Productos
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark bg-white border" href="{{ url_for('admin_ventas') }}">
-                <i class="bi bi-receipt me-2"></i> Ventas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link active bg-primary-custom" href="{{ url_for('admin_envios') }}">
-                <i class="bi bi-truck me-2"></i> Tipos de Envío
-            </a>
-        </li>
-    </ul>
+    <div class="mb-5">
+        <ul class="nav admin-nav d-flex gap-2">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_panel') }}">
+                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('admin_ventas') }}">
+                    <i class="bi bi-receipt me-2"></i> Ventas
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('admin_envios') }}">
+                    <i class="bi bi-truck me-2"></i> Envíos
+                </a>
+            </li>
+        </ul>
+    </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -45,28 +48,28 @@
         {% endif %}
     {% endwith %}
 
-    <div class="row">
+    <div class="row g-4">
         <!-- Formulario Nuevo Envío -->
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold">Agregar Nuevo Envío</h5>
+        <div class="col-lg-4">
+            <div class="admin-card sticky-top" style="top: 20px;">
+                <div class="admin-card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle me-2 text-primary"></i> Agregar Nuevo Envío</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form action="{{ url_for('admin_envio_nuevo') }}" method="POST">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold">Nombre del Envío</label>
+                            <label class="form-label small fw-bold text-muted">NOMBRE DEL MÉTODO *</label>
                             <input type="text" name="nombre" class="form-control" required placeholder="Ej: Moto Mensajería">
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Precio</label>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold text-muted">COSTO ($) *</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="precio" class="form-control" required placeholder="0.00">
+                                <span class="input-group-text bg-white border-end-0 text-muted">$</span>
+                                <input type="number" step="0.01" name="precio" class="form-control border-start-0 fw-bold text-dark" required placeholder="0.00">
                             </div>
                         </div>
                         <button type="submit" class="btn btn-fachero w-100 shadow-sm">
-                            <i class="bi bi-plus-lg"></i> Agregar
+                            <i class="bi bi-plus-lg me-2"></i> Agregar Método
                         </button>
                     </form>
                 </div>
@@ -74,76 +77,72 @@
         </div>
 
         <!-- Lista de Envíos -->
-        <div class="col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0 fw-bold">Listado de Envíos</h5>
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul me-2 text-muted"></i> Listado de Envíos</h5>
+                    <span class="badge bg-white text-muted border">{{ envios|length }} métodos</span>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0 align-middle">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-4">Nombre</th>
-                                    <th>Precio</th>
-                                    <th>Estado</th>
-                                    <th class="text-end pe-4">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for envio in envios %}
-                                <tr>
-                                    <td class="ps-4 fw-bold">{{ envio.nombre }}</td>
-                                    <td>${{ "%.2f"|format(envio.precio) }}</td>
-                                    <td>
+                <div class="admin-table-wrapper border-0 rounded-0">
+                    <table class="admin-table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Nombre</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for envio in envios %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-dark">{{ envio.nombre }}</td>
+                                <td>
+                                    <span class="fw-bold text-dark">${{ "%.2f"|format(envio.precio) }}</span>
+                                </td>
+                                <td>
+                                    {% if envio.activo %}
+                                        <span class="status-badge success"><span class="status-dot"></span>Activo</span>
+                                    {% else %}
+                                        <span class="status-badge secondary"><span class="status-dot"></span>Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('admin_envio_editar', id=envio.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm" title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
                                         {% if envio.activo %}
-                                            <span class="badge bg-success">Activo</span>
+                                        <form action="{{ url_for('admin_envio_eliminar', id=envio.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este envío?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded shadow-sm" title="Desactivar">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
                                         {% else %}
-                                            <span class="badge bg-secondary">Inactivo</span>
+                                        <form action="{{ url_for('admin_envio_activar', id=envio.id) }}" method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded shadow-sm" title="Activar">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
                                         {% endif %}
-                                    </td>
-                                    <td class="text-end pe-4">
-                                        <div class="btn-group">
-                                            <a href="{{ url_for('admin_envio_editar', id=envio.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            {% if envio.activo %}
-                                            <form action="{{ url_for('admin_envio_eliminar', id=envio.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este envío?');">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Desactivar">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                            {% else %}
-                                            <form action="{{ url_for('admin_envio_activar', id=envio.id) }}" method="POST" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Activar">
-                                                    <i class="bi bi-check-lg"></i>
-                                                </button>
-                                            </form>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">
-                                        <i class="bi bi-truck fs-1 d-block opacity-25 mb-2"></i>
-                                        No hay tipos de envío configurados.
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted opacity-25 mb-3">
+                                        <i class="bi bi-truck fs-1"></i>
+                                    </div>
+                                    <p class="text-muted fw-bold mb-0">No hay métodos de envío configurados.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .bg-primary-custom {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-    }
-</style>
 {% endblock %}
