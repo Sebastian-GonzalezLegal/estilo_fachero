@@ -2,73 +2,98 @@
 
 {% block content %}
 <div class="container my-5 fade-in-up">
-    <div class="d-flex align-items-center mb-4">
-        <h2 class="text-uppercase fw-bold mb-0">Tu Carrito</h2>
-        <i class="bi bi-cart3 ms-3 fs-2 text-primary"></i>
-    </div>
-    
-    <div class="card shadow-sm border-0 rounded-lg overflow-hidden">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="py-3 ps-4">Producto</th>
-                        <th class="py-3">Precio</th>
-                        <th class="py-3 text-center">Cant.</th>
-                        <th class="py-3">Subtotal</th>
-                        <th class="py-3 pe-4"></th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-carrito" class="bg-white">
-                    <!-- JS rellena esto -->
-                </tbody>
-            </table>
+    <div class="row g-4">
+        <!-- Cart Items Column -->
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="fw-bold mb-0 display-6">Tu Carrito</h2>
+                <span class="badge bg-light text-dark ms-3 border" id="cart-count-badge" style="display:none;">0 items</span>
+            </div>
+            
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="py-3 ps-4 text-uppercase small text-muted fw-bold">Producto</th>
+                                <th class="py-3 text-uppercase small text-muted fw-bold">Precio</th>
+                                <th class="py-3 text-center text-uppercase small text-muted fw-bold">Cant.</th>
+                                <th class="py-3 text-uppercase small text-muted fw-bold">Subtotal</th>
+                                <th class="py-3 pe-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-carrito" class="bg-white">
+                            <!-- JS inyecta filas aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Empty Cart Message -->
+                <div id="mensaje-carrito-vacio" class="text-center py-5 d-none">
+                    <div class="mb-4">
+                        <div class="d-inline-block p-4 rounded-circle bg-light">
+                            <i class="bi bi-cart-x fs-1 text-muted opacity-50"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">Tu carrito está vacío</h4>
+                    <p class="text-muted mb-4">¡Mirá nuestros productos y encontrá algo que te guste!</p>
+                    <a href="/productos" class="btn btn-fachero rounded-pill px-4 py-2">
+                        Ir a la Tienda
+                    </a>
+                </div>
+            </div>
+            
+            <div class="d-none d-lg-block">
+                <a href="/productos" class="text-decoration-none text-muted small hover-lift d-inline-block">
+                    <i class="bi bi-arrow-left me-1"></i> Seguir Comprando
+                </a>
+            </div>
         </div>
-        
-        <!-- Empty Cart Message (Hidden by default, shown via JS if empty) -->
-        <div id="mensaje-carrito-vacio" class="text-center py-5 d-none">
-            <i class="bi bi-cart-x fs-1 text-muted opacity-50"></i>
-            <h5 class="mt-3 fw-bold text-muted">Tu carrito está vacío</h5>
-            <a href="/productos" class="btn btn-outline-primary mt-3">Ver Productos</a>
-        </div>
-    </div>
 
-    <div id="panel-compra-final" class="d-none mt-4">
-        <div class="row justify-content-end">
-            <!-- Total y Checkout -->
-            <div class="col-md-5 col-lg-4">
-                <div class="card border-0 shadow-sm bg-light h-100">
-                    <div class="card-body p-4 d-flex flex-column justify-content-between">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Subtotal</span>
-                                <span class="fw-bold">$<span id="subtotal-compra">0</span></span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2 text-primary" id="fila-envio" style="display: none !important;">
-                                <span>Envío (<span id="tipo-envio-seleccionado">Calculando...</span>)</span>
-                                <span class="fw-bold">$<span id="costo-envio">0</span></span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <span class="h4 fw-bold mb-0">Total</span>
-                                <h3 class="fw-bold text-success mb-0">$<span id="total-compra">0</span></h3>
-                            </div>
+        <!-- Order Summary Column -->
+        <div class="col-lg-4">
+            <div id="panel-compra-final" class="d-none sticky-top" style="top: 100px; z-index: 10;">
+                <div class="card border shadow-sm rounded-4 bg-white">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="fw-bold mb-0">Resumen de Compra</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-bold fs-5">$<span id="subtotal-compra">0</span></span>
                         </div>
                         
-                        <!-- Formulario oculto para pasar datos a checkout -->
+                        <!-- Shipping Row (Hidden initially) -->
+                        <div class="d-flex justify-content-between align-items-center mb-3 text-success" id="fila-envio" style="display: none !important;">
+                            <span>Envío <small class="text-muted" id="tipo-envio-seleccionado"></small></span>
+                            <span class="fw-bold">$<span id="costo-envio">0</span></span>
+                        </div>
+                        
+                        <hr class="my-4 border-dashed">
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="h5 fw-bold mb-0 text-dark">Total</span>
+                            <h2 class="fw-bold text-primary mb-0">$<span id="total-compra">0</span></h2>
+                        </div>
+                        
+                        <!-- Hidden Form -->
                         <form action="/finalizar" method="GET" id="form-checkout">
-                             <!-- Datos de envío se inyectan aquí via JS si se selecciona uno -->
                              <input type="hidden" name="envio_precio" id="input-envio-precio" value="0">
                              <input type="hidden" name="envio_nombre" id="input-envio-nombre" value="">
                              <input type="hidden" name="envio_tipo" id="input-envio-tipo" value="">
                         </form>
 
-                        <button onclick="irACheckout()" class="btn btn-fachero w-100 py-3 shadow-sm hover-lift">
+                        <button onclick="irACheckout()" class="btn btn-fachero w-100 py-3 rounded-pill shadow-sm hover-lift fw-bold">
                             INICIAR COMPRA <i class="bi bi-arrow-right ms-2"></i>
                         </button>
                         
-                        <div class="text-center mt-3">
-                            <a href="/productos" class="text-muted small text-decoration-underline">Seguir comprando</a>
+                        <div class="mt-4 text-center">
+                            <p class="text-muted x-small mb-2"><i class="bi bi-shield-lock-fill me-1"></i> Compra 100% Segura</p>
+                             <div class="d-flex justify-content-center gap-2 opacity-50">
+                                <i class="bi bi-credit-card"></i>
+                                <i class="bi bi-cash-coin"></i>
+                                <i class="bi bi-bank"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -76,6 +101,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .border-dashed {
+        border-style: dashed !important;
+    }
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

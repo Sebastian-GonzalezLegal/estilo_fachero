@@ -7,47 +7,61 @@
     <!-- Google Fonts: Montserrat (Titulos) & Inter (Cuerpo) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/rating.css') }}">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-fachero sticky-top shadow-sm transition-all" id="mainNavbar">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-fachero sticky-top shadow-sm" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="nav-logo">
-                <span class="brand-text">ESTILO FACHERO</span>
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Estilo Fachero" class="nav-logo shadow-sm">
+                <span class="brand-text d-none d-sm-block">ESTILO FACHERO</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            
+            <div class="d-flex align-items-center gap-2 order-lg-3">
+                 <!-- Mobile Cart Toggle -->
+                 {% if 'admin' not in request.path %}
+                <a class="nav-link btn-cart-nav d-lg-none position-relative me-2" href="#offcanvasCart" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart">
+                    <i class="bi bi-bag-fill"></i>
+                    <span id="badge-carrito-mobile" class="badge rounded-pill bg-danger cart-badge" style="display: none;">0</span>
+                </a>
+                {% endif %}
+                
+                <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
+                <ul class="navbar-nav ms-auto align-items-center gap-lg-1">
                     {% if 'admin' not in request.path %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/">Inicio</a>
+                            <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/productos">Productos</a>
+                            <a class="nav-link {{ 'active' if '/productos' in request.path }}" href="/productos">Productos</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/contacto">Contacto</a>
+                            <a class="nav-link {{ 'active' if '/contacto' in request.path }}" href="/contacto">Contacto</a>
                         </li>
-                        <li class="nav-item ms-lg-3">
-                            <a class="nav-link btn-cart-nav" href="#offcanvasCart" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart">
+                        <li class="nav-item ms-lg-3 d-none d-lg-block">
+                            <a class="nav-link btn-cart-nav position-relative" href="#offcanvasCart" data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart" title="Ver Carrito">
                                 <i class="bi bi-bag-fill"></i>
-                                <span class="d-lg-none ms-2">Carrito</span>
                                 <span id="badge-carrito" class="badge rounded-pill bg-danger cart-badge" style="display: none;">0</span>
                             </a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <span class="nav-link text-white-high">Panel de Administración</span>
+                            <span class="nav-link text-white-high fw-bold"><i class="bi bi-shield-lock me-2"></i>Panel de Administración</span>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link" href="/"><i class="bi bi-box-arrow-right me-1"></i> Ir al Sitio</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -61,36 +75,40 @@
     </main>
 
     <!-- Offcanvas Cart -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel" style="z-index: 1055;">
-        <div class="offcanvas-header bg-light border-bottom">
-            <h5 class="offcanvas-title fw-bold font-heading" id="offcanvasCartLabel">
-                <i class="bi bi-bag-check-fill me-2 text-success"></i>Tu Carrito
+    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel" style="z-index: 1055;">
+        <div class="offcanvas-header bg-white border-bottom py-3">
+            <h5 class="offcanvas-title fw-bold font-heading d-flex align-items-center text-dark" id="offcanvasCartLabel">
+                <i class="bi bi-bag-heart-fill me-2 text-primary"></i> Tu Carrito
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body d-flex flex-column p-0">
+        
+        <div class="offcanvas-body d-flex flex-column p-0 bg-light">
             <!-- Items Area -->
-            <div id="cart-items-container" class="flex-grow-1 overflow-auto p-3">
+            <div id="cart-items-container" class="flex-grow-1 overflow-auto p-3 custom-scrollbar">
                 <!-- Content injected by JS -->
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-basket fs-1 mb-3 opacity-25"></i>
-                    <p class="mb-0">Tu carrito está vacío.</p>
-                    <small>¡Agregá algo con mucha onda!</small>
+                <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
+                    <div class="bg-white p-4 rounded-circle shadow-sm mb-3">
+                        <i class="bi bi-basket3 fs-1 text-muted opacity-50"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Tu carrito está vacío</h5>
+                    <p class="text-muted small mb-4">¿No sabés qué elegir? ¡Mirá nuestras novedades!</p>
+                    <a href="/productos" class="btn btn-outline-fachero rounded-pill px-4">Ir a la Tienda</a>
                 </div>
             </div>
             
             <!-- Footer Area -->
-            <div class="border-top p-3 bg-light shadow-sm-top" id="cart-footer-actions">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted small text-uppercase fw-bold">Subtotal</span>
-                    <span id="offcanvas-cart-total" class="fw-bold fs-5 text-dark">$0</span>
+            <div class="border-top p-4 bg-white shadow-lg" id="cart-footer-actions">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="text-muted text-uppercase fw-bold small">Subtotal</span>
+                    <span id="offcanvas-cart-total" class="fw-bold fs-4 text-primary">$0</span>
                 </div>
                 <div class="d-grid gap-2">
-                    <a href="/carrito" class="btn btn-fachero rounded-pill">
-                        Iniciar Compra <i class="bi bi-arrow-right-short"></i>
+                    <a href="/carrito" class="btn btn-fachero rounded-pill py-3 fw-bold">
+                        INICIAR COMPRA <i class="bi bi-arrow-right-short ms-1"></i>
                     </a>
-                    <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm" data-bs-dismiss="offcanvas">
-                        Seguir Mirando
+                    <button type="button" class="btn btn-link text-muted text-decoration-none small" data-bs-dismiss="offcanvas">
+                        Seguir mirando
                     </button>
                 </div>
             </div>
@@ -98,25 +116,60 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-5 text-center">
+    <footer class="footer mt-auto">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <h5 class="fw-bold text-uppercase mb-3">Estilo Fachero</h5>
-                    <p class="text-white-50">Le damos más onda a tus outfits. Envíos a todo el país.</p>
-                    <div class="mb-3">
-                        <a href="/productos" class="text-white-50 text-decoration-none mx-2 small">Productos</a> |
-                        <a href="/contacto" class="text-white-50 text-decoration-none mx-2 small">Ayuda y Contacto</a>
+            <div class="row g-5 justify-content-center text-center text-md-start">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 gap-2">
+                         <h4 class="fw-bold text-white mb-0" style="letter-spacing: -1px;">ESTILO FACHERO</h4>
                     </div>
-                    <div class="social-icons mb-4">
-                        <a href="#"><i class="bi bi-instagram"></i></a>
-                        <a href="#"><i class="bi bi-facebook"></i></a>
-                        <a href="{{ whatsapp_link }}" target="_blank"><i class="bi bi-whatsapp"></i></a>
+                    <p class="text-white-50 mb-4">Elevá tu estilo con nuestra colección exclusiva de accesorios. Calidad, diseño y la mejor onda para vos.</p>
+                    <div class="social-icons">
+                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="{{ whatsapp_link }}" target="_blank" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>
                     </div>
                 </div>
+                
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-white text-uppercase mb-4" style="letter-spacing: 1px;">Explorar</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-2">
+                        <li><a href="/" class="text-white-50 text-decoration-none hover-white">Inicio</a></li>
+                        <li><a href="/productos" class="text-white-50 text-decoration-none hover-white">Todos los Productos</a></li>
+                        <li><a href="/productos?tipo=gorra" class="text-white-50 text-decoration-none hover-white">Gorras</a></li>
+                        <li><a href="/productos?tipo=lentes" class="text-white-50 text-decoration-none hover-white">Lentes</a></li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-4">
+                    <h5 class="fw-bold text-white text-uppercase mb-4" style="letter-spacing: 1px;">Contacto</h5>
+                    <ul class="list-unstyled d-flex flex-column gap-3 text-white-50">
+                        <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                            <i class="bi bi-geo-alt text-accent fs-5"></i>
+                            <span>Adolfo Sourdeaux, Buenos Aires</span>
+                        </li>
+                        <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                            <i class="bi bi-envelope text-accent fs-5"></i>
+                            <span>hola@estilofachero.com</span>
+                        </li>
+                         <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
+                            <i class="bi bi-truck text-accent fs-5"></i>
+                            <span>Envíos a todo el país</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <hr class="border-secondary my-4">
-            <p class="mb-0 text-white-50 small">© 2026 <strong>Estilo Fachero</strong> - Adolfo Sourdeaux, Bs As.</p>
+            
+            <hr class="border-secondary my-5 opacity-25">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-white-50 small">© 2026 <strong>Estilo Fachero</strong>. Todos los derechos reservados.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
+                    <p class="mb-0 text-white-50 small">Diseñado con <i class="bi bi-heart-fill text-danger mx-1"></i> en Argentina</p>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -124,16 +177,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
-    <!-- Script para efecto sticky navbar -->
     <script>
         document.addEventListener("DOMContentLoaded", function(){
+            const navbar = document.getElementById('mainNavbar');
             window.addEventListener('scroll', function() {
-                if (window.scrollY > 50) {
-                    document.getElementById('mainNavbar').classList.add('scrolled');
+                if (window.scrollY > 20) {
+                    navbar.classList.add('scrolled');
                 } else {
-                    document.getElementById('mainNavbar').classList.remove('scrolled');
+                    navbar.classList.remove('scrolled');
                 }
             });
+            
+            // Check scroll on init
+            if (window.scrollY > 20) {
+                navbar.classList.add('scrolled');
+            }
         });
     </script>
 </body>

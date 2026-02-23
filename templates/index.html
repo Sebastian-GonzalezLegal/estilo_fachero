@@ -1,96 +1,179 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container my-5">
-    <!-- Hero Section -->
-    <div class="p-5 mb-5 rounded-3 text-center position-relative overflow-hidden" 
-         style="background: linear-gradient(135deg, var(--light-bg) 0%, #e9ecef 100%); border: 1px solid rgba(0,0,0,0.05);">
+<!-- Hero Section -->
+<section class="position-relative overflow-hidden py-5 mb-5">
+    <div class="container py-lg-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 text-center text-lg-start z-1">
+                <span class="d-inline-block py-1 px-3 rounded-pill bg-light text-primary fw-bold small mb-3 border border-primary-subtle">
+                    NUEVA COLECCIÓN 2026
+                </span>
+                <h1 class="display-3 fw-bold mb-3 lh-1 text-dark" style="letter-spacing: -2px;">
+                    MÁS ONDA A TUS <span class="text-primary position-relative d-inline-block">OUTFITS
+                        <svg class="position-absolute start-0 bottom-0 w-100 text-warning" height="10" viewBox="0 0 100 10" preserveAspectRatio="none" style="z-index: -1; opacity: 0.6;">
+                            <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="8" fill="none" />
+                        </svg>
+                    </span> ⚡
+                </h1>
+                <p class="lead text-muted mb-4 pe-lg-5">
+                    Descubrí los accesorios que definen tu estilo. Gorras, lentes y medias con la mejor calidad y diseño. Envíos a todo el país.
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                    <a href="/productos" class="btn btn-fachero btn-lg px-5 shadow-lg">
+                        VER EL SHOP <i class="bi bi-arrow-right-short ms-2"></i>
+                    </a>
+                    <a href="#categorias" class="btn btn-outline-dark btn-lg px-4 rounded-pill">
+                        Categorías
+                    </a>
+                </div>
+                
+                <div class="mt-5 pt-3 d-flex align-items-center justify-content-center justify-content-lg-start gap-4 text-muted small fw-bold">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i> Calidad Premium
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-star-fill text-warning fs-5"></i> Clientes Felices
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 position-relative">
+                <!-- Abstract blobs decoration -->
+                <div class="position-absolute top-50 start-50 translate-middle w-100 h-100 bg-gradient-primary rounded-circle opacity-10 blur-3xl" style="filter: blur(60px); z-index: 0;"></div>
+                
+                <div class="position-relative z-1 row g-3">
+                    <div class="col-6 mt-5">
+                        <div class="glass-panel p-3 rounded-4 shadow-lg mb-3 hover-lift">
+                            <div class="aspect-ratio-1x1 bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-capslock fs-1 text-primary opacity-50"></i>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <h6 class="fw-bold mb-0">Gorras</h6>
+                                <small class="text-muted">Trucker &amp; Planas</small>
+                            </div>
+                        </div>
+                         <div class="glass-panel p-3 rounded-4 shadow-lg hover-lift">
+                            <div class="aspect-ratio-1x1 bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 140px;">
+                                <i class="bi bi-emoji-sunglasses fs-1 text-accent opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-panel p-3 rounded-4 shadow-lg mb-3 hover-lift">
+                            <div class="aspect-ratio-1x1 bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 140px;">
+                                <i class="bi bi-stars fs-1 text-warning opacity-50"></i>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-3 rounded-4 shadow-lg hover-lift">
+                            <div class="aspect-ratio-1x1 bg-light rounded-3 d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-eyeglasses fs-1 text-dark opacity-50"></i>
+                            </div>
+                            <div class="mt-3 text-center">
+                                <h6 class="fw-bold mb-0">Lentes</h6>
+                                <small class="text-muted">Protección UV400</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categorías Section -->
+<section id="categorias" class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold display-6 mb-2">Explorá por Categoría</h2>
+            <p class="text-muted">Encontrá justo lo que estás buscando para completar tu look.</p>
+        </div>
         
-        <!-- Decorative Circle -->
-        <div class="position-absolute top-0 start-0 translate-middle rounded-circle" 
-             style="width: 200px; height: 200px; background: var(--primary-color); opacity: 0.05;"></div>
-        <div class="position-absolute bottom-0 end-0 translate-middle rounded-circle" 
-             style="width: 300px; height: 300px; background: var(--accent-color); opacity: 0.05;"></div>
-
-        <div class="container-fluid py-4 position-relative z-1">
-            <h1 class="display-4 fw-bold text-uppercase mb-3" style="letter-spacing: -1px;">
-                Más onda a tus <span style="color: var(--primary-color);">outfits</span> ⚡
-            </h1>
-            <p class="col-md-8 fs-5 mx-auto text-dark mb-4">
-                Encontrá tu estilo con nuestras Gorras, Lentes y Medias. <br>
-                Envíos desde Adolfo Sourdeaux a todo el país.
-            </p>
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <a href="/productos" class="btn btn-fachero btn-lg px-5 rounded-pill shadow-lg">
-                    VER EL SHOP <i class="bi bi-arrow-right-short"></i>
-                </a>
-                <a href="#categorias" class="btn btn-outline-fachero btn-lg px-4 rounded-pill">
-                    Explorar
+        <div class="row g-4 justify-content-center">
+            <!-- Gorras Card -->
+            <div class="col-md-4">
+                <a href="/productos?tipo=gorra" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                    <div class="card-body p-5 text-center d-flex flex-column align-items-center">
+                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-capslock display-6"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-2">Gorras</h3>
+                        <p class="text-muted mb-4">Diseños únicos, Trucker, Visera Plana y más.</p>
+                        <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
+                    </div>
                 </a>
             </div>
-        </div>
-    </div>
 
-    <!-- Categorías -->
-    <div id="categorias" class="row g-4 mt-2">
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
-                <div class="card-body">
-                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
-                         style="width: 60px; height: 60px; background-color: var(--primary-color);">
-                        <i class="bi bi-capslock fs-3"></i>
+            <!-- Lentes Card -->
+            <div class="col-md-4">
+                <a href="/productos?tipo=lentes" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                    <div class="card-body p-5 text-center d-flex flex-column align-items-center">
+                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-accent d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-eyeglasses display-6"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-2">Lentes</h3>
+                        <p class="text-muted mb-4">Gafas de sol con estilo y protección para el verano.</p>
+                        <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
                     </div>
-                    <h4 class="fw-bold">Gorras</h4>
-                    <p class="text-muted">Trucker, Visera Plana y los mejores diseños.</p>
-                    <a href="/productos?tipo=gorra" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Gorras &rarr;</a>
-                </div>
+                </a>
+            </div>
+
+            <!-- Medias Card -->
+            <div class="col-md-4">
+                <a href="/productos?tipo=medias" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                    <div class="card-body p-5 text-center d-flex flex-column align-items-center">
+                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-dark d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-emoji-smile display-6"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-2">Medias</h3>
+                        <p class="text-muted mb-4">Comodidad y diseño en cada paso. Packs disponibles.</p>
+                        <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
+                    </div>
+                </a>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
-                <div class="card-body">
-                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
-                         style="width: 60px; height: 60px; background-color: var(--accent-color);">
-                        <i class="bi bi-eyeglasses fs-3"></i>
+    </div>
+</section>
+
+<!-- Features / Trust Section -->
+<section class="py-5">
+    <div class="container py-4">
+        <div class="glass-panel p-5 rounded-4 shadow-sm">
+            <div class="row g-4 text-center">
+                <div class="col-md-4 border-end-md">
+                    <div class="mb-3">
+                        <i class="bi bi-truck fs-1 text-primary"></i>
                     </div>
-                    <h4 class="fw-bold">Lentes</h4>
-                    <p class="text-muted">Protegé tu vista con toda la facha este verano.</p>
-                    <a href="/productos?tipo=lentes" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Lentes &rarr;</a>
+                    <h5 class="fw-bold mb-2">Envíos a todo el País</h5>
+                    <p class="text-muted small mb-0 px-lg-4">Llegamos a cada rincón de Argentina a través de Correo Argentino.</p>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100 text-center p-4 border-0 shadow-sm hover-scale">
-                <div class="card-body">
-                    <div class="icon-box mb-3 mx-auto text-white d-flex align-items-center justify-content-center rounded-circle" 
-                         style="width: 60px; height: 60px; background-color: var(--dark-color);">
-                        <i class="bi bi-emoji-smile fs-3"></i>
+                <div class="col-md-4 border-end-md">
+                    <div class="mb-3">
+                        <i class="bi bi-shield-check fs-1 text-primary"></i>
                     </div>
-                    <h4 class="fw-bold">Medias</h4>
-                    <p class="text-muted">Packs de soquetes y estilo skate para todos los días.</p>
-                    <a href="/productos?tipo=medias" class="btn btn-sm btn-link text-decoration-none text-dark fw-bold">Ver Medias &rarr;</a>
+                    <h5 class="fw-bold mb-2">Compra Segura</h5>
+                    <p class="text-muted small mb-0 px-lg-4">Tus datos están protegidos. Pagá tranquilo mediante transferencia.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <i class="bi bi-chat-heart fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Atención Personalizada</h5>
+                    <p class="text-muted small mb-0 px-lg-4">¿Tenés dudas? Escribinos por WhatsApp y te ayudamos al toque.</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Info Banner -->
-    <div class="row mt-5 py-4 g-4 text-center">
-        <div class="col-md-4">
-            <i class="bi bi-truck fs-2 text-muted"></i>
-            <h6 class="mt-2 fw-bold">Envíos a todo el país</h6>
-            <small class="text-muted">Vía MiCorreo (Correo Argentino)</small>
-        </div>
-        <div class="col-md-4">
-            <i class="bi bi-credit-card fs-2 text-muted"></i>
-            <h6 class="mt-2 fw-bold">Pagos Seguros</h6>
-            <small class="text-muted">Transferencia Bancaria</small>
-        </div>
-        <div class="col-md-4">
-            <i class="bi bi-whatsapp fs-2 text-muted"></i>
-            <h6 class="mt-2 fw-bold">Atención Personalizada</h6>
-            <small class="text-muted">Respondemos tus dudas al instante</small>
-        </div>
-    </div>
-</div>
+</section>
+
+<style>
+    @media (min-width: 768px) {
+        .border-end-md {
+            border-right: 1px solid rgba(0,0,0,0.05);
+        }
+    }
+    .blur-3xl {
+        filter: blur(60px);
+    }
+</style>
 {% endblock %}

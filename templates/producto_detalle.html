@@ -1,274 +1,265 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Navegación -->
+<div class="container my-5">
+    <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="/productos">Productos</a></li>
-            <li class="breadcrumb-item active">{{ producto.nombre }}</li>
+        <ol class="breadcrumb bg-transparent p-0 small text-uppercase fw-bold text-muted">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/productos" class="text-decoration-none text-muted">Productos</a></li>
+            <li class="breadcrumb-item active text-dark" aria-current="page">{{ producto.nombre }}</li>
         </ol>
     </nav>
 
-    <div class="row">
+    <div class="row g-5">
         <!-- Galería de Fotos -->
-        <div class="col-md-6 mb-4">
-            <div id="carousel-fotos" class="carousel slide border rounded" data-bs-ride="carousel">
-                <div class="carousel-inner bg-light p-3">
-                    {% set fotos = producto.fotos_lista() %}
-                    {% if fotos %}
-                        {% for foto in fotos %}
-                            <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                <img src="{{ url_for('imagen_producto', filename=foto) }}" 
-                                     class="d-block w-100 rounded" 
-                                     alt="{{ producto.nombre }}"
-                                     style="max-height: 500px; object-fit: contain;">
+        <div class="col-lg-7">
+            <div class="position-sticky top-0" style="z-index: 1;">
+                <div id="carousel-fotos" class="carousel slide mb-3" data-bs-ride="carousel">
+                    <div class="carousel-inner rounded-4 overflow-hidden shadow-sm bg-white">
+                        {% set fotos = producto.fotos_lista() %}
+                        {% if fotos %}
+                            {% for foto in fotos %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <div class="d-flex align-items-center justify-content-center bg-white" style="height: 500px;">
+                                        <img src="{{ url_for('imagen_producto', filename=foto) }}" 
+                                             class="d-block mw-100 mh-100" 
+                                             alt="{{ producto.nombre }}"
+                                             style="object-fit: contain;">
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="carousel-item active">
+                                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 500px;">
+                                    <i class="bi bi-camera fs-1 text-muted opacity-50"></i>
+                                </div>
                             </div>
+                        {% endif %}
+                    </div>
+
+                    {% if fotos|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-fotos" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-fotos" data-bs-slide="next">
+                        <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Miniaturas -->
+                {% if fotos|length > 1 %}
+                <div class="d-flex gap-2 overflow-auto py-2" style="scrollbar-width: thin;">
+                    {% for foto in fotos %}
+                    <div class="border rounded-3 overflow-hidden cursor-pointer opacity-75 hover-opacity-100 transition-all" 
+                         style="width: 80px; height: 80px; flex-shrink: 0;"
+                         onclick="document.querySelector('#carousel-fotos .carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
+                        <img src="{{ url_for('imagen_producto', filename=foto) }}" 
+                             class="w-100 h-100 object-fit-cover" 
+                             alt="Thumbnail">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Información del Producto -->
+        <div class="col-lg-5">
+            <div class="ps-lg-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-light text-dark border fw-normal text-uppercase tracking-wider">{{ producto.tipo }}</span>
+                    {% if producto.stock < 5 and producto.stock > 0 %}
+                        <span class="badge bg-warning text-dark"><i class="bi bi-fire me-1"></i>¡ÚLTIMOS!</span>
+                    {% endif %}
+                </div>
+
+                <h1 class="fw-bold display-6 mb-2">{{ producto.nombre }}</h1>
+
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    {% if producto.promedio_calificacion() > 0 %}
+                    <div class="d-flex align-items-center text-warning small">
+                        {% for i in range(producto.promedio_calificacion()|round|int) %}
+                            <i class="bi bi-star-fill"></i>
                         {% endfor %}
+                        <span class="text-muted ms-2 text-decoration-underline text-dark" style="font-size: 0.85rem;">{{ producto.resenas|length }} Opiniones</span>
+                    </div>
                     {% else %}
-                        <div class="carousel-item active">
-                            <div class="d-flex align-items-center justify-content-center" style="height: 500px;">
-                                <span class="text-muted">Sin imágenes disponibles</span>
+                    <span class="text-muted small">Sin opiniones aún</span>
+                    {% endif %}
+                </div>
+                
+                <h2 class="fw-bold text-primary mb-4 display-6">${{ "%.2f"|format(producto.precio) }}</h2>
+
+                {% if producto.descripcion %}
+                <p class="text-muted lead fs-6 mb-5">{{ producto.descripcion }}</p>
+                {% endif %}
+
+                <!-- Action Box -->
+                <div class="p-4 bg-light rounded-4 border mb-4">
+                    {% if producto.stock > 0 %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold">Cantidad</span>
+                            <div class="input-group w-auto bg-white rounded-pill border">
+                                <button class="btn btn-link text-dark text-decoration-none px-3" type="button" onclick="disminuirCantidad()">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" id="cantidad-detalle" class="form-control border-0 text-center bg-transparent p-0 fw-bold" 
+                                       style="width: 50px;" value="1" min="1" max="{{ producto.stock }}">
+                                <button class="btn btn-link text-dark text-decoration-none px-3" type="button" onclick="aumentarCantidad()">
+                                    <i class="bi bi-plus"></i>
+                                </button>
                             </div>
+                        </div>
+
+                        <button class="btn btn-fachero btn-lg w-100 shadow-sm mb-3 rounded-pill py-3 fw-bold" 
+                                onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                            AGREGAR AL CARRITO <i class="bi bi-bag-plus ms-2"></i>
+                        </button>
+                        
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                            <i class="bi bi-check-circle-fill text-success"></i> Stock disponible: {{ producto.stock }} unidades
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <h5 class="text-danger fw-bold mb-2">Producto Agotado</h5>
+                            <p class="text-muted small mb-0">Dejanos tu email para avisarte cuando vuelva.</p>
+                            <!-- Fake subscribe form could go here -->
                         </div>
                     {% endif %}
                 </div>
 
-                {% if fotos|length > 1 %}
-                <button class="carousel-control-prev" type="button" data-bs-target="#carousel-fotos" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carousel-fotos" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                </button>
-                {% endif %}
-            </div>
-
-            <!-- Miniaturas -->
-            {% if fotos|length > 1 %}
-            <div class="row mt-3 g-2">
-                {% for foto in fotos %}
-                <div class="col-auto">
-                    <img src="{{ url_for('imagen_producto', filename=foto) }}" 
-                         class="img-thumbnail cursor-pointer" 
-                         alt="{{ producto.nombre }}"
-                         style="width: 80px; height: 80px; object-fit: contain; cursor: pointer;"
-                         onclick="document.querySelector('#carousel-fotos').querySelector('.carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Información del Producto -->
-        <div class="col-md-6">
-            <h1 class="fw-bold mb-2">{{ producto.nombre }}</h1>
-
-            <!-- Tipo -->
-            <div class="mb-3 d-flex align-items-center gap-2">
-                <span class="badge bg-secondary" style="font-size: 0.9rem;">{{ producto.tipo|upper }}</span>
-                
-                {% if producto.promedio_calificacion() > 0 %}
-                <div class="text-warning">
-                    {% for i in range(producto.promedio_calificacion()|round|int) %}
-                        <i class="bi bi-star-fill"></i>
-                    {% endfor %}
-                    <span class="text-muted ms-1 small">({{ producto.resenas|length }})</span>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Descripción -->
-            {% if producto.descripcion %}
-            <p class="text-muted mb-4">{{ producto.descripcion }}</p>
-            {% endif %}
-
-            <!-- Precio y Stock -->
-            <div class="card bg-light border-0 p-4 mb-4">
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Precio</p>
-                        <h3 class="fw-bold text-success mb-0">${{ "%.2f"|format(producto.precio) }}</h3>
+                <div class="d-flex gap-4 small text-muted justify-content-center justify-content-lg-start border-top pt-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-truck fs-5"></i> Envíos a todo el país
                     </div>
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Stock Disponible</p>
-                        {% if producto.stock > 0 %}
-                            <h3 class="fw-bold text-primary mb-0">{{ producto.stock }} unidades</h3>
-                        {% else %}
-                            <h3 class="fw-bold text-danger mb-0">Sin stock</h3>
-                        {% endif %}
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check fs-5"></i> Garantía de Calidad
                     </div>
                 </div>
             </div>
-
-            <!-- Selector de Cantidad y Botón Agregar -->
-            {% if producto.stock > 0 %}
-            <div class="mb-4">
-                <label class="form-label fw-bold">Cantidad</label>
-                <div class="input-group mb-3">
-                    <button class="btn btn-outline-secondary" type="button" onclick="disminuirCantidad()">
-                        <i class="bi bi-dash"></i>
-                    </button>
-                    <input type="number" id="cantidad-detalle" class="form-control text-center" value="1" min="1" max="{{ producto.stock }}">
-                    <button class="btn btn-outline-secondary" type="button" onclick="aumentarCantidad()">
-                        <i class="bi bi-plus"></i>
-                    </button>
-                </div>
-                <small class="text-muted">Máximo disponible: {{ producto.stock }} unidades</small>
-            </div>
-
-            <button class="btn btn-fachero btn-lg w-100 mb-3" 
-                    onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
-                <i class="bi bi-bag-plus-fill"></i> AGREGAR AL CARRITO
-            </button>
-
-            <a href="/productos" class="btn btn-outline-secondary btn-lg w-100">
-                <i class="bi bi-arrow-left"></i> Volver a Productos
-            </a>
-            {% else %}
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-triangle"></i> Este producto no tiene stock disponible
-            </div>
-            <a href="/productos" class="btn btn-outline-secondary btn-lg w-100">
-                <i class="bi bi-arrow-left"></i> Volver a Productos
-            </a>
-            {% endif %}
         </div>
     </div>
 
     <!-- Reseñas -->
-    <div class="mt-5 pt-5 border-top">
-        <h4 class="fw-bold mb-4">Opiniones de Clientes</h4>
-        
-        <div class="row">
-            <div class="col-md-5 mb-4">
-                <div class="bg-light p-4 rounded">
-                    <h5 class="fw-bold mb-3">Dejanos tu opinión</h5>
+    <div class="row mt-5 pt-5">
+        <div class="col-lg-8 mx-auto">
+            <h3 class="fw-bold text-center mb-5">Lo que dicen nuestros clientes</h3>
+            
+            <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+                <div class="card-header bg-white border-bottom p-4">
+                    <h5 class="fw-bold mb-0">Escribí tu opinión</h5>
+                </div>
+                <div class="card-body p-4">
                     <form action="/api/productos/{{ producto.id }}/resenas" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small text-muted">Nombre</label>
-                            <input type="text" name="nombre" class="form-control" required placeholder="Tu nombre">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small text-muted">Calificación</label>
-                            <div class="rating-css">
-                                <div class="star-icon">
-                                    <input type="radio" name="calificacion" value="5" id="rating5" checked>
-                                    <label for="rating5" class="bi bi-star-fill"></label>
-                                    <input type="radio" name="calificacion" value="4" id="rating4">
-                                    <label for="rating4" class="bi bi-star-fill"></label>
-                                    <input type="radio" name="calificacion" value="3" id="rating3">
-                                    <label for="rating3" class="bi bi-star-fill"></label>
-                                    <input type="radio" name="calificacion" value="2" id="rating2">
-                                    <label for="rating2" class="bi bi-star-fill"></label>
-                                    <input type="radio" name="calificacion" value="1" id="rating1">
-                                    <label for="rating1" class="bi bi-star-fill"></label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold text-uppercase">Nombre</label>
+                                <input type="text" name="nombre" class="form-control bg-light border-0" required placeholder="Tu nombre">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted fw-bold text-uppercase">Calificación</label>
+                                <div class="rating-css mt-1">
+                                    <div class="star-icon">
+                                        <input type="radio" name="calificacion" value="5" id="rating5" checked>
+                                        <label for="rating5" class="bi bi-star-fill"></label>
+                                        <input type="radio" name="calificacion" value="4" id="rating4">
+                                        <label for="rating4" class="bi bi-star-fill"></label>
+                                        <input type="radio" name="calificacion" value="3" id="rating3">
+                                        <label for="rating3" class="bi bi-star-fill"></label>
+                                        <input type="radio" name="calificacion" value="2" id="rating2">
+                                        <label for="rating2" class="bi bi-star-fill"></label>
+                                        <input type="radio" name="calificacion" value="1" id="rating1">
+                                        <label for="rating1" class="bi bi-star-fill"></label>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted fw-bold text-uppercase">Comentario</label>
+                                <textarea name="comentario" class="form-control bg-light border-0" rows="3" required placeholder="Contanos tu experiencia..."></textarea>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-dark px-4 rounded-pill">Publicar</button>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label small text-muted">Comentario</label>
-                            <textarea name="comentario" class="form-control" rows="3" required placeholder="¿Qué te pareció el producto?"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-dark w-100">Publicar Opinión</button>
                     </form>
                 </div>
             </div>
 
-            <div class="col-md-7">
-                {% if producto.resenas %}
-                    <div class="d-flex align-items-center mb-4">
-                        <h1 class="fw-bold mb-0 me-2">{{ producto.promedio_calificacion() }}</h1>
-                        <div class="text-warning">
-                            {% for i in range(producto.promedio_calificacion()|round|int) %}
-                                <i class="bi bi-star-fill"></i>
-                            {% endfor %}
-                        </div>
-                        <span class="text-muted ms-2">({{ producto.resenas|length }} opiniones)</span>
-                    </div>
-
-                    <div class="list-group list-group-flush">
-                        {% for resena in producto.resenas|reverse %}
-                        <div class="list-group-item border-0 px-0 py-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <h6 class="fw-bold mb-0">{{ resena.nombre_cliente }}</h6>
-                                <small class="text-muted">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
+            {% if producto.resenas %}
+                <div class="d-flex flex-column gap-3">
+                    {% for resena in producto.resenas|reverse %}
+                    <div class="card border-0 bg-light rounded-4 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="d-flex align-items-center justify-content-center rounded-circle bg-dark text-white fw-bold" style="width: 40px; height: 40px;">
+                                    {{ resena.nombre_cliente[:1]|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ resena.nombre_cliente }}</h6>
+                                    <div class="text-warning small">
+                                        {% for i in range(resena.calificacion) %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-warning mb-2 small">
-                                {% for i in range(resena.calificacion) %}
-                                    <i class="bi bi-star-fill"></i>
-                                {% endfor %}
-                            </div>
-                            <p class="mb-0 text-muted">{{ resena.comentario }}</p>
+                            <small class="text-muted">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
                         </div>
-                        {% endfor %}
+                        <p class="mb-0 text-muted ps-5 ms-2">{{ resena.comentario }}</p>
                     </div>
-                {% else %}
-                    <div class="text-center py-5 text-muted">
-                        <i class="bi bi-chat-square-quote fs-1 mb-2 d-block"></i>
-                        <p>Todavía no hay opiniones. ¡Sé el primero!</p>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="d-inline-block p-3 rounded-circle bg-light mb-3">
+                        <i class="bi bi-chat-heart fs-1 text-muted opacity-50"></i>
                     </div>
-                {% endif %}
-            </div>
+                    <p class="text-muted">Todavía no hay opiniones. ¡Sé el primero en comentar!</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
     <!-- Productos Relacionados -->
     <div class="mt-5 pt-5 border-top">
-        <h4 class="fw-bold mb-4">Productos Similares</h4>
-        <div class="row g-3">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">También te puede gustar</h3>
+            <a href="/productos" class="btn btn-outline-dark rounded-pill btn-sm px-3">Ver todo</a>
+        </div>
+        
+        <div class="row g-4">
             {% set productos_relacionados = query_productos_por_tipo(producto.tipo, producto.id) %}
             {% if productos_relacionados %}
                 {% for prod in productos_relacionados[:4] %}
-                <div class="col-md-3 col-sm-6">
-                    <div class="card h-100 shadow-sm border-0 transition-card">
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px; overflow: hidden;">
-                            {% if prod.primera_foto() %}
-                                <img src="{{ url_for('imagen_producto', filename=prod.primera_foto()) }}" 
-                                     class="img-fluid" alt="{{ prod.nombre }}" style="max-height: 100%; object-fit: contain;">
-                            {% else %}
-                                <span class="text-muted">Sin foto</span>
-                            {% endif %}
+                <div class="col-md-3 col-6">
+                    <div class="card h-100 border-0 shadow-sm product-card hover-lift">
+                         <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
+                            <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
+                                {% if prod.primera_foto() %}
+                                    <img src="{{ url_for('imagen_producto', filename=prod.primera_foto()) }}" 
+                                         class="img-fluid mh-100 mw-100 p-3" alt="{{ prod.nombre }}">
+                                {% else %}
+                                    <span class="text-muted small">Sin foto</span>
+                                {% endif %}
+                            </a>
                         </div>
-                        <div class="card-body">
-                            <h6 class="card-title fw-bold">{{ prod.nombre }}</h6>
-                            <p class="text-muted small mb-2">{{ prod.descripcion[:50] }}...</p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-success">${{ "%.2f"|format(prod.precio) }}</span>
-                                <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> Ver
-                                </a>
-                            </div>
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold text-truncate mb-1"><a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
+                            <p class="fw-bold text-primary mb-0">${{ "%.0f"|format(prod.precio) }}</p>
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="col-12">
-                    <p class="text-muted text-center">No hay productos similares disponibles</p>
+                <div class="col-12 text-center text-muted">
+                    No hay productos similares disponibles en este momento.
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
-
-<style>
-    .transition-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .transition-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    }
-    .img-thumbnail {
-        border: 2px solid #ddd;
-        padding: 5px;
-    }
-    .img-thumbnail:hover {
-        border-color: #4f5d2f;
-    }
-</style>
 
 <script>
     function agregarAlCarritoDetalle(id, nombre, precio) {
@@ -279,19 +270,19 @@
             return;
         }
         
-        // Llamar a la función original modificando temporalmente el input de cantidad
-        const inputCantidad = document.getElementById('cantidad-' + id);
-        const inputDetalle = document.getElementById('cantidad-detalle');
-        
-        // Crear un input temporal con la cantidad del detalle
+        // Crear un input temporal para simular la estructura que espera la función global
         const tempInput = document.createElement('input');
         tempInput.id = 'cantidad-' + id;
         tempInput.value = cantidad;
         document.body.appendChild(tempInput);
         
-        // Llamar a agregarAlCarrito
-        agregarAlCarrito(id, nombre, precio);
-        
+        // Llamar a agregarAlCarrito (definida en main.js/base)
+        if(typeof agregarAlCarrito === 'function') {
+             agregarAlCarrito(id, nombre, precio);
+        } else {
+            console.error("Función agregarAlCarrito no encontrada");
+        }
+       
         // Limpiar
         document.body.removeChild(tempInput);
     }
