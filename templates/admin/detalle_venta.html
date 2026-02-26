@@ -47,6 +47,7 @@
                             <select name="estado" class="form-select fw-bold" id="selectEstado" onchange="toggleEnvioFields()">
                                 <option value="Pendiente" {% if pedido.estado == 'Pendiente' %}selected{% endif %} {% if pedido.estado in ['Enviado', 'Entregado'] %}disabled{% endif %}>Pendiente</option>
                                 <option value="En Aprobación" {% if pedido.estado == 'En Aprobación' %}selected{% endif %} {% if pedido.estado in ['Enviado', 'Entregado'] %}disabled{% endif %}>En Aprobación</option>
+                                <option value="Aprobado" {% if pedido.estado == 'Aprobado' %}selected{% endif %} {% if pedido.estado in ['Enviado', 'Entregado'] %}disabled{% endif %}>Aprobado (Pagado)</option>
                                 <option value="Enviado" {% if pedido.estado == 'Enviado' %}selected{% endif %}>Enviado</option>
                                 <option value="Entregado" {% if pedido.estado == 'Entregado' %}selected{% endif %}>Entregado</option>
                                 <option value="Cancelado" {% if pedido.estado == 'Cancelado' %}selected{% endif %}>Cancelado</option>

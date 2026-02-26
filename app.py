@@ -1163,59 +1163,7 @@ def mp_success():
         pedido.estado = 'Aprobado'
         db.session.commit()
         
-        # Enviar mail de confirmación
-        try:
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(MI_EMAIL, MI_PASSWORD)
-            
-            # Cargar logo
-            logo_data = None
-            try:
-                with open("static/img/logo.png", "rb") as f_logo:
-                    logo_data = f_logo.read()
-            except: pass
-            
-            cuerpo_html = f"""
-            <html>
-              <body style="font-family:Arial,Helvetica,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
-                <table width="600" align="center" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                  <tr>
-                    <td style="background:#4f5d2f;color:#fff;padding:20px;text-align:center;">
-                        <h2>¡Pago Recibido! 🎉</h2>
-                        <p>Pedido #{pedido.id}</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:20px;">
-                        <p>Hola <strong>{pedido.nombre_cliente}</strong>,</p>
-                        <p>Hemos recibido tu pago correctamente a través de Mercado Pago.</p>
-                        <p><strong>ID de pago:</strong> {payment_id}</p>
-                        <p>Prepararemos tu pedido a la brevedad.</p>
-                        <p>¡Gracias por tu compra!</p>
-                    </td>
-                  </tr>
-                </table>
-              </body>
-            </html>
-            """
-            
-            msg = MIMEMultipart('related')
-            msg['Subject'] = f"Pago Recibido - Pedido #{pedido.id}"
-            msg['To'] = pedido.email_cliente
-            msg['From'] = MI_EMAIL
-            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
-            
-            if logo_data:
-                img = MIMEImage(logo_data)
-                img.add_header('Content-ID', '<logo_estilo>')
-                img.add_header('Content-Disposition', 'inline', filename="logo.png")
-                msg.attach(img)
-                
-            server.send_message(msg)
-            server.quit()
-        except Exception as e:
-            print(f"Error enviando mail MP Success: {e}")
+        enviar_mail_confirmacion_pago(pedido, payment_id)
 
     return render_template('success.html', 
                          datos={"banco": "Mercado Pago", "alias": "-", "titular": "-"}, 
