@@ -7,22 +7,35 @@
             <div class="mb-4">
                 <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
             </div>
-            <h2 class="fw-bold">¡Pedido Recibido!</h2>
-            <p class="text-muted">Te enviamos un mail con el detalle. Para confirmar, por favor realizá el pago:</p>
-            
-            <div class="alert alert-secondary mt-4">
-                <h4 class="fw-bold mb-3">Total a Pagar: ${{ total }}</h4>
-                <ul class="list-unstyled mb-0">
-                    <li><strong>Banco:</strong> {{ datos.banco }}</li>
-                    <li><strong>Alias:</strong> <span class="badge bg-dark fs-6">{{ datos.alias }}</span></li>
-                    <li><strong>Titular:</strong> {{ datos.titular }}</li>
-                </ul>
-            </div>
 
-            <p class="small mt-3">Una vez transferido, enviá el comprobante:</p>
-            <a href="{{ whatsapp_link }}" class="btn btn-success fw-bold">
-                <i class="bi bi-whatsapp"></i> Enviar Comprobante por WhatsApp
-            </a>
+            {% if pagado %}
+                <h2 class="fw-bold">¡Pago Exitoso!</h2>
+                <p class="text-muted">Tu pago fue procesado correctamente.</p>
+                {% if payment_id %}
+                    <p class="small text-muted">ID de pago: {{ payment_id }}</p>
+                {% endif %}
+                <div class="alert alert-success mt-4">
+                    <h4 class="fw-bold mb-0">Total Pagado: ${{ total }}</h4>
+                </div>
+                <p class="mt-3">Te enviamos un email con los detalles de tu compra.</p>
+            {% else %}
+                <h2 class="fw-bold">¡Pedido Recibido!</h2>
+                <p class="text-muted">Te enviamos un mail con el detalle. Para confirmar, por favor realizá el pago:</p>
+                
+                <div class="alert alert-secondary mt-4">
+                    <h4 class="fw-bold mb-3">Total a Pagar: ${{ total }}</h4>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Banco:</strong> {{ datos.banco }}</li>
+                        <li><strong>Alias:</strong> <span class="badge bg-dark fs-6">{{ datos.alias }}</span></li>
+                        <li><strong>Titular:</strong> {{ datos.titular }}</li>
+                    </ul>
+                </div>
+
+                <p class="small mt-3">Una vez transferido, enviá el comprobante:</p>
+                <a href="{{ whatsapp_link }}" class="btn btn-success fw-bold">
+                    <i class="bi bi-whatsapp"></i> Enviar Comprobante por WhatsApp
+                </a>
+            {% endif %}
             
             <div class="mt-4">
                 <a href="/" class="btn btn-link text-muted">Volver al inicio</a>

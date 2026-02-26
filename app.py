@@ -15,6 +15,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 from uuid import uuid4
 from dotenv import load_dotenv
+import mercadopago
 
 from sqlalchemy import func
 from extensions import db, login_manager
@@ -22,6 +23,10 @@ from models import ProductoImagen, TipoEnvio, Producto, Admin, Pedido, DetallePe
 
 # Cargar variables de entorno desde archivo .env
 load_dotenv()
+
+# Configuración Mercado Pago
+mp_access_token = os.getenv('MERCADOPAGO_ACCESS_TOKEN')
+sdk = mercadopago.SDK(mp_access_token) if mp_access_token else None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -193,6 +198,7 @@ def checkout():
         telefono_cliente = request.form.get('telefono')
         direccion_cliente = request.form.get('direccion')
         cp_cliente = request.form.get('cp')
+        metodo_pago = request.form.get('metodo_pago') or 'transferencia'
 
         envio_tipo = request.form.get('envio_tipo') or ""
         envio_nombre = request.form.get('envio_nombre') or ""
@@ -254,7 +260,8 @@ def checkout():
             envio_nombre=envio_nombre,
             envio_precio=envio_precio,
             total_productos=total_productos,
-            total=total
+            total=total,
+            metodo_pago=metodo_pago
         )
         
         # Agregar detalles del pedido
@@ -269,7 +276,69 @@ def checkout():
         
         db.session.add(pedido)
         db.session.commit()  # Guardar el pedido
-        
+
+        # --- MERCADO PAGO ---
+        if metodo_pago == 'mercadopago' and sdk:
+            items_mp = []
+            for item in carrito:
+                items_mp.append({
+                    "id": str(item.get('id')),
+                    "title": item.get('nombre'),
+                    "quantity": int(item.get('cantidad', 1)),
+                    "unit_price": float(item.get('precio')),
+                    "currency_id": "ARS"
+                })
+            
+            # Agregar envío como item si existe
+            if envio_precio > 0:
+                items_mp.append({
+                    "title": f"Envío: {envio_nombre}",
+                    "quantity": 1,
+                    "unit_price": float(envio_precio),
+                    "currency_id": "ARS"
+                })
+
+            preference_data = {
+                "items": items_mp,
+                "payer": {
+                    "name": nombre,
+                    "email": email_cliente,
+                    "phone": {
+                        "area_code": "",
+                        "number": telefono_cliente or ""
+                    },
+                    "address": {
+                        "street_name": direccion_cliente or "",
+                        "zip_code": cp_cliente or ""
+                    }
+                },
+                "back_urls": {
+                    "success": url_for('mp_success', _external=True, _scheme='https'),
+                    "failure": url_for('mp_failure', _external=True, _scheme='https'),
+                    "pending": url_for('mp_pending', _external=True, _scheme='https')
+                },
+                "auto_return": "approved",
+                "external_reference": str(pedido.id)
+            }
+
+            try:
+                preference_response = sdk.preference().create(preference_data)
+                print(f"MP Response Status: {preference_response.get('status')}")
+                if preference_response.get('status') != 201:
+                    print(f"MP Error Details: {preference_response}")
+                    
+                preference = preference_response["response"]
+                if "init_point" not in preference:
+                    print(f"Error: init_point no encontrado en respuesta MP: {preference}")
+                    flash("Error al generar el pago. Por favor verificá tus datos.", "error")
+                    return redirect(url_for('cart'))
+                    
+                return redirect(preference["init_point"])
+            except Exception as e:
+                print(f"Error EXCEPCIÓN creando preferencia MP: {e}")
+                flash("Hubo un error al conectar con Mercado Pago. Intentá de nuevo o elegí transferencia.", "error")
+                return redirect(url_for('cart'))
+
         datos_vendedor = {
             "banco": "Mercado Pago",
             "alias": "ESTILO.FACHERO",
@@ -1075,6 +1144,96 @@ def api_productos():
     return jsonify([p.to_dict() for p in productos])
 
 
+# --- RUTAS RETORNO MERCADO PAGO ---
+@app.route('/mp/success')
+def mp_success():
+    external_reference = request.args.get('external_reference')
+    payment_id = request.args.get('payment_id')
+    
+    if not external_reference:
+        return redirect(url_for('home'))
+        
+    pedido = Pedido.query.get(external_reference)
+    if not pedido:
+        return redirect(url_for('home'))
+        
+    # Actualizar pedido
+    if not pedido.pagado:
+        pedido.pagado = True
+        pedido.estado = 'Aprobado'
+        db.session.commit()
+        
+        # Enviar mail de confirmación
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(MI_EMAIL, MI_PASSWORD)
+            
+            # Cargar logo
+            logo_data = None
+            try:
+                with open("static/img/logo.png", "rb") as f_logo:
+                    logo_data = f_logo.read()
+            except: pass
+            
+            cuerpo_html = f"""
+            <html>
+              <body style="font-family:Arial,Helvetica,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
+                <table width="600" align="center" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                  <tr>
+                    <td style="background:#4f5d2f;color:#fff;padding:20px;text-align:center;">
+                        <h2>¡Pago Recibido! 🎉</h2>
+                        <p>Pedido #{pedido.id}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:20px;">
+                        <p>Hola <strong>{pedido.nombre_cliente}</strong>,</p>
+                        <p>Hemos recibido tu pago correctamente a través de Mercado Pago.</p>
+                        <p><strong>ID de pago:</strong> {payment_id}</p>
+                        <p>Prepararemos tu pedido a la brevedad.</p>
+                        <p>¡Gracias por tu compra!</p>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+            </html>
+            """
+            
+            msg = MIMEMultipart('related')
+            msg['Subject'] = f"Pago Recibido - Pedido #{pedido.id}"
+            msg['To'] = pedido.email_cliente
+            msg['From'] = MI_EMAIL
+            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
+            
+            if logo_data:
+                img = MIMEImage(logo_data)
+                img.add_header('Content-ID', '<logo_estilo>')
+                img.add_header('Content-Disposition', 'inline', filename="logo.png")
+                msg.attach(img)
+                
+            server.send_message(msg)
+            server.quit()
+        except Exception as e:
+            print(f"Error enviando mail MP Success: {e}")
+
+    return render_template('success.html', 
+                         datos={"banco": "Mercado Pago", "alias": "-", "titular": "-"}, 
+                         total=pedido.total,
+                         pagado=True,
+                         payment_id=payment_id,
+                         whatsapp_link=WHATSAPP_LINK,
+                         whatsapp_numero=WHATSAPP_NUMERO)
+
+@app.route('/mp/failure')
+def mp_failure():
+    return render_template('failure.html')
+
+@app.route('/mp/pending')
+def mp_pending():
+    return render_template('pending.html')
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -1088,6 +1247,7 @@ if __name__ == '__main__':
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS codigo_seguimiento VARCHAR(100)"))
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS link_seguimiento VARCHAR(300)"))
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_envio VARCHAR(100)"))
+                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(50) DEFAULT 'transferencia'"))
                 connection.commit()
                 print("Base de datos actualizada: Columnas nuevas verificadas.")
         except Exception as e:

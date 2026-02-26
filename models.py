@@ -109,6 +109,7 @@ class Pedido(db.Model):
     pagado = db.Column(db.Boolean, default=False)
     codigo_seguimiento = db.Column(db.String(100))
     empresa_envio = db.Column(db.String(100))
+    metodo_pago = db.Column(db.String(50), default='transferencia')
 
     detalles = db.relationship('DetallePedido', backref='pedido', lazy=True, cascade='all, delete-orphan')
 
