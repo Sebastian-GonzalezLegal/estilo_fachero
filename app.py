@@ -73,14 +73,14 @@ class SecureIPv4SMTP(smtplib.SMTP_SSL):
     Subclase de SMTP_SSL para forzar la conexión a través de IPv4 
     y verificar correctamente el certificado SSL usando el hostname original.
     """
-    def connect(self, host='localhost', port=0, source_address=None):
-        self.sock = socket.create_connection((host, port), self.timeout, source_address)
-        self.sock = self.context.wrap_socket(self.sock, server_hostname="smtp.gmail.com")
-        self.file = None
-        (code, msg) = self.getreply()
-        if self.debuglevel > 0:
-            self._print_debug('connect:', repr(msg))
-        return (code, msg)
+def connect(self, host='localhost', port=0, source_address=None):
+    self.sock = socket.create_connection((host, port), self.timeout, source_address)
+    self.sock = self.context.wrap_socket(self.sock, server_hostname="smtp.gmail.com")
+    self.file = None
+    (code, msg) = self.getreply()
+    if self.debuglevel > 0:
+        self._print_debug('connect:', repr(msg))
+    return (code, msg)
 
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
