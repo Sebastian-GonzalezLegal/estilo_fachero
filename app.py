@@ -199,7 +199,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
     try:
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        server = smtplib.SMTP_SSL(ipv4_address, 465)
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
