@@ -1170,6 +1170,79 @@ def api_productos():
     return jsonify([p.to_dict() for p in productos])
 
 
+def enviar_mail_confirmacion_pago(pedido, payment_id):
+    import threading
+    def _enviar():
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(MI_EMAIL, MI_PASSWORD)
+
+            logo_data = None
+            try:
+                with open("static/img/logo.png", "rb") as f_logo:
+                    logo_data = f_logo.read()
+            except Exception as e_logo:
+                print(f"No se pudo cargar el logo: {e_logo}")
+
+            cuerpo_html = f"""
+            <html>
+              <body style="font-family:Arial,Helvetica,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
+                <table width="600" align="center" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                  <tr>
+                    <td style="background:#4f5d2f;color:#ffffff;padding:16px 24px;border-bottom:4px solid #4F5D2F;">
+                      <table width="100%" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td align="left" style="vertical-align:middle;">
+                            <h2 style="margin:0;font-size:18px;">¡Pago Confirmado! ✅</h2>
+                          </td>
+                          <td align="right" style="vertical-align:middle;">
+                            <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:24px;color:#111827;">
+                      <p>Hola <strong>{pedido.nombre_cliente}</strong>,</p>
+                      <p>Recibimos exitosamente tu pago por <strong>Mercado Pago</strong> para el pedido <strong>#{pedido.id}</strong>.</p>
+                      
+                      <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
+                        <h3 style="margin-top:0;font-size:16px;">Detalles del Pago</h3>
+                        <p style="margin:5px 0;"><strong>ID de Pago:</strong> {payment_id}</p>
+                        <p style="margin:5px 0;"><strong>Total pagado:</strong> ${pedido.total}</p>
+                      </div>
+
+                      <p>Pronto estaremos preparando tu pedido para el envío o retiro.</p>
+                      <p>¡Gracias por elegir Estilo Fachero!</p>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+            </html>
+            """
+
+            msg = MIMEMultipart('related')
+            msg['Subject'] = f"Pago confirmado - Pedido #{pedido.id}"
+            msg['To'] = pedido.email_cliente
+            msg['From'] = MI_EMAIL
+            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
+            
+            if logo_data:
+                img = MIMEImage(logo_data)
+                img.add_header('Content-ID', '<logo_estilo>')
+                img.add_header('Content-Disposition', 'inline', filename="logo.png")
+                msg.attach(img)
+
+            server.send_message(msg)
+            server.quit()
+        except Exception as e:
+            print(f"Error enviando mail confirmación pago: {e}")
+
+    threading.Thread(target=_enviar).start()
+
+
 # --- RUTAS RETORNO MERCADO PAGO ---
 @app.route('/mp/success')
 def mp_success():
