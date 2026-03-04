@@ -1,14 +1,17 @@
 import base64
 import math
 import os
+import smtplib
 import time
 import urllib.error
 import urllib.request
 import threading
 from datetime import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from io import BytesIO
 import ssl
-import resend
 from flask import Flask, render_template, request, json, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
@@ -62,8 +65,6 @@ login_manager.login_message_category = 'info'
 # --- CONFIGURACIÓN ---
 MI_EMAIL = "seba10gl1@gmail.com"
 MI_PASSWORD = "tfxb osfn jrrm xfyq"
-
-resend.api_key = os.getenv('RESEND_API_KEY')
 
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
