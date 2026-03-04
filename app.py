@@ -199,7 +199,8 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
     try:
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP(ipv4_address, 587)
+        server.starttls()
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
@@ -720,7 +721,8 @@ def enviar_mail_despacho(pedido):
     try:
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        server = smtplib.SMTP_SSL(ipv4_address, 465)
+        server = smtplib.SMTP(ipv4_address, 587)
+        server.starttls()
         server.login(MI_EMAIL, MI_PASSWORD)
 
         logo_data = None
@@ -1189,12 +1191,13 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             
             import socket
             ipv4_address = socket.gethostbyname('smtp.gmail.com')
-            # Usamos SMTP_SSL en el puerto 465 directo (evita bloqueos de Render al puerto 587)
-            server = smtplib.SMTP_SSL(ipv4_address, 465)
+            # Usamos SMTP en el puerto 587 directo usando la IP (evita bloqueos de IPv6 en Render)
+            server = smtplib.SMTP(ipv4_address, 587)
+            server.starttls()
             server.login(MI_EMAIL, MI_PASSWORD)
             
             with open("mail_debug.log", "a") as f_log:
-                f_log.write("Login SMTP_SSL exitoso\n")
+                f_log.write("Login SMTP exitoso\n")
 
             logo_data = None
             try:
