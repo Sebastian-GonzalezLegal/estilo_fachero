@@ -6,6 +6,7 @@ import time
 import urllib.error
 import urllib.request
 import threading
+import requests
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -64,7 +65,7 @@ login_manager.login_message_category = 'info'
 
 # --- CONFIGURACIÓN ---
 MI_EMAIL = "seba10gl1@gmail.com"
-MI_PASSWORD = "tfxb osfn jrrm xfyq"
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUJLNZH593kh-5hjdViRXnvusZvmyRhpGznY4XIVYDGc98TdTN1Imh9tyMKjFbPZ1I/exec"
 
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
@@ -351,42 +352,22 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
         </html>
         """
 
-        # -------- Construir mensajes SMTPLIB --------
-        msg_cliente = MIMEMultipart('related')
-        msg_cliente['Subject'] = "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago"
-        msg_cliente['To'] = email_cliente
-        msg_cliente['From'] = MI_EMAIL
-        msg_cliente.attach(MIMEText(cuerpo_cliente_html, 'html', 'utf-8'))
+        # -------- Enviar peticiones HTTPS al Webhook de Google Apps Script --------
+        # Mail al Cliente
+        payload_cliente = {
+            "to": email_cliente,
+            "subject": "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago",
+            "htmlBody": cuerpo_cliente_html
+        }
+        requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload_cliente)
 
-        msg_vendedor = MIMEMultipart('related')
-        msg_vendedor['Subject'] = f"¡NUEVA VENTA! - {nombre}"
-        msg_vendedor['To'] = MI_EMAIL
-        msg_vendedor['From'] = MI_EMAIL
-        msg_vendedor.attach(MIMEText(cuerpo_vendedor_html, 'html', 'utf-8'))
-
-        # Intentar adjuntar logo si existe
-        logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
-        logo_data = None
-        if os.path.exists(logo_path):
-            with open(logo_path, 'rb') as f:
-                logo_data = f.read()
-
-        if logo_data:
-            img_c = MIMEImage(logo_data)
-            img_c.add_header('Content-ID', '<logo_estilo>')
-            img_c.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg_cliente.attach(img_c)
-            
-            img_v = MIMEImage(logo_data)
-            img_v.add_header('Content-ID', '<logo_estilo>')
-            img_v.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg_vendedor.attach(img_v)
-
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(MI_EMAIL, MI_PASSWORD)
-            server.send_message(msg_cliente)
-            server.send_message(msg_vendedor)
+        # Mail al Vendedor (Tu aviso)
+        payload_vendedor = {
+            "to": MI_EMAIL,
+            "subject": f"¡NUEVA VENTA! - {nombre}",
+            "htmlBody": cuerpo_vendedor_html
+        }
+        requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload_vendedor)
 
     except Exception as e:
         print(f"Error en mails: {e}")
@@ -753,29 +734,13 @@ def enviar_mail_despacho(pedido):
           </body>
         </html>
         """
-        msg = MIMEMultipart('related')
-        msg['Subject'] = f"Tu pedido #{pedido.id} ha sido enviado"
-        msg['To'] = pedido.email_cliente
-        msg['From'] = MI_EMAIL
-        msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
-        
-        logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
-        logo_data = None
-        if os.path.exists(logo_path):
-            with open(logo_path, 'rb') as f:
-                logo_data = f.read()
-                
-        if logo_data:
-            img = MIMEImage(logo_data)
-            img.add_header('Content-ID', '<logo_estilo>')
-            img.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg.attach(img)
-            
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(MI_EMAIL, MI_PASSWORD)
-            server.send_message(msg)
-        return True
+        payload = {
+            "to": pedido.email_cliente,
+            "subject": f"Tu pedido #{pedido.id} ha sido enviado",
+            "htmlBody": cuerpo_html
+        }
+        r = requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload)
+        return r.status_code == 200
     except Exception as e:
         print(f"Error enviando mail despacho: {e}")
         return False
@@ -1217,28 +1182,12 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             </html>
             """
 
-            msg = MIMEMultipart('related')
-            msg['Subject'] = f"Pago confirmado - Pedido #{p_id}"
-            msg['To'] = p_email
-            msg['From'] = MI_EMAIL
-            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
-            
-            logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
-            logo_data = None
-            if os.path.exists(logo_path):
-                with open(logo_path, 'rb') as f:
-                    logo_data = f.read()
-                    
-            if logo_data:
-                img = MIMEImage(logo_data)
-                img.add_header('Content-ID', '<logo_estilo>')
-                img.add_header('Content-Disposition', 'inline', filename="logo.png")
-                msg.attach(img)
-                
-            context = ssl.create_default_context()
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-                server.login(MI_EMAIL, MI_PASSWORD)
-                server.send_message(msg)
+            payload = {
+                "to": p_email,
+                "subject": f"Pago confirmado - Pedido #{p_id}",
+                "htmlBody": cuerpo_html
+            }
+            requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload)
             
             with open("mail_debug.log", "a") as f_log:
                 f_log.write("Mensaje enviado correctamente\n")
