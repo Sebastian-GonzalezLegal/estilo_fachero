@@ -66,6 +66,22 @@ login_manager.login_message_category = 'info'
 MI_EMAIL = "seba10gl1@gmail.com"
 MI_PASSWORD = "tfxb osfn jrrm xfyq"
 
+import smtplib
+import socket
+class SecureIPv4SMTP(smtplib.SMTP_SSL):
+    """
+    Subclase de SMTP_SSL para forzar la conexión a través de IPv4 
+    y verificar correctamente el certificado SSL usando el hostname original.
+    """
+    def connect(self, host='localhost', port=0, source_address=None):
+        self.sock = socket.create_connection((host, port), self.timeout, source_address)
+        self.sock = self.context.wrap_socket(self.sock, server_hostname="smtp.gmail.com")
+        self.file = None
+        (code, msg) = self.getreply()
+        if self.debuglevel > 0:
+            self._print_debug('connect:', repr(msg))
+        return (code, msg)
+
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
 WHATSAPP_NUMERO = "+54 9 11 1234-5678"
@@ -201,9 +217,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
         context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
+        server = SecureIPv4SMTP(ipv4_address, 465, context=context)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
@@ -725,9 +739,7 @@ def enviar_mail_despacho(pedido):
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
         context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
+        server = SecureIPv4SMTP(ipv4_address, 465, context=context)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         logo_data = None
@@ -1198,9 +1210,7 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             ipv4_address = socket.gethostbyname('smtp.gmail.com')
             # Usamos SMTP_SSL en el puerto 465 directo usando la IP (evita bloqueos de IPv6 en Render)
             context = ssl.create_default_context()
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-            server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
+            server = SecureIPv4SMTP(ipv4_address, 465, context=context)
             server.login(MI_EMAIL, MI_PASSWORD)
             
             with open("mail_debug.log", "a") as f_log:
