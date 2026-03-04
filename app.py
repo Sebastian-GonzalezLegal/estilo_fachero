@@ -1172,6 +1172,14 @@ def api_productos():
 
 def enviar_mail_confirmacion_pago(pedido, payment_id):
     import threading
+    
+    # Extraemos los datos del modelo SQLAlchemy antes de enviarlos a otro hilo.
+    # Si accedemos a `pedido` dentro de _enviar(), SQLAlchemy lanza DetachedInstanceError.
+    p_id = pedido.id
+    p_nombre = pedido.nombre_cliente
+    p_email = pedido.email_cliente
+    p_total = pedido.total
+
     def _enviar():
         try:
             server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -1205,13 +1213,13 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
                   </tr>
                   <tr>
                     <td style="padding:24px;color:#111827;">
-                      <p>Hola <strong>{pedido.nombre_cliente}</strong>,</p>
-                      <p>Recibimos exitosamente tu pago por <strong>Mercado Pago</strong> para el pedido <strong>#{pedido.id}</strong>.</p>
+                      <p>Hola <strong>{p_nombre}</strong>,</p>
+                      <p>Recibimos exitosamente tu pago por <strong>Mercado Pago</strong> para el pedido <strong>#{p_id}</strong>.</p>
                       
                       <div style="background:#f3f4f6;padding:16px;border-radius:8px;margin:20px 0;">
                         <h3 style="margin-top:0;font-size:16px;">Detalles del Pago</h3>
                         <p style="margin:5px 0;"><strong>ID de Pago:</strong> {payment_id}</p>
-                        <p style="margin:5px 0;"><strong>Total pagado:</strong> ${pedido.total}</p>
+                        <p style="margin:5px 0;"><strong>Total pagado:</strong> ${p_total}</p>
                       </div>
 
                       <p>Pronto estaremos preparando tu pedido para el envío o retiro.</p>
@@ -1224,8 +1232,8 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             """
 
             msg = MIMEMultipart('related')
-            msg['Subject'] = f"Pago confirmado - Pedido #{pedido.id}"
-            msg['To'] = pedido.email_cliente
+            msg['Subject'] = f"Pago confirmado - Pedido #{p_id}"
+            msg['To'] = p_email
             msg['From'] = MI_EMAIL
             msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
             
