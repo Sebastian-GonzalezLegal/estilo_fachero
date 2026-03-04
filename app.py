@@ -197,7 +197,9 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
                           filas_carrito, fila_envio_html, datos_vendedor):
     # --- ENVÍO DE MAILS (Puerto 587 para evitar bloqueos) ---
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        import socket
+        ipv4_address = socket.gethostbyname('smtp.gmail.com')
+        server = smtplib.SMTP_SSL(ipv4_address, 465)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
@@ -716,7 +718,9 @@ def admin_detalle_venta(id):
 
 def enviar_mail_despacho(pedido):
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        import socket
+        ipv4_address = socket.gethostbyname('smtp.gmail.com')
+        server = smtplib.SMTP_SSL(ipv4_address, 465)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         logo_data = None
@@ -1183,8 +1187,10 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             with open("mail_debug.log", "a") as f_log:
                 f_log.write(f"Iniciando hilo de envio para pedido {p_id} al email '{p_email}'\n")
             
+            import socket
+            ipv4_address = socket.gethostbyname('smtp.gmail.com')
             # Usamos SMTP_SSL en el puerto 465 directo (evita bloqueos de Render al puerto 587)
-            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            server = smtplib.SMTP_SSL(ipv4_address, 465)
             server.login(MI_EMAIL, MI_PASSWORD)
             
             with open("mail_debug.log", "a") as f_log:
