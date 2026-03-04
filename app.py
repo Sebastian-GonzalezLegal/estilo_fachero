@@ -197,8 +197,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
                           filas_carrito, fila_envio_html, datos_vendedor):
     # --- ENVÍO DE MAILS (Puerto 587 para evitar bloqueos) ---
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
@@ -717,8 +716,7 @@ def admin_detalle_venta(id):
 
 def enviar_mail_despacho(pedido):
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         logo_data = None
@@ -1185,29 +1183,12 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             with open("mail_debug.log", "a") as f_log:
                 f_log.write(f"Iniciando hilo de envio para pedido {p_id} al email '{p_email}'\n")
             
-            import socket
-            # Forzamos a Python a conectarse a Gmail usando IPv4 exclusivamente
-            # En plataformas como Render, IPv6 puede fallar con `[Errno 101] Network is unreachable`
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect(('smtp.gmail.com', 587))
-            
-            server = smtplib.SMTP()
-            server.sock = s
-            server.default_port = 587
-            # Tenemos que comunicarnos explícitamente con el servidor desde cero
-            server.getreply()
-            
-            with open("mail_debug.log", "a") as f_log:
-                f_log.write("Socket IPv4 conectado\n")
-
-            # Ahora procedemos tal cual antes
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
+            # Usamos SMTP_SSL en el puerto 465 directo (evita bloqueos de Render al puerto 587)
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
             server.login(MI_EMAIL, MI_PASSWORD)
             
             with open("mail_debug.log", "a") as f_log:
-                f_log.write("Login SMTP exitoso\n")
+                f_log.write("Login SMTP_SSL exitoso\n")
 
             logo_data = None
             try:
