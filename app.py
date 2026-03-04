@@ -11,6 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from io import BytesIO
+import ssl
 from flask import Flask, render_template, request, json, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
@@ -195,12 +196,14 @@ def cart():
 def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cliente, cp_cliente, 
                           envio_nombre, envio_tipo_label, envio_precio, total, 
                           filas_carrito, fila_envio_html, datos_vendedor):
-    # --- ENVÍO DE MAILS (Puerto 587 para evitar bloqueos) ---
+    # --- ENVÍO DE MAILS (Puerto 465 SSL, IPv4 forzado para evitar bloqueos) ---
     try:
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        server = smtplib.SMTP(ipv4_address, 587)
-        server.starttls()
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         # Cargamos el logo para incrustarlo en los correos
@@ -721,8 +724,10 @@ def enviar_mail_despacho(pedido):
     try:
         import socket
         ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        server = smtplib.SMTP(ipv4_address, 587)
-        server.starttls()
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
         server.login(MI_EMAIL, MI_PASSWORD)
 
         logo_data = None
@@ -1191,9 +1196,11 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             
             import socket
             ipv4_address = socket.gethostbyname('smtp.gmail.com')
-            # Usamos SMTP en el puerto 587 directo usando la IP (evita bloqueos de IPv6 en Render)
-            server = smtplib.SMTP(ipv4_address, 587)
-            server.starttls()
+            # Usamos SMTP_SSL en el puerto 465 directo usando la IP (evita bloqueos de IPv6 en Render)
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            server = smtplib.SMTP_SSL(ipv4_address, 465, context=context)
             server.login(MI_EMAIL, MI_PASSWORD)
             
             with open("mail_debug.log", "a") as f_log:
