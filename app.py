@@ -1182,15 +1182,23 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
 
     def _enviar():
         try:
+            with open("mail_debug.log", "a") as f_log:
+                f_log.write(f"Iniciando hilo de envio para pedido {p_id} al email '{p_email}'\n")
+            
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.starttls()
             server.login(MI_EMAIL, MI_PASSWORD)
+            
+            with open("mail_debug.log", "a") as f_log:
+                f_log.write("Login SMTP exitoso\n")
 
             logo_data = None
             try:
                 with open("static/img/logo.png", "rb") as f_logo:
                     logo_data = f_logo.read()
             except Exception as e_logo:
+                with open("mail_debug.log", "a") as f_log:
+                    f_log.write(f"No se pudo cargar el logo: {e_logo}\n")
                 print(f"No se pudo cargar el logo: {e_logo}")
 
             cuerpo_html = f"""
@@ -1245,8 +1253,14 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
 
             server.send_message(msg)
             server.quit()
+            
+            with open("mail_debug.log", "a") as f_log:
+                f_log.write("Mensaje enviado correctamente\n")
+                
         except Exception as e:
-            print(f"Error enviando mail confirmación pago: {e}")
+            with open("mail_debug.log", "a") as f_log:
+                f_log.write(f"Error EXCEPCION en thread de email: {e}\n")
+            print(f"Error enviando mail confirmación pago: {e}", flush=True)
 
     threading.Thread(target=_enviar).start()
 
