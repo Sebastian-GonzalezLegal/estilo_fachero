@@ -1,17 +1,14 @@
 import base64
 import math
 import os
-import smtplib
 import time
 import urllib.error
 import urllib.request
 import threading
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
 from io import BytesIO
 import ssl
+import resend
 from flask import Flask, render_template, request, json, jsonify, redirect, url_for, flash, session, send_file, send_from_directory
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
@@ -66,21 +63,7 @@ login_manager.login_message_category = 'info'
 MI_EMAIL = "seba10gl1@gmail.com"
 MI_PASSWORD = "tfxb osfn jrrm xfyq"
 
-import smtplib
-import socket
-class SecureIPv4SMTP(smtplib.SMTP_SSL):
-    """
-    Subclase de SMTP_SSL para forzar la conexión a través de IPv4 
-    y verificar correctamente el certificado SSL usando el hostname original.
-    """
-def connect(self, host='localhost', port=0, source_address=None):
-    self.sock = socket.create_connection((host, port), self.timeout, source_address)
-    self.sock = self.context.wrap_socket(self.sock, server_hostname="smtp.gmail.com")
-    self.file = None
-    (code, msg) = self.getreply()
-    if self.debuglevel > 0:
-        self._print_debug('connect:', repr(msg))
-    return (code, msg)
+resend.api_key = os.getenv('RESEND_API_KEY')
 
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
@@ -212,22 +195,8 @@ def cart():
 def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cliente, cp_cliente, 
                           envio_nombre, envio_tipo_label, envio_precio, total, 
                           filas_carrito, fila_envio_html, datos_vendedor):
-    # --- ENVÍO DE MAILS (Puerto 465 SSL, IPv4 forzado para evitar bloqueos) ---
+    # --- ENVÍO DE MAILS CON RESEND ---
     try:
-        import socket
-        ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        context = ssl.create_default_context()
-        server = SecureIPv4SMTP(ipv4_address, 465, context=context)
-        server.login(MI_EMAIL, MI_PASSWORD)
-
-        # Cargamos el logo para incrustarlo en los correos
-        logo_data = None
-        try:
-            with open("static/img/logo.png", "rb") as f_logo:
-                logo_data = f_logo.read()
-        except Exception as e_logo:
-            print(f"No se pudo cargar el logo: {e_logo}")
-
         # -------- Mail para el cliente con instrucciones de pago (HTML) --------
         cuerpo_cliente_html = f"""
         <html>
@@ -245,7 +214,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
                                 <p style="margin:4px 0 0;font-size:14px;opacity:0.9;">Confirmación de pedido</p>
                             </td>
                             <td align="right" style="vertical-align:middle;">
-                                <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:45px;border-radius:50%;">
+                                <img src="https://estilo-fachero.onrender.com/static/img/logo.png" alt="Estilo Fachero" style="height:45px;border-radius:50%;">
                             </td>
                             </tr>
                         </table>
@@ -318,19 +287,13 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
             </body>
         </html>
         """
-
-        msg_c = MIMEMultipart('related')
-        msg_c['Subject'] = "Pago Pedido Estilo Fachero"
-        msg_c['To'] = email_cliente
-        msg_c['From'] = MI_EMAIL
-        msg_c.attach(MIMEText(cuerpo_cliente_html, 'html', 'utf-8'))
-        if logo_data:
-            img_c = MIMEImage(logo_data)
-            img_c.add_header('Content-ID', '<logo_estilo>')
-            img_c.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg_c.attach(img_c)
-
-        server.send_message(msg_c)
+        
+        resend.Emails.send({
+            "from": "ventas@resend.dev",
+            "to": [email_cliente],
+            "subject": "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago",
+            "html": cuerpo_cliente_html
+        })
 
         # -------- Mail para vos (Aviso de venta, con detalle y datos del cliente) --------
         cuerpo_vendedor_html = f"""
@@ -346,7 +309,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
                         <p style="margin:4px 0 0;font-size:13px;opacity:0.9;">Pedido desde Estilo Fachero</p>
                         </td>
                         <td align="right" style="vertical-align:middle;">
-                        <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
+                        <img src="https://estilo-fachero.onrender.com/static/img/logo.png" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
                         </td>
                     </tr>
                     </table>
@@ -394,21 +357,14 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
             </body>
         </html>
         """
+        
+        resend.Emails.send({
+            "from": "ventas@resend.dev",
+            "to": [MI_EMAIL],
+            "subject": f"¡NUEVA VENTA! - {nombre}",
+            "html": cuerpo_vendedor_html
+        })
 
-        msg_v = MIMEMultipart('related')
-        msg_v['Subject'] = f"¡NUEVA VENTA! - {nombre}"
-        msg_v['To'] = MI_EMAIL
-        msg_v['From'] = MI_EMAIL
-        msg_v.attach(MIMEText(cuerpo_vendedor_html, 'html', 'utf-8'))
-        if logo_data:
-            img_v = MIMEImage(logo_data)
-            img_v.add_header('Content-ID', '<logo_estilo>')
-            img_v.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg_v.attach(img_v)
-
-        server.send_message(msg_v)
-
-        server.quit()
     except Exception as e:
         print(f"Error en mails: {e}")
 
@@ -736,19 +692,6 @@ def admin_detalle_venta(id):
 
 def enviar_mail_despacho(pedido):
     try:
-        import socket
-        ipv4_address = socket.gethostbyname('smtp.gmail.com')
-        context = ssl.create_default_context()
-        server = SecureIPv4SMTP(ipv4_address, 465, context=context)
-        server.login(MI_EMAIL, MI_PASSWORD)
-
-        logo_data = None
-        try:
-            with open("static/img/logo.png", "rb") as f_logo:
-                logo_data = f_logo.read()
-        except Exception as e_logo:
-            print(f"No se pudo cargar el logo: {e_logo}")
-
         cuerpo_html = f"""
         <html>
           <body style="font-family:Arial,Helvetica,sans-serif;background:#f8f9fa;margin:0;padding:20px;">
@@ -761,7 +704,7 @@ def enviar_mail_despacho(pedido):
                         <h2 style="margin:0;font-size:18px;">¡Tu pedido está en camino! 🚚</h2>
                       </td>
                       <td align="right" style="vertical-align:middle;">
-                        <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
+                        <img src="https://estilo-fachero.onrender.com/static/img/logo.png" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
                       </td>
                     </tr>
                   </table>
@@ -788,20 +731,12 @@ def enviar_mail_despacho(pedido):
         </html>
         """
 
-        msg = MIMEMultipart('related')
-        msg['Subject'] = f"Tu pedido #{pedido.id} ha sido enviado"
-        msg['To'] = pedido.email_cliente
-        msg['From'] = MI_EMAIL
-        msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
-        
-        if logo_data:
-            img = MIMEImage(logo_data)
-            img.add_header('Content-ID', '<logo_estilo>')
-            img.add_header('Content-Disposition', 'inline', filename="logo.png")
-            msg.attach(img)
-
-        server.send_message(msg)
-        server.quit()
+        resend.Emails.send({
+            "from": "ventas@resend.dev",
+            "to": [pedido.email_cliente],
+            "subject": f"Tu pedido #{pedido.id} ha sido enviado",
+            "html": cuerpo_html
+        })
         return True
     except Exception as e:
         print(f"Error enviando mail despacho: {e}")
@@ -1205,25 +1140,6 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
         try:
             with open("mail_debug.log", "a") as f_log:
                 f_log.write(f"Iniciando hilo de envio para pedido {p_id} al email '{p_email}'\n")
-            
-            import socket
-            ipv4_address = socket.gethostbyname('smtp.gmail.com')
-            # Usamos SMTP_SSL en el puerto 465 directo usando la IP (evita bloqueos de IPv6 en Render)
-            context = ssl.create_default_context()
-            server = SecureIPv4SMTP(ipv4_address, 465, context=context)
-            server.login(MI_EMAIL, MI_PASSWORD)
-            
-            with open("mail_debug.log", "a") as f_log:
-                f_log.write("Login SMTP exitoso\n")
-
-            logo_data = None
-            try:
-                with open("static/img/logo.png", "rb") as f_logo:
-                    logo_data = f_logo.read()
-            except Exception as e_logo:
-                with open("mail_debug.log", "a") as f_log:
-                    f_log.write(f"No se pudo cargar el logo: {e_logo}\n")
-                print(f"No se pudo cargar el logo: {e_logo}")
 
             cuerpo_html = f"""
             <html>
@@ -1234,10 +1150,10 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
                       <table width="100%" cellpadding="0" cellspacing="0">
                         <tr>
                           <td align="left" style="vertical-align:middle;">
-                            <h2 style="margin:0;font-size:18px;">¡Pago Confirmado! ✅</h2>
+                            <h2 style="margin:0;font-size:18px;">¡Pago Confirmado! 🎉</h2>
                           </td>
                           <td align="right" style="vertical-align:middle;">
-                            <img src="cid:logo_estilo" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
+                            <img src="https://estilo-fachero.onrender.com/static/img/logo.png" alt="Estilo Fachero" style="height:40px;border-radius:50%;">
                           </td>
                         </tr>
                       </table>
@@ -1263,20 +1179,12 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             </html>
             """
 
-            msg = MIMEMultipart('related')
-            msg['Subject'] = f"Pago confirmado - Pedido #{p_id}"
-            msg['To'] = p_email
-            msg['From'] = MI_EMAIL
-            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
-            
-            if logo_data:
-                img = MIMEImage(logo_data)
-                img.add_header('Content-ID', '<logo_estilo>')
-                img.add_header('Content-Disposition', 'inline', filename="logo.png")
-                msg.attach(img)
-
-            server.send_message(msg)
-            server.quit()
+            resend.Emails.send({
+                "from": "ventas@resend.dev",
+                "to": [p_email],
+                "subject": f"Pago confirmado - Pedido #{p_id}",
+                "html": cuerpo_html
+            })
             
             with open("mail_debug.log", "a") as f_log:
                 f_log.write("Mensaje enviado correctamente\n")
