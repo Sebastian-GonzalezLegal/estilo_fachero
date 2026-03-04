@@ -288,14 +288,6 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
             </body>
         </html>
         """
-        
-        resend.Emails.send({
-            "from": "ventas@resend.dev",
-            "to": [email_cliente],
-            "subject": "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago",
-            "html": cuerpo_cliente_html
-        })
-
         # -------- Mail para vos (Aviso de venta, con detalle y datos del cliente) --------
         cuerpo_vendedor_html = f"""
         <html>
@@ -358,13 +350,43 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
             </body>
         </html>
         """
-        
-        resend.Emails.send({
-            "from": "ventas@resend.dev",
-            "to": [MI_EMAIL],
-            "subject": f"¡NUEVA VENTA! - {nombre}",
-            "html": cuerpo_vendedor_html
-        })
+
+        # -------- Construir mensajes SMTPLIB --------
+        msg_cliente = MIMEMultipart('related')
+        msg_cliente['Subject'] = "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago"
+        msg_cliente['To'] = email_cliente
+        msg_cliente['From'] = MI_EMAIL
+        msg_cliente.attach(MIMEText(cuerpo_cliente_html, 'html', 'utf-8'))
+
+        msg_vendedor = MIMEMultipart('related')
+        msg_vendedor['Subject'] = f"¡NUEVA VENTA! - {nombre}"
+        msg_vendedor['To'] = MI_EMAIL
+        msg_vendedor['From'] = MI_EMAIL
+        msg_vendedor.attach(MIMEText(cuerpo_vendedor_html, 'html', 'utf-8'))
+
+        # Intentar adjuntar logo si existe
+        logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
+        logo_data = None
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as f:
+                logo_data = f.read()
+
+        if logo_data:
+            img_c = MIMEImage(logo_data)
+            img_c.add_header('Content-ID', '<logo_estilo>')
+            img_c.add_header('Content-Disposition', 'inline', filename="logo.png")
+            msg_cliente.attach(img_c)
+            
+            img_v = MIMEImage(logo_data)
+            img_v.add_header('Content-ID', '<logo_estilo>')
+            img_v.add_header('Content-Disposition', 'inline', filename="logo.png")
+            msg_vendedor.attach(img_v)
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(MI_EMAIL, MI_PASSWORD)
+            server.send_message(msg_cliente)
+            server.send_message(msg_vendedor)
 
     except Exception as e:
         print(f"Error en mails: {e}")
@@ -731,13 +753,28 @@ def enviar_mail_despacho(pedido):
           </body>
         </html>
         """
-
-        resend.Emails.send({
-            "from": "ventas@resend.dev",
-            "to": [pedido.email_cliente],
-            "subject": f"Tu pedido #{pedido.id} ha sido enviado",
-            "html": cuerpo_html
-        })
+        msg = MIMEMultipart('related')
+        msg['Subject'] = f"Tu pedido #{pedido.id} ha sido enviado"
+        msg['To'] = pedido.email_cliente
+        msg['From'] = MI_EMAIL
+        msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
+        
+        logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
+        logo_data = None
+        if os.path.exists(logo_path):
+            with open(logo_path, 'rb') as f:
+                logo_data = f.read()
+                
+        if logo_data:
+            img = MIMEImage(logo_data)
+            img.add_header('Content-ID', '<logo_estilo>')
+            img.add_header('Content-Disposition', 'inline', filename="logo.png")
+            msg.attach(img)
+            
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(MI_EMAIL, MI_PASSWORD)
+            server.send_message(msg)
         return True
     except Exception as e:
         print(f"Error enviando mail despacho: {e}")
@@ -1180,12 +1217,28 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             </html>
             """
 
-            resend.Emails.send({
-                "from": "ventas@resend.dev",
-                "to": [p_email],
-                "subject": f"Pago confirmado - Pedido #{p_id}",
-                "html": cuerpo_html
-            })
+            msg = MIMEMultipart('related')
+            msg['Subject'] = f"Pago confirmado - Pedido #{p_id}"
+            msg['To'] = p_email
+            msg['From'] = MI_EMAIL
+            msg.attach(MIMEText(cuerpo_html, 'html', 'utf-8'))
+            
+            logo_path = os.path.join(app.root_path, 'static', 'img', 'logo.png')
+            logo_data = None
+            if os.path.exists(logo_path):
+                with open(logo_path, 'rb') as f:
+                    logo_data = f.read()
+                    
+            if logo_data:
+                img = MIMEImage(logo_data)
+                img.add_header('Content-ID', '<logo_estilo>')
+                img.add_header('Content-Disposition', 'inline', filename="logo.png")
+                msg.attach(img)
+                
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(MI_EMAIL, MI_PASSWORD)
+                server.send_message(msg)
             
             with open("mail_debug.log", "a") as f_log:
                 f_log.write("Mensaje enviado correctamente\n")
