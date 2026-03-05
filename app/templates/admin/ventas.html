@@ -9,7 +9,7 @@
             <p class="text-muted mb-0">Controla y administra los pedidos de tus clientes.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+            <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
@@ -19,17 +19,17 @@
     <div class="mb-5">
         <ul class="nav admin-nav d-flex gap-2">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin_panel') }}">
+                <a class="nav-link" href="{{ url_for('admin.admin_panel') }}">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="{{ url_for('admin_ventas') }}">
+                <a class="nav-link active" href="{{ url_for('admin.admin_ventas') }}">
                     <i class="bi bi-receipt me-2"></i> Ventas
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin_envios') }}">
+                <a class="nav-link" href="{{ url_for('admin.admin_envios') }}">
                     <i class="bi bi-truck me-2"></i> Envíos
                 </a>
             </li>
@@ -52,7 +52,7 @@
     <div class="admin-card mb-5">
         <div class="card-body p-4">
             <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Pedidos</h6>
-            <form method="GET" action="{{ url_for('admin_ventas') }}" class="row g-3 align-items-end">
+            <form method="GET" action="{{ url_for('admin.admin_ventas') }}" class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label small fw-bold text-muted">Cliente</label>
                     <div class="input-group">
@@ -67,7 +67,7 @@
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
                     {% if filtro_cliente or filtro_fecha %}
-                    <a href="{{ url_for('admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
                     {% endif %}
                 </div>
             </form>
@@ -129,7 +129,7 @@
                         ${{ "%.2f"|format(pedido.total) }}
                     </td>
                     <td class="text-end pe-4">
-                        <a href="{{ url_for('admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
+                        <a href="{{ url_for('admin.admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
                             Ver <i class="bi bi-arrow-right-short"></i>
                         </a>
                     </td>

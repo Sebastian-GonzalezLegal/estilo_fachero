@@ -5,7 +5,7 @@
     <!-- Header con botón volver -->
     <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ url_for('admin_ventas') }}" class="btn btn-outline-secondary rounded-circle" title="Volver">
+            <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-outline-secondary rounded-circle" title="Volver">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
@@ -14,7 +14,7 @@
             </div>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+            <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
@@ -41,7 +41,7 @@
                     <h5 class="mb-0 text-primary"><i class="bi bi-gear-fill me-2"></i> Administrar Pedido</h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="{{ url_for('admin_actualizar_venta', id=pedido.id) }}" method="POST">
+                    <form action="{{ url_for('admin.admin_actualizar_venta', id=pedido.id) }}" method="POST">
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-muted">ESTADO ACTUAL</label>
                             <select name="estado" class="form-select fw-bold" id="selectEstado" onchange="toggleEnvioFields()">

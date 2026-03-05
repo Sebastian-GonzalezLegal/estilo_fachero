@@ -22,7 +22,7 @@
                             {% for foto in fotos %}
                                 <div class="carousel-item {% if loop.first %}active{% endif %}">
                                     <div class="d-flex align-items-center justify-content-center bg-white" style="height: 500px;">
-                                        <img src="{{ url_for('imagen_producto', filename=foto) }}" 
+                                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}" 
                                              class="d-block mw-100 mh-100" 
                                              alt="{{ producto.nombre }}"
                                              style="object-fit: contain;">
@@ -55,7 +55,7 @@
                     <div class="border rounded-3 overflow-hidden cursor-pointer opacity-75 hover-opacity-100 transition-all" 
                          style="width: 80px; height: 80px; flex-shrink: 0;"
                          onclick="document.querySelector('#carousel-fotos .carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
-                        <img src="{{ url_for('imagen_producto', filename=foto) }}" 
+                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}" 
                              class="w-100 h-100 object-fit-cover" 
                              alt="Thumbnail">
                     </div>
@@ -236,9 +236,9 @@
                 <div class="col-md-3 col-6">
                     <div class="card h-100 border-0 shadow-sm product-card hover-lift">
                          <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
-                            <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
+                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
                                 {% if prod.primera_foto() %}
-                                    <img src="{{ url_for('imagen_producto', filename=prod.primera_foto()) }}" 
+                                    <img src="{{ url_for('api.imagen_producto', filename=prod.primera_foto()) }}" 
                                          class="img-fluid mh-100 mw-100 p-3" alt="{{ prod.nombre }}">
                                 {% else %}
                                     <span class="text-muted small">Sin foto</span>
@@ -246,7 +246,7 @@
                             </a>
                         </div>
                         <div class="card-body p-3">
-                            <h6 class="card-title fw-bold text-truncate mb-1"><a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
+                            <h6 class="card-title fw-bold text-truncate mb-1"><a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
                             <p class="fw-bold text-primary mb-0">${{ "%.0f"|format(prod.precio) }}</p>
                         </div>
                     </div>

@@ -70,10 +70,10 @@
 
                 <!-- Imagen -->
                 <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
-                    <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center text-decoration-none">
+                    <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center text-decoration-none">
                         {% if prod.primera_foto() %}
                             {% set foto = prod.primera_foto() %}
-                            <img src="{{ foto if foto.startswith('http') else url_for('imagen_producto', filename=foto) }}" 
+                            <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}" 
                                  alt="{{ prod.nombre }}" 
                                  class="img-fluid w-100 h-100" 
                                  style="object-fit: contain; padding: 1rem; transition: transform 0.5s ease;">
@@ -101,7 +101,7 @@
                         {% endif %}
 
                         <h5 class="card-title fw-bold mb-1 lh-sm text-truncate">
-                            <a href="{{ url_for('producto_detalle', id=prod.id) }}" class="text-dark stretched-link text-decoration-none">
+                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="text-dark stretched-link text-decoration-none">
                                 {{ prod.nombre }}
                             </a>
                         </h5>
