@@ -104,14 +104,14 @@ def api_admin_producto(id):
             </div>
             
             <div class="d-grid mt-4">
-                <a href="/admin/editar_producto/{producto.id}" class="btn btn-primary">
+                <a href="{url_for('admin.admin_producto_editar', id=producto.id)}" class="btn btn-primary">
                     <i class="fas fa-edit me-2"></i>Editar Producto
                 </a>
             </div>
         </div>
     </div>
     """
-    return html
+    return jsonify({"html": html})
 
 @api_bp.route('/imagen_producto/<filename>')
 def imagen_producto(filename):
