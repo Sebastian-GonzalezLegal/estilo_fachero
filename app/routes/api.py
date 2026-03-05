@@ -116,13 +116,18 @@ def api_admin_producto(id):
 @api_bp.route('/imagen_producto/<filename>')
 def imagen_producto(filename):
     imagen = ProductoImagen.query.filter_by(nombre=filename).first()
+    response = None
     if imagen:
-        return send_file(BytesIO(imagen.datos), mimetype=imagen.mimetype, as_attachment=False, download_name=imagen.nombre)
-    
-    try:
-        return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
-    except:
-        return "Imagen no encontrada", 404
+        response = send_file(BytesIO(imagen.datos), mimetype=imagen.mimetype, as_attachment=False, download_name=imagen.nombre)
+    else:
+        try:
+            response = send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+        except:
+            return "Imagen no encontrada", 404
+            
+    if response:
+        response.headers['Cache-Control'] = 'public, max-age=604800' # 7 días
+    return response
 
 # --- API para obtener productos (para compatibilidad con JS) ---
 @api_bp.route('/productos')

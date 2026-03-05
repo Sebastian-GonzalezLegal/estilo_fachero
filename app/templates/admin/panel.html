@@ -9,10 +9,12 @@
             <p class="text-muted mb-0">Resumen de actividad y gestión de la tienda.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('main.home') }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+            <a href="{{ url_for('main.home') }}"
+                class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-eye"></i> Ver Tienda
             </a>
-            <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+            <a href="{{ url_for('admin.admin_logout') }}"
+                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
@@ -47,7 +49,8 @@
                     <i class="bi bi-currency-dollar"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Ventas Totales</h6>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Ventas
+                        Totales</h6>
                     <h3 class="fw-bold mb-0 text-dark">${{ total_ventas }}</h3>
                 </div>
             </div>
@@ -58,7 +61,8 @@
                     <i class="bi bi-bag-check"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Pedidos Totales</h6>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Pedidos
+                        Totales</h6>
                     <h3 class="fw-bold mb-0 text-dark">{{ total_pedidos }}</h3>
                 </div>
             </div>
@@ -69,7 +73,8 @@
                     <i class="bi bi-exclamation-triangle"></i>
                 </div>
                 <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Bajo Stock</h6>
+                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Bajo Stock
+                    </h6>
                     <h3 class="fw-bold mb-0 text-dark">{{ productos_bajo_stock }}</h3>
                     <small class="text-danger fw-bold" style="font-size: 0.75rem;">&lt; 5 unidades</small>
                 </div>
@@ -80,7 +85,8 @@
     <!-- Chart Section -->
     <div class="admin-card mb-5">
         <div class="admin-card-header">
-            <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)</h5>
+            <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)
+            </h5>
         </div>
         <div class="card-body">
             <canvas id="salesChart" height="80"></canvas>
@@ -90,7 +96,8 @@
     <!-- Product List -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold text-dark mb-0">Gestión de Productos</h4>
-        <a href="{{ url_for('admin.admin_producto_nuevo') }}" class="btn btn-fachero shadow-sm d-flex align-items-center gap-2">
+        <a href="{{ url_for('admin.admin_producto_nuevo') }}"
+            class="btn btn-fachero shadow-sm d-flex align-items-center gap-2">
             <i class="bi bi-plus-lg"></i> Nuevo Producto
         </a>
     </div>
@@ -113,51 +120,62 @@
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
                             {% if producto.primera_foto() %}
-                                <img src="{{ url_for('api.imagen_producto', filename=producto.primera_foto()) }}" 
-                                     class="avatar shadow-sm" alt="{{ producto.nombre }}">
+                            <img src="{{ url_for('api.imagen_producto', filename=producto.primera_foto()) }}"
+                                class="avatar shadow-sm" loading="lazy" alt="{{ producto.nombre }}">
                             {% else %}
-                                <div class="avatar bg-light d-flex align-items-center justify-content-center text-muted">
-                                    <i class="bi bi-image"></i>
-                                </div>
+                            <div class="avatar bg-light d-flex align-items-center justify-content-center text-muted">
+                                <i class="bi bi-image"></i>
+                            </div>
                             {% endif %}
                             <div>
                                 <div class="fw-bold text-dark">{{ producto.nombre }}</div>
-                                <div class="small text-muted text-truncate" style="max-width: 200px;">{{ producto.descripcion or 'Sin descripción' }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">{{
+                                    producto.descripcion or 'Sin descripción' }}</div>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <span class="badge bg-light text-dark border fw-normal text-uppercase">{{ producto.tipo }}</span>
+                        <span class="badge bg-light text-dark border fw-normal text-uppercase">{{ producto.tipo
+                            }}</span>
                     </td>
                     <td>
                         <div class="fw-bold text-dark">${{ producto.precio }}</div>
                     </td>
                     <td>
-                        <span class="fw-bold {% if producto.stock > 5 %}text-success{% elif producto.stock > 0 %}text-warning{% else %}text-danger{% endif %}">
+                        <span
+                            class="fw-bold {% if producto.stock > 5 %}text-success{% elif producto.stock > 0 %}text-warning{% else %}text-danger{% endif %}">
                             {{ producto.stock }} unid.
                         </span>
                     </td>
                     <td>
                         {% if producto.activo %}
-                            <span class="status-badge success"><span class="status-dot"></span>Activo</span>
+                        <span class="status-badge success"><span class="status-dot"></span>Activo</span>
                         {% else %}
-                            <span class="status-badge secondary"><span class="status-dot"></span>Inactivo</span>
+                        <span class="status-badge secondary"><span class="status-dot"></span>Inactivo</span>
                         {% endif %}
                     </td>
                     <td class="text-end pe-4">
                         <div class="btn-group">
-                            <a href="{{ url_for('admin.admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm" title="Editar">
+                            <a href="{{ url_for('admin.admin_producto_editar', id=producto.id) }}"
+                                class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm"
+                                title="Editar">
                                 <i class="bi bi-pencil-fill"></i>
                             </a>
                             {% if producto.activo %}
-                            <form action="{{ url_for('admin.admin_producto_eliminar', id=producto.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este producto?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded shadow-sm" title="Desactivar">
+                            <form action="{{ url_for('admin.admin_producto_eliminar', id=producto.id) }}" method="POST"
+                                class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este producto?');">
+                                <button type="submit"
+                                    class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded shadow-sm"
+                                    title="Desactivar">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </form>
                             {% else %}
-                            <form action="{{ url_for('admin.admin_producto_activar', id=producto.id) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded shadow-sm" title="Activar">
+                            <form action="{{ url_for('admin.admin_producto_activar', id=producto.id) }}" method="POST"
+                                class="d-inline">
+                                <button type="submit"
+                                    class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded shadow-sm"
+                                    title="Activar">
                                     <i class="bi bi-check-lg"></i>
                                 </button>
                             </form>
@@ -172,7 +190,8 @@
                             <i class="bi bi-box2 fs-1"></i>
                         </div>
                         <p class="text-muted fw-bold">No hay productos cargados.</p>
-                        <a href="{{ url_for('admin.admin_producto_nuevo') }}" class="btn btn-sm btn-outline-primary mt-2">Cargar el primero</a>
+                        <a href="{{ url_for('admin.admin_producto_nuevo') }}"
+                            class="btn btn-sm btn-outline-primary mt-2">Cargar el primero</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -185,25 +204,29 @@
     <nav aria-label="Navegación de páginas de productos" class="mt-4 d-flex justify-content-center">
         <ul class="pagination pagination-sm shadow-sm">
             <li class="page-item {% if not productos.has_prev %}disabled{% endif %}">
-                <a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=productos.prev_num) if productos.has_prev else '#' }}" tabindex="-1" aria-disabled="true">Anterior</a>
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_panel', page=productos.prev_num) if productos.has_prev else '#' }}"
+                    tabindex="-1" aria-disabled="true">Anterior</a>
             </li>
-            
+
             {% for page_num in productos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                {% if page_num %}
-                    {% if productos.page == page_num %}
-                        <li class="page-item active" aria-current="page">
-                            <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
-                        </li>
-                    {% else %}
-                        <li class="page-item"><a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=page_num) }}">{{ page_num }}</a></li>
-                    {% endif %}
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link">...</span></li>
-                {% endif %}
+            {% if page_num %}
+            {% if productos.page == page_num %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item"><a class="page-link text-success"
+                    href="{{ url_for('admin.admin_panel', page=page_num) }}">{{ page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
             {% endfor %}
-            
+
             <li class="page-item {% if not productos.has_next %}disabled{% endif %}">
-                <a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=productos.next_num) if productos.has_next else '#' }}">Siguiente</a>
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_panel', page=productos.next_num) if productos.has_next else '#' }}">Siguiente</a>
             </li>
         </ul>
     </nav>
@@ -219,57 +242,57 @@
         type: 'line',
         data: {
             labels: {{ fechas_grafico | tojson }},
-            datasets: [{
-                label: 'Ventas ($)',
-                data: {{ valores_grafico | tojson }},
-                borderColor: '#4F5D2F',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                    gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
-                    gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
-                    return gradient;
-                },
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#4F5D2F',
-                pointRadius: 4,
-                pointHoverRadius: 6
+    datasets: [{
+        label: 'Ventas ($)',
+        data: {{ valores_grafico | tojson }},
+        borderColor: '#4F5D2F',
+        backgroundColor: (context) => {
+            const ctx = context.chart.ctx;
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
+            gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
+            return gradient;
+        },
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#4F5D2F',
+        pointRadius: 4,
+        pointHoverRadius: 6
             }]
         },
-        options: {
-            responsive: true,
+    options: {
+        responsive: true,
             plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(44, 51, 51, 0.9)',
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    titleFont: { family: 'Montserrat', size: 13 },
-                    bodyFont: { family: 'Inter', size: 13 }
-                }
+            legend: {
+                display: false
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
+            tooltip: {
+                backgroundColor: 'rgba(44, 51, 51, 0.9)',
+                    padding: 12,
+                        cornerRadius: 8,
+                            displayColors: false,
+                                titleFont: { family: 'Montserrat', size: 13 },
+                bodyFont: { family: 'Inter', size: 13 }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
                     grid: {
-                        borderDash: [4, 4],
+                    borderDash: [4, 4],
                         color: '#f0f0f0',
-                        drawBorder: false
-                    },
-                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                            drawBorder: false
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
-                }
+                ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
             }
         }
+    }
     });
 </script>
 {% endblock %}

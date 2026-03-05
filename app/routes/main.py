@@ -15,6 +15,7 @@ def contacto():
 def productos():
     tipo_filtro = request.args.get('tipo', '').strip().lower()
     busqueda = request.args.get('q', '').strip()
+    page = request.args.get('page', 1, type=int)
     
     query = Producto.query.filter_by(activo=True)
     
@@ -27,8 +28,13 @@ def productos():
             (Producto.descripcion.ilike(f'%{busqueda}%'))
         )
     
-    productos_list = query.all()
-    return render_template('products.html', productos=productos_list, tipos=TIPOS_PRODUCTO, busqueda=busqueda)
+    pagination = query.order_by(Producto.id.desc()).paginate(page=page, per_page=12, error_out=False)
+    
+    return render_template('products.html', 
+                         productos=pagination, 
+                         tipos=TIPOS_PRODUCTO, 
+                         busqueda=busqueda,
+                         tipo_actual=tipo_filtro)
 
 @main_bp.route('/productos/<int:id>')
 def producto_detalle(id):

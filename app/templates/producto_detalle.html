@@ -19,30 +19,33 @@
                     <div class="carousel-inner rounded-4 overflow-hidden shadow-sm bg-white">
                         {% set fotos = producto.fotos_lista() %}
                         {% if fotos %}
-                            {% for foto in fotos %}
-                                <div class="carousel-item {% if loop.first %}active{% endif %}">
-                                    <div class="d-flex align-items-center justify-content-center bg-white" style="height: 500px;">
-                                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}" 
-                                             class="d-block mw-100 mh-100" 
-                                             alt="{{ producto.nombre }}"
-                                             style="object-fit: contain;">
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% else %}
-                            <div class="carousel-item active">
-                                <div class="d-flex align-items-center justify-content-center bg-light" style="height: 500px;">
-                                    <i class="bi bi-camera fs-1 text-muted opacity-50"></i>
-                                </div>
+                        {% for foto in fotos %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <div class="d-flex align-items-center justify-content-center bg-white"
+                                style="height: 500px;">
+                                <img src="{{ url_for('api.imagen_producto', filename=foto) }}"
+                                    class="d-block mw-100 mh-100" loading="lazy" alt="{{ producto.nombre }}"
+                                    style="object-fit: contain;">
                             </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="carousel-item active">
+                            <div class="d-flex align-items-center justify-content-center bg-light"
+                                style="height: 500px;">
+                                <i class="bi bi-camera fs-1 text-muted opacity-50"></i>
+                            </div>
+                        </div>
                         {% endif %}
                     </div>
 
                     {% if fotos|length > 1 %}
-                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-fotos" data-bs-slide="prev">
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-fotos"
+                        data-bs-slide="prev">
                         <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-fotos" data-bs-slide="next">
+                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-fotos"
+                        data-bs-slide="next">
                         <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
                     </button>
                     {% endif %}
@@ -52,12 +55,11 @@
                 {% if fotos|length > 1 %}
                 <div class="d-flex gap-2 overflow-auto py-2" style="scrollbar-width: thin;">
                     {% for foto in fotos %}
-                    <div class="border rounded-3 overflow-hidden cursor-pointer opacity-75 hover-opacity-100 transition-all" 
-                         style="width: 80px; height: 80px; flex-shrink: 0;"
-                         onclick="document.querySelector('#carousel-fotos .carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
-                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}" 
-                             class="w-100 h-100 object-fit-cover" 
-                             alt="Thumbnail">
+                    <div class="border rounded-3 overflow-hidden cursor-pointer opacity-75 hover-opacity-100 transition-all"
+                        style="width: 80px; height: 80px; flex-shrink: 0;"
+                        onclick="document.querySelector('#carousel-fotos .carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
+                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}"
+                            class="w-100 h-100 object-fit-cover" loading="lazy" alt="Thumbnail">
                     </div>
                     {% endfor %}
                 </div>
@@ -69,10 +71,11 @@
         <div class="col-lg-5">
             <div class="ps-lg-4">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge bg-light text-dark border fw-normal text-uppercase tracking-wider">{{ producto.tipo }}</span>
-                    {% if producto.stock < 5 and producto.stock > 0 %}
+                    <span class="badge bg-light text-dark border fw-normal text-uppercase tracking-wider">{{
+                        producto.tipo }}</span>
+                    {% if producto.stock < 5 and producto.stock> 0 %}
                         <span class="badge bg-warning text-dark"><i class="bi bi-fire me-1"></i>¡ÚLTIMOS!</span>
-                    {% endif %}
+                        {% endif %}
                 </div>
 
                 <h1 class="fw-bold display-6 mb-2">{{ producto.nombre }}</h1>
@@ -81,15 +84,16 @@
                     {% if producto.promedio_calificacion() > 0 %}
                     <div class="d-flex align-items-center text-warning small">
                         {% for i in range(producto.promedio_calificacion()|round|int) %}
-                            <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
                         {% endfor %}
-                        <span class="text-muted ms-2 text-decoration-underline text-dark" style="font-size: 0.85rem;">{{ producto.resenas|length }} Opiniones</span>
+                        <span class="text-muted ms-2 text-decoration-underline text-dark" style="font-size: 0.85rem;">{{
+                            producto.resenas|length }} Opiniones</span>
                     </div>
                     {% else %}
                     <span class="text-muted small">Sin opiniones aún</span>
                     {% endif %}
                 </div>
-                
+
                 <h2 class="fw-bold text-primary mb-4 display-6">${{ "%.2f"|format(producto.precio) }}</h2>
 
                 {% if producto.descripcion %}
@@ -99,38 +103,43 @@
                 <!-- Action Box -->
                 <div class="p-4 bg-light rounded-4 border mb-4">
                     {% if producto.stock > 0 %}
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold">Cantidad</span>
-                            <div class="input-group w-auto bg-white rounded-pill border">
-                                <button class="btn btn-link text-dark text-decoration-none px-3" type="button" onclick="disminuirCantidad()">
-                                    <i class="bi bi-dash"></i>
-                                </button>
-                                <input type="number" id="cantidad-detalle" class="form-control border-0 text-center bg-transparent p-0 fw-bold" 
-                                       style="width: 50px;" value="1" min="1" max="{{ producto.stock }}">
-                                <button class="btn btn-link text-dark text-decoration-none px-3" type="button" onclick="aumentarCantidad()">
-                                    <i class="bi bi-plus"></i>
-                                </button>
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold">Cantidad</span>
+                        <div class="input-group w-auto bg-white rounded-pill border">
+                            <button class="btn btn-link text-dark text-decoration-none px-3" type="button"
+                                onclick="disminuirCantidad()">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" id="cantidad-detalle"
+                                class="form-control border-0 text-center bg-transparent p-0 fw-bold"
+                                style="width: 50px;" value="1" min="1" max="{{ producto.stock }}">
+                            <button class="btn btn-link text-dark text-decoration-none px-3" type="button"
+                                onclick="aumentarCantidad()">
+                                <i class="bi bi-plus"></i>
+                            </button>
                         </div>
+                    </div>
 
-                        <button class="btn btn-fachero btn-lg w-100 shadow-sm mb-3 rounded-pill py-3 fw-bold" 
-                                onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
-                            AGREGAR AL CARRITO <i class="bi bi-bag-plus ms-2"></i>
-                        </button>
-                        
-                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
-                            <i class="bi bi-check-circle-fill text-success"></i> Stock disponible: {{ producto.stock }} unidades
-                        </div>
+                    <button class="btn btn-fachero btn-lg w-100 shadow-sm mb-3 rounded-pill py-3 fw-bold"
+                        onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                        AGREGAR AL CARRITO <i class="bi bi-bag-plus ms-2"></i>
+                    </button>
+
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                        <i class="bi bi-check-circle-fill text-success"></i> Stock disponible: {{ producto.stock }}
+                        unidades
+                    </div>
                     {% else %}
-                        <div class="text-center py-3">
-                            <h5 class="text-danger fw-bold mb-2">Producto Agotado</h5>
-                            <p class="text-muted small mb-0">Dejanos tu email para avisarte cuando vuelva.</p>
-                            <!-- Fake subscribe form could go here -->
-                        </div>
+                    <div class="text-center py-3">
+                        <h5 class="text-danger fw-bold mb-2">Producto Agotado</h5>
+                        <p class="text-muted small mb-0">Dejanos tu email para avisarte cuando vuelva.</p>
+                        <!-- Fake subscribe form could go here -->
+                    </div>
                     {% endif %}
                 </div>
 
-                <div class="d-flex gap-4 small text-muted justify-content-center justify-content-lg-start border-top pt-4">
+                <div
+                    class="d-flex gap-4 small text-muted justify-content-center justify-content-lg-start border-top pt-4">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-truck fs-5"></i> Envíos a todo el país
                     </div>
@@ -146,7 +155,7 @@
     <div class="row mt-5 pt-5">
         <div class="col-lg-8 mx-auto">
             <h3 class="fw-bold text-center mb-5">Lo que dicen nuestros clientes</h3>
-            
+
             <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
                 <div class="card-header bg-white border-bottom p-4">
                     <h5 class="fw-bold mb-0">Escribí tu opinión</h5>
@@ -156,7 +165,8 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small text-muted fw-bold text-uppercase">Nombre</label>
-                                <input type="text" name="nombre" class="form-control bg-light border-0" required placeholder="Tu nombre">
+                                <input type="text" name="nombre" class="form-control bg-light border-0" required
+                                    placeholder="Tu nombre">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small text-muted fw-bold text-uppercase">Calificación</label>
@@ -177,7 +187,8 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label small text-muted fw-bold text-uppercase">Comentario</label>
-                                <textarea name="comentario" class="form-control bg-light border-0" rows="3" required placeholder="Contanos tu experiencia..."></textarea>
+                                <textarea name="comentario" class="form-control bg-light border-0" rows="3" required
+                                    placeholder="Contanos tu experiencia..."></textarea>
                             </div>
                             <div class="col-12 text-end">
                                 <button type="submit" class="btn btn-dark px-4 rounded-pill">Publicar</button>
@@ -188,36 +199,37 @@
             </div>
 
             {% if producto.resenas %}
-                <div class="d-flex flex-column gap-3">
-                    {% for resena in producto.resenas|reverse %}
-                    <div class="card border-0 bg-light rounded-4 p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="d-flex align-items-center justify-content-center rounded-circle bg-dark text-white fw-bold" style="width: 40px; height: 40px;">
-                                    {{ resena.nombre_cliente[:1]|upper }}
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold mb-0 text-dark">{{ resena.nombre_cliente }}</h6>
-                                    <div class="text-warning small">
-                                        {% for i in range(resena.calificacion) %}
-                                            <i class="bi bi-star-fill"></i>
-                                        {% endfor %}
-                                    </div>
+            <div class="d-flex flex-column gap-3">
+                {% for resena in producto.resenas|reverse %}
+                <div class="card border-0 bg-light rounded-4 p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-dark text-white fw-bold"
+                                style="width: 40px; height: 40px;">
+                                {{ resena.nombre_cliente[:1]|upper }}
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ resena.nombre_cliente }}</h6>
+                                <div class="text-warning small">
+                                    {% for i in range(resena.calificacion) %}
+                                    <i class="bi bi-star-fill"></i>
+                                    {% endfor %}
                                 </div>
                             </div>
-                            <small class="text-muted">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
                         </div>
-                        <p class="mb-0 text-muted ps-5 ms-2">{{ resena.comentario }}</p>
+                        <small class="text-muted">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
                     </div>
-                    {% endfor %}
+                    <p class="mb-0 text-muted ps-5 ms-2">{{ resena.comentario }}</p>
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
-                <div class="text-center py-5">
-                    <div class="d-inline-block p-3 rounded-circle bg-light mb-3">
-                        <i class="bi bi-chat-heart fs-1 text-muted opacity-50"></i>
-                    </div>
-                    <p class="text-muted">Todavía no hay opiniones. ¡Sé el primero en comentar!</p>
+            <div class="text-center py-5">
+                <div class="d-inline-block p-3 rounded-circle bg-light mb-3">
+                    <i class="bi bi-chat-heart fs-1 text-muted opacity-50"></i>
                 </div>
+                <p class="text-muted">Todavía no hay opiniones. ¡Sé el primero en comentar!</p>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -228,34 +240,37 @@
             <h3 class="fw-bold mb-0">También te puede gustar</h3>
             <a href="/productos" class="btn btn-outline-dark rounded-pill btn-sm px-3">Ver todo</a>
         </div>
-        
+
         <div class="row g-4">
             {% set productos_relacionados = query_productos_por_tipo(producto.tipo, producto.id) %}
             {% if productos_relacionados %}
-                {% for prod in productos_relacionados[:4] %}
-                <div class="col-md-3 col-6">
-                    <div class="card h-100 border-0 shadow-sm product-card hover-lift">
-                         <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
-                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
-                                {% if prod.primera_foto() %}
-                                    <img src="{{ url_for('api.imagen_producto', filename=prod.primera_foto()) }}" 
-                                         class="img-fluid mh-100 mw-100 p-3" alt="{{ prod.nombre }}">
-                                {% else %}
-                                    <span class="text-muted small">Sin foto</span>
-                                {% endif %}
-                            </a>
-                        </div>
-                        <div class="card-body p-3">
-                            <h6 class="card-title fw-bold text-truncate mb-1"><a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
-                            <p class="fw-bold text-primary mb-0">${{ "%.0f"|format(prod.precio) }}</p>
-                        </div>
+            {% for prod in productos_relacionados[:4] %}
+            <div class="col-md-3 col-6">
+                <div class="card h-100 border-0 shadow-sm product-card hover-lift">
+                    <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
+                        <a href="{{ url_for('main.producto_detalle', id=prod.id) }}"
+                            class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
+                            {% if prod.primera_foto() %}
+                            <img src="{{ url_for('api.imagen_producto', filename=prod.primera_foto()) }}"
+                                class="img-fluid mh-100 mw-100 p-3" loading="lazy" alt="{{ prod.nombre }}">
+                            {% else %}
+                            <span class="text-muted small">Sin foto</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="card-body p-3">
+                        <h6 class="card-title fw-bold text-truncate mb-1"><a
+                                href="{{ url_for('main.producto_detalle', id=prod.id) }}"
+                                class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
+                        <p class="fw-bold text-primary mb-0">${{ "%.0f"|format(prod.precio) }}</p>
                     </div>
                 </div>
-                {% endfor %}
+            </div>
+            {% endfor %}
             {% else %}
-                <div class="col-12 text-center text-muted">
-                    No hay productos similares disponibles en este momento.
-                </div>
+            <div class="col-12 text-center text-muted">
+                No hay productos similares disponibles en este momento.
+            </div>
             {% endif %}
         </div>
     </div>
@@ -264,25 +279,25 @@
 <script>
     function agregarAlCarritoDetalle(id, nombre, precio) {
         const cantidad = parseInt(document.getElementById('cantidad-detalle').value);
-        
+
         if (cantidad < 1) {
             alert("La cantidad debe ser mayor a 0");
             return;
         }
-        
+
         // Crear un input temporal para simular la estructura que espera la función global
         const tempInput = document.createElement('input');
         tempInput.id = 'cantidad-' + id;
         tempInput.value = cantidad;
         document.body.appendChild(tempInput);
-        
+
         // Llamar a agregarAlCarrito (definida en main.js/base)
-        if(typeof agregarAlCarrito === 'function') {
-             agregarAlCarrito(id, nombre, precio);
+        if (typeof agregarAlCarrito === 'function') {
+            agregarAlCarrito(id, nombre, precio);
         } else {
             console.error("Función agregarAlCarrito no encontrada");
         }
-       
+
         // Limpiar
         document.body.removeChild(tempInput);
     }
