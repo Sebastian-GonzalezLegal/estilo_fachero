@@ -12,36 +12,47 @@
     <div class="row justify-content-center mb-5 g-3">
         <div class="col-md-8">
             <div
-                class="d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between p-3 bg-white rounded-4 shadow-sm border">
+                class="filters-container d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between p-3 bg-white rounded-4 shadow-sm border">
                 <!-- Filtros -->
                 <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0 w-100 w-md-auto" style="scrollbar-width: none;">
                     <a href="/productos"
-                        class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('tipo') else 'btn-light text-muted border' }}">
+                        class="filter-btn btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('tipo') else 'btn-light text-muted border' }}">
                         Todo
                     </a>
                     {% for t in tipos %}
                     <a href="/productos?tipo={{ t }}"
-                        class="btn btn-sm rounded-pill px-3 text-capitalize fw-bold {{ 'btn-dark' if request.args.get('tipo') == t else 'btn-light text-muted border' }}">
+                        class="filter-btn btn btn-sm rounded-pill px-3 text-capitalize fw-bold {{ 'btn-dark' if request.args.get('tipo') == t else 'btn-light text-muted border' }}">
                         {{ t }}
                     </a>
                     {% endfor %}
                 </div>
 
-                <!-- Buscador -->
-                <form action="/productos" method="GET" class="d-flex flex-grow-1 mw-md-50 w-100">
-                    {% if request.args.get('tipo') %}
-                    <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
-                    {% endif %}
-                    <div class="input-group">
-                        <input type="text" name="q"
-                            class="form-control border-end-0 rounded-start-pill ps-3 bg-light border-0"
-                            placeholder="Buscar..." value="{{ busqueda or '' }}" aria-label="Buscar">
-                        <button class="btn btn-light border-start-0 rounded-end-pill pe-3 border-0 bg-light text-muted"
-                            type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </form>
+                <!-- Ordenar y Buscador -->
+                <div class="d-flex flex-grow-1 gap-2 w-100 mw-md-50">
+                    <select id="sort-select"
+                        class="form-select form-select-sm rounded-pill border-0 bg-light text-muted"
+                        style="width: auto; min-width: 140px;">
+                        <option value="newest">Más nuevos</option>
+                        <option value="price_low">Precio: Bajo a Alto</option>
+                        <option value="price_high">Precio: Alto a Bajo</option>
+                    </select>
+
+                    <form action="/productos" method="GET" class="d-flex flex-grow-1">
+                        {% if request.args.get('tipo') %}
+                        <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
+                        {% endif %}
+                        <div class="input-group">
+                            <input type="text" name="q"
+                                class="form-control border-end-0 rounded-start-pill ps-3 bg-light border-0"
+                                placeholder="Buscar..." value="{{ busqueda or '' }}" aria-label="Buscar">
+                            <button
+                                class="btn btn-light border-start-0 rounded-end-pill pe-3 border-0 bg-light text-muted"
+                                type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -78,7 +89,7 @@
                         {% if prod.primera_foto() %}
                         {% set foto = prod.primera_foto() %}
                         <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}"
-                            alt="{{ prod.nombre }}" class="img-fluid w-100 h-100" loading="lazy"
+                            alt="{{ prod.nombre }}" class="img-fluid w-100 h-100" loading="eager"
                             style="object-fit: contain; padding: 1rem; transition: transform 0.5s ease;">
                         {% else %}
                         <div class="text-muted opacity-50">
@@ -86,6 +97,15 @@
                         </div>
                         {% endif %}
                     </a>
+
+                    <!-- Quick View Overlay -->
+                    <div class="quick-view-btn position-absolute bottom-0 start-0 w-100 p-2 translate-middle-y opacity-0 transition-all"
+                        style="z-index: 3; margin-bottom: -10px;">
+                        <button onclick='abrirVistaRapida({{ prod.id }})'
+                            class="btn btn-dark btn-sm w-100 rounded-pill shadow-sm py-2 opacity-90">
+                            <i class="bi bi-eye me-1"></i> VISTA RÁPIDA
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Card Body -->
@@ -204,5 +224,33 @@
     .pointer-events-none {
         pointer-events: none;
     }
+
+    /* Quick View hover effect */
+    .product-card:hover .quick-view-btn {
+        opacity: 1 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
 </style>
+
+<!-- Modal Vista Rápida -->
+<div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 overflow-hidden shadow-lg">
+            <div class="modal-body p-0">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" style="z-index: 10;"
+                    data-bs-dismiss="modal" aria-label="Close"></button>
+                <div id="quick-view-content">
+                    <!-- Cargado vía AJAX -->
+                    <div class="p-5 text-center">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

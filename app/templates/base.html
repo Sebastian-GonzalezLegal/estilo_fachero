@@ -40,7 +40,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-3" href="/">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Estilo Fachero"
-                    class="nav-logo shadow-sm">
+                    class="nav-logo shadow-sm" loading="eager">
                 <span class="brand-text d-none d-sm-block">ESTILO FACHERO</span>
             </a>
 
@@ -98,6 +98,25 @@
 
     <!-- Main Content -->
     <main class="flex-grow-1 {% if 'admin' not in request.path %}fade-in-up{% endif %}">
+        {% if 'admin' not in request.path and request.path != '/' %}
+        <div class="container mt-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small text-uppercase fw-bold text-muted mb-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Inicio</a></li>
+                    {% if '/productos' in request.path %}
+                    <li class="breadcrumb-item"><a href="/productos"
+                            class="text-decoration-none text-muted">Productos</a></li>
+                    {% endif %}
+                    {% if '/contacto' in request.path %}
+                    <li class="breadcrumb-item active text-dark">Contacto</li>
+                    {% endif %}
+                    {% if '/carrito' in request.path %}
+                    <li class="breadcrumb-item active text-dark">Carrito</li>
+                    {% endif %}
+                </ol>
+            </nav>
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

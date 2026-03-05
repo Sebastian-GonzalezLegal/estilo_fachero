@@ -33,9 +33,9 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
                         <div class="carousel-item {% if loop.first %}active{% endif %}">
                             <div class="d-flex align-items-center justify-content-center bg-white"
                                 style="height: 500px;">
-                                <img src="{{ url_for('api.imagen_producto', filename=foto) }}"
-                                    class="d-block mw-100 mh-100" loading="lazy" alt="{{ producto.nombre }}"
-                                    style="object-fit: contain;">
+                                <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}"
+                                    class="d-block mw-100 mh-100" alt="{{ producto.nombre }}" loading="eager"
+                                    fetchpriority="high" style="object-fit: contain;">
                             </div>
                         </div>
                         {% endfor %}
@@ -68,8 +68,8 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
                     <div class="border rounded-3 overflow-hidden cursor-pointer opacity-75 hover-opacity-100 transition-all"
                         style="width: 80px; height: 80px; flex-shrink: 0;"
                         onclick="document.querySelector('#carousel-fotos .carousel-item.active').classList.remove('active'); document.querySelectorAll('#carousel-fotos .carousel-item')[{{ loop.index0 }}].classList.add('active');">
-                        <img src="{{ url_for('api.imagen_producto', filename=foto) }}"
-                            class="w-100 h-100 object-fit-cover" loading="lazy" alt="Thumbnail">
+                        <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}"
+                            class="w-100 h-100 object-fit-cover" alt="Thumbnail">
                     </div>
                     {% endfor %}
                 </div>
@@ -149,13 +149,27 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
                 </div>
 
                 <div
-                    class="d-flex gap-4 small text-muted justify-content-center justify-content-lg-start border-top pt-4">
+                    class="d-flex flex-wrap gap-3 small text-muted justify-content-center justify-content-lg-start border-top pt-4 mb-4">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-truck fs-5"></i> Envíos a todo el país
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-shield-check fs-5"></i> Garantía de Calidad
                     </div>
+                </div>
+
+                <!-- Compartir -->
+                <div class="d-flex align-items-center gap-3">
+                    <span class="small fw-bold text-uppercase text-muted">Compartir:</span>
+                    <a href="https://wa.me/?text=Mirá este producto en Estilo Fachero: {{ producto.nombre }} - {{ request.url }}"
+                        target="_blank" class="btn btn-sm btn-outline-success rounded-circle"
+                        title="Compartir en WhatsApp">
+                        <i class="bi bi-whatsapp"></i>
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank"
+                        class="btn btn-sm btn-outline-primary rounded-circle" title="Compartir en Facebook">
+                        <i class="bi bi-facebook"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -251,27 +265,32 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
             <a href="/productos" class="btn btn-outline-dark rounded-pill btn-sm px-3">Ver todo</a>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-4 mb-5">
             {% set productos_relacionados = query_productos_por_tipo(producto.tipo, producto.id) %}
             {% if productos_relacionados %}
             {% for prod in productos_relacionados[:4] %}
             <div class="col-md-3 col-6">
                 <div class="card h-100 border-0 shadow-sm product-card hover-lift">
-                    <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
+                    <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden"
+                        style="height: 200px;">
                         <a href="{{ url_for('main.producto_detalle', id=prod.id) }}"
-                            class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center">
+                            class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center text-decoration-none">
                             {% if prod.primera_foto() %}
-                            <img src="{{ url_for('api.imagen_producto', filename=prod.primera_foto()) }}"
-                                class="img-fluid mh-100 mw-100 p-3" loading="lazy" alt="{{ prod.nombre }}">
+                            {% set rel_foto = prod.primera_foto() %}
+                            <img src="{{ rel_foto if rel_foto.startswith('http') else url_for('api.imagen_producto', filename=rel_foto) }}"
+                                class="img-fluid w-100 h-100 p-2" alt="{{ prod.nombre }}" style="object-fit: contain;">
                             {% else %}
-                            <span class="text-muted small">Sin foto</span>
+                            <i class="bi bi-camera text-muted opacity-25 fs-2"></i>
                             {% endif %}
                         </a>
                     </div>
-                    <div class="card-body p-3">
-                        <h6 class="card-title fw-bold text-truncate mb-1"><a
-                                href="{{ url_for('main.producto_detalle', id=prod.id) }}"
-                                class="text-dark text-decoration-none">{{ prod.nombre }}</a></h6>
+                    <div class="card-body p-3 text-center">
+                        <h6 class="card-title fw-bold text-truncate mb-1">
+                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}"
+                                class="text-dark text-decoration-none">
+                                {{ prod.nombre }}
+                            </a>
+                        </h6>
                         <p class="fw-bold text-primary mb-0">${{ "%.0f"|format(prod.precio) }}</p>
                     </div>
                 </div>

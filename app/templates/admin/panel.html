@@ -121,7 +121,7 @@
                         <div class="d-flex align-items-center gap-3">
                             {% if producto.primera_foto() %}
                             <img src="{{ url_for('api.imagen_producto', filename=producto.primera_foto()) }}"
-                                class="avatar shadow-sm" loading="lazy" alt="{{ producto.nombre }}">
+                                class="avatar shadow-sm" alt="{{ producto.nombre }}">
                             {% else %}
                             <div class="avatar bg-light d-flex align-items-center justify-content-center text-muted">
                                 <i class="bi bi-image"></i>

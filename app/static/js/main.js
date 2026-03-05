@@ -2,12 +2,12 @@
 let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
 let productosDisponibles = {}; // Cache de productos con stock
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     actualizarBadge();
     cargarProductos(); // Cargar stock de productos
     actualizarEstadoProductos();
-    
-    if(document.getElementById('tabla-carrito')){
+
+    if (document.getElementById('tabla-carrito')) {
         mostrarCarrito();
     }
 
@@ -18,7 +18,168 @@ document.addEventListener("DOMContentLoaded", function() {
             actualizarOffcanvas();
         });
     }
+
+    // --- MEJORAS UX: Búsqueda y Filtros AJAX ---
+    initAjaxFilters();
+    initBackToTop();
+    initSort();
 });
+
+// Cache para los productos de la página actual para la Vista Rápida
+let productosCacheLocal = [];
+
+function initAjaxFilters() {
+    const filterContainer = document.querySelector('.filters-container'); // Necesitaremos envolver los filtros en este contenedor
+    const searchForm = document.querySelector('form[action="/productos"]');
+    const productGrid = document.querySelector('.row.g-4');
+
+    if (!searchForm || !productGrid) return;
+
+    // Escuchar clics en los botones de filtro
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            updateProducts(url);
+
+            // Actualizar estado activo
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('btn-dark');
+                b.classList.add('btn-light', 'text-muted', 'border');
+            });
+            this.classList.remove('btn-light', 'text-muted', 'border');
+            this.classList.add('btn-dark');
+        });
+    });
+
+    // Búsqueda dinámica (debounce)
+    const searchInput = searchForm.querySelector('input[name="q"]');
+    let timeout = null;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const formData = new FormData(searchForm);
+                const params = new URLSearchParams(formData);
+                updateProducts(`/productos?${params.toString()}`);
+            }, 500);
+        });
+
+        searchForm.addEventListener('submit', (e) => e.preventDefault());
+    }
+}
+
+function initSort() {
+    const sortSelect = document.getElementById('sort-select');
+    if (!sortSelect) return;
+
+    sortSelect.addEventListener('change', function () {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', this.value);
+        updateProducts(url.pathname + url.search);
+    });
+
+    // Marcar el valor actual desde la URL si existe
+    const currentSort = new URLSearchParams(window.location.search).get('sort');
+    if (currentSort) sortSelect.value = currentSort;
+}
+
+async function updateProducts(url) {
+    const productGrid = document.querySelector('.row.g-4');
+    if (!productGrid) return;
+
+    // Mostrar loading
+    productGrid.style.opacity = '0.5';
+    productGrid.style.pointerEvents = 'none';
+
+    try {
+        const response = await fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newContent = doc.querySelector('.row.g-4').innerHTML;
+        const newPagination = doc.querySelector('nav[aria-label="Navegación de productos"]');
+
+        productGrid.innerHTML = newContent;
+        productGrid.style.opacity = '1';
+        productGrid.style.pointerEvents = 'auto';
+
+        // Actualizar paginación
+        const paginationContainer = document.querySelector('nav[aria-label="Navegación de productos"]');
+        if (newPagination && paginationContainer) {
+            paginationContainer.innerHTML = newPagination.innerHTML;
+        } else if (paginationContainer) {
+            paginationContainer.innerHTML = '';
+        }
+
+        // Re-inicializar eventos para los nuevos productos
+        actualizarEstadoProductos();
+
+        // Actualizar URL del navegador sin recargar
+        window.history.pushState({}, '', url);
+
+        // Volver arriba al cambiar de página o filtro
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    } catch (e) {
+        console.error('Error actualizando productos:', e);
+        productGrid.style.opacity = '1';
+        productGrid.style.pointerEvents = 'auto';
+    }
+}
+
+async function abrirVistaRapida(id) {
+    const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+    const content = document.getElementById('quick-view-content');
+
+    content.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-primary" role="status"></div></div>';
+    modal.show();
+
+    try {
+        const response = await fetch(`/api/admin/producto/${id}`); // Reutilizamos el endpoint de admin que devuelve un HTML similar
+        const data = await response.json();
+
+        // El HTML de admin necesita unos ajustes para la vista pública (quitar botón editar, etc.)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.html, 'text/html');
+
+        // Quitar el botón de editar
+        const adminBtn = doc.querySelector('.btn-primary');
+        if (adminBtn) adminBtn.remove();
+
+        // Ajustar enlaces de imágenes si es necesario
+        content.innerHTML = doc.body.innerHTML;
+
+    } catch (e) {
+        content.innerHTML = '<div class="p-5 text-center text-danger">Error al cargar el producto.</div>';
+    }
+}
+
+function initBackToTop() {
+    const btn = document.createElement('button');
+    btn.innerHTML = '<i class="bi bi-arrow-up"></i>';
+    btn.className = 'btn btn-primary rounded-circle shadow-lg position-fixed bottom-0 end-0 m-4 back-to-top';
+    btn.style.display = 'none';
+    btn.style.zIndex = '1000';
+    btn.style.width = '50px';
+    btn.style.height = '50px';
+    document.body.appendChild(btn);
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            btn.style.display = 'block';
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+
+    btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
 // Cargar productos con stock desde la API
 async function cargarProductos() {
@@ -38,14 +199,14 @@ function agregarAlCarrito(id, nombre, precio) {
     const inputCantidad = document.getElementById('cantidad-' + id);
     const cantidadElegida = inputCantidad ? parseInt(inputCantidad.value) : 1;
 
-    if (cantidadElegida < 1) { 
+    if (cantidadElegida < 1) {
         Swal.fire({
             icon: 'error',
             title: 'Ups...',
             text: 'La cantidad debe ser al menos 1.',
             confirmButtonColor: '#4F5D2F'
         });
-        return; 
+        return;
     }
 
     // Validar stock disponible
@@ -87,17 +248,17 @@ function agregarAlCarrito(id, nombre, precio) {
     }
 
     const item = { id, nombre, precio, cantidad: cantidadElegida };
-    
+
     if (existe) {
         existe.cantidad += cantidadElegida;
     } else {
         carrito.push(item);
     }
-    
+
     actualizarStorage();
     actualizarBadge();
     actualizarEstadoProductos();
-    
+
     // Open Offcanvas
     const offcanvasEl = document.getElementById('offcanvasCart');
     if (offcanvasEl) {
@@ -105,17 +266,33 @@ function agregarAlCarrito(id, nombre, precio) {
         offcanvas.show();
     }
 
-    // Feedback visual (opcional, ya que se abre el offcanvas)
+    // Feedback visual premium con Toast de SweetAlert2
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    Toast.fire({
+        icon: 'success',
+        title: `${nombre} agregado al carrito`
+    });
+
     const btn = document.querySelector(`#btn-agregar-${id}`);
-    if(btn) {
-        const originalContent = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check-lg"></i>';
-        btn.classList.add('btn-success');
-        
-        setTimeout(() => { 
-            btn.innerHTML = originalContent; 
-            btn.classList.remove('btn-success');
-        }, 1500);
+    if (btn) {
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> AGREGADO';
+        btn.classList.replace('btn-fachero', 'btn-success');
+
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-bag-plus"></i> AGREGAR';
+            btn.classList.replace('btn-success', 'btn-fachero');
+        }, 2000);
     }
 }
 
@@ -138,7 +315,7 @@ function actualizarBadge() {
     const totalItems = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
     badge.innerText = totalItems;
     badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
-    
+
     // Si el offcanvas está abierto, actualizar su contenido también
     const offcanvasEl = document.getElementById('offcanvasCart');
     if (offcanvasEl && offcanvasEl.classList.contains('show')) {
@@ -150,9 +327,9 @@ function actualizarOffcanvas() {
     const container = document.getElementById('cart-items-container');
     const totalEl = document.getElementById('offcanvas-cart-total');
     const footerActions = document.getElementById('cart-footer-actions');
-    
-    if(!container || !totalEl) return;
-    
+
+    if (!container || !totalEl) return;
+
     container.innerHTML = '';
     let total = 0;
 
@@ -165,16 +342,16 @@ function actualizarOffcanvas() {
             </div>
         `;
         totalEl.innerText = '$0';
-        if(footerActions) footerActions.classList.add('d-none');
+        if (footerActions) footerActions.classList.add('d-none');
         return;
     }
-    
-    if(footerActions) footerActions.classList.remove('d-none');
+
+    if (footerActions) footerActions.classList.remove('d-none');
 
     carrito.forEach((prod, index) => {
         let subtotal = prod.precio * prod.cantidad;
         total += subtotal;
-        
+
         let item = `
             <div class="d-flex align-items-center mb-3 border-bottom pb-3">
                 <div class="flex-grow-1">
@@ -191,7 +368,7 @@ function actualizarOffcanvas() {
         `;
         container.innerHTML += item;
     });
-    
+
     totalEl.innerText = '$' + total;
 }
 
@@ -210,7 +387,7 @@ function actualizarEstadoProductos() {
         const producto = productosDisponibles[prodId];
         const btn = document.getElementById(`btn-agregar-${prodId}`);
         const inputCantidad = document.getElementById(`cantidad-${prodId}`);
-        
+
         if (producto.stock <= 0) {
             if (btn) {
                 btn.disabled = true;
@@ -226,8 +403,8 @@ function actualizarEstadoProductos() {
                 btn.classList.remove('btn-secondary');
                 btn.classList.add('btn-fachero');
                 // Mantenemos el HTML original del template si es posible, o ponemos uno genérico
-                if(!btn.innerHTML.includes('AGREGAR') && !btn.innerHTML.includes('AGOTADO')) {
-                     // No hacemos nada para no romper iconos custom
+                if (!btn.innerHTML.includes('AGREGAR') && !btn.innerHTML.includes('AGOTADO')) {
+                    // No hacemos nada para no romper iconos custom
                 }
             }
             if (inputCantidad) inputCantidad.disabled = false;
@@ -240,16 +417,16 @@ function mostrarCarrito() {
     const totalSpan = document.getElementById('total-compra');
     const panelCompra = document.getElementById('panel-compra-final');
     const mensajeVacio = document.getElementById('mensaje-carrito-vacio');
-    
+
     if (!tabla) return;
 
     let total = 0;
-    tabla.innerHTML = ''; 
-    
+    tabla.innerHTML = '';
+
     // SI ESTÁ VACÍO
     if (carrito.length === 0) {
         // Mostrar mensaje vacío, ocultar tabla y panel compra
-        if(mensajeVacio) {
+        if (mensajeVacio) {
             mensajeVacio.classList.remove('d-none');
             if (tabla.parentElement) {
                 tabla.parentElement.classList.add('d-none'); // Ocultar div .table-responsive
@@ -259,23 +436,23 @@ function mostrarCarrito() {
             tabla.innerHTML = '<tr><td colspan="5" class="text-center py-5">Carrito vacío</td></tr>';
         }
 
-        if(totalSpan) totalSpan.innerText = 0;
-        
-        if(panelCompra) {
+        if (totalSpan) totalSpan.innerText = 0;
+
+        if (panelCompra) {
             panelCompra.classList.add('d-none');
         }
         return;
     }
 
     // SI HAY COSAS
-    if(mensajeVacio) {
+    if (mensajeVacio) {
         mensajeVacio.classList.add('d-none');
         if (tabla.parentElement) {
             tabla.parentElement.classList.remove('d-none');
         }
     }
 
-    if(panelCompra) {
+    if (panelCompra) {
         panelCompra.classList.remove('d-none');
         // panelCompra.classList.add('d-flex'); // Quitamos esto porque ahora es un bloque normal
     }
@@ -283,7 +460,7 @@ function mostrarCarrito() {
     carrito.forEach((prod, index) => {
         let subtotal = prod.precio * prod.cantidad;
         total += subtotal;
-        
+
         let row = `
             <tr>
                 <td class="align-middle fw-bold ps-4">${prod.nombre}</td>
@@ -301,9 +478,9 @@ function mostrarCarrito() {
         `;
         tabla.innerHTML += row;
     });
-    
-    if(totalSpan) totalSpan.innerText = total;
-    if(document.getElementById('subtotal-compra')) {
+
+    if (totalSpan) totalSpan.innerText = total;
+    if (document.getElementById('subtotal-compra')) {
         document.getElementById('subtotal-compra').innerText = total;
     }
 }
@@ -314,7 +491,7 @@ async function calcularEnvio() {
     const cp = document.getElementById('cp-destino').value;
     const resultadoDiv = document.getElementById('resultado-envio');
     const errorDiv = document.getElementById('error-envio');
-    
+
     if (!cp || cp.length < 4) {
         errorDiv.innerText = "Ingresá un código postal válido.";
         errorDiv.classList.remove('d-none');
@@ -328,7 +505,7 @@ async function calcularEnvio() {
         const response = await fetch('/api/micorreo/rates', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 postalCodeDestination: cp,
                 carrito: carrito // Enviamos el carrito para calcular peso y dimensiones
             })
@@ -354,12 +531,12 @@ async function calcularEnvio() {
             // rate suele tener: { "serviceType": "S"|"D", "price": 1234.50, "deliveryTime": "3 a 6 días" ... }
             // Ajustar según respuesta real de MiCorreo (a veces es 'zoneId', 'totalPrice', etc. Chequear API o respuesta real)
             // Asumimos respuesta estandarizada en backend o la que devuelve la API directa.
-            
+
             // Mapeo simple si la API devuelve crudo
             const precio = rate.totalPrice || rate.price || 0;
             const tipo = rate.serviceType === 'D' ? 'A Domicilio' : 'Retiro en Sucursal';
             const demora = rate.deliveryTime || '3-6 días';
-            
+
             html += `
                 <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                     <div>
@@ -394,13 +571,13 @@ function seleccionarEnvio(radio) {
     const precio = parseFloat(radio.value);
     const nombre = radio.getAttribute('data-nombre');
     const tipo = radio.getAttribute('data-tipo');
-    
+
     // Actualizar UI visual
     document.getElementById('fila-envio').style.display = 'flex'; // remove !important with style property if inline
     document.getElementById('fila-envio').style.setProperty('display', 'flex', 'important');
     document.getElementById('tipo-envio-seleccionado').innerText = nombre;
     document.getElementById('costo-envio').innerText = precio;
-    
+
     // Actualizar inputs ocultos para el form
     document.getElementById('input-envio-precio').value = precio;
     document.getElementById('input-envio-nombre').value = nombre;
@@ -413,20 +590,20 @@ function seleccionarEnvio(radio) {
 function recalcularTotalCarrito(costoEnvio = 0) {
     const subtotal = carrito.reduce((acc, prod) => acc + (prod.precio * prod.cantidad), 0);
     const total = subtotal + costoEnvio;
-    
+
     // Actualizar DOM
-    if(document.getElementById('subtotal-compra')) document.getElementById('subtotal-compra').innerText = subtotal;
-    if(document.getElementById('total-compra')) document.getElementById('total-compra').innerText = total;
+    if (document.getElementById('subtotal-compra')) document.getElementById('subtotal-compra').innerText = subtotal;
+    if (document.getElementById('total-compra')) document.getElementById('total-compra').innerText = total;
 }
 
 function irACheckout() {
     // Validar si seleccionó envío si cotizó
     const envioPrecio = document.getElementById('input-envio-precio').value;
     const form = document.getElementById('form-checkout');
-    
+
     // Inyectamos el carrito como JSON en el form GET para procesarlo en /finalizar (aunque lo ideal seria POST o usar session)
     // Como /finalizar espera POST en tu app original, vamos a cambiar el metodo del form a POST dinamicamente o agregar input hidden
-    
+
     // Crear input hidden para el carrito
     let inputCarrito = document.getElementById('input-carrito-data');
     if (!inputCarrito) {
@@ -442,14 +619,14 @@ function irACheckout() {
     // Mmm, en app.py: @app.route('/finalizar', methods=['GET', 'POST'])
     // Si es GET -> render_template('checkout.html')
     // Si es POST -> procesa la compra.
-    
+
     // Mi lógica: El botón "Iniciar Compra" del carrito debería llevar a la pantalla de Checkout (GET), 
     // y AHÍ el usuario llena sus datos. 
     // PERO acá estamos calculando el envío en el carrito.
     // Si queremos persistir el envío seleccionado, debemos pasarlo como query params al GET de checkout.
-    
+
     // Ajuste: Vamos a mandar al usuario a checkout.html CON los datos pre-cargados en la URL o sessionStorage.
     // Para simplificar, usaremos query params ya que el form es method="GET".
-    
+
     form.submit();
 }

@@ -28,7 +28,15 @@ def productos():
             (Producto.descripcion.ilike(f'%{busqueda}%'))
         )
     
-    pagination = query.order_by(Producto.id.desc()).paginate(page=page, per_page=12, error_out=False)
+    sort = request.args.get('sort', 'newest')
+    if sort == 'price_low':
+        query = query.order_by(Producto.precio.asc())
+    elif sort == 'price_high':
+        query = query.order_by(Producto.precio.desc())
+    else:
+        query = query.order_by(Producto.id.desc())
+        
+    pagination = query.paginate(page=page, per_page=12, error_out=False)
     
     return render_template('products.html', 
                          productos=pagination, 
