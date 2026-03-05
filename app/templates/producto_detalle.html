@@ -1,5 +1,15 @@
 {% extends 'base.html' %}
 
+{% block title %}{{ producto.nombre }} | Estilo Fachero{% endblock %}
+{% block description %}{{ producto.descripcion[:160] if producto.descripcion else 'Accesorio exclusivo de Estilo
+Fachero.' }}{% endblock %}
+
+{% block og_title %}{{ producto.nombre }} - Estilo Fachero{% endblock %}
+{% block og_description %}Llevate este producto por solo ${{ "%.2f"|format(producto.precio) }}. ¡Envíos a todo el
+país!{% endblock %}
+{% block og_image %}{{ url_for('api.imagen_producto', filename=producto.primera_foto(), _external=True) if
+producto.primera_foto() else url_for('static', filename='img/logo.png', _external=True) }}{% endblock %}
+
 {% block content %}
 <div class="container my-5">
     <!-- Breadcrumb -->
@@ -121,7 +131,7 @@
                     </div>
 
                     <button class="btn btn-fachero btn-lg w-100 shadow-sm mb-3 rounded-pill py-3 fw-bold"
-                        onclick="agregarAlCarritoDetalle({{ producto.id }}, '{{ producto.nombre }}', {{ producto.precio }})">
+                        onclick='agregarAlCarritoDetalle({{ producto.id }}, {{ producto.nombre | tojson | safe }}, {{ producto.precio }})'>
                         AGREGAR AL CARRITO <i class="bi bi-bag-plus ms-2"></i>
                     </button>
 

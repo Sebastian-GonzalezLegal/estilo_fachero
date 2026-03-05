@@ -125,7 +125,7 @@
                                 class="form-control form-control-sm text-center border-secondary rounded-pill" value="1"
                                 min="1" max="{{ prod.stock }}" style="width: 60px;">
                             <button id="btn-agregar-{{ prod.id }}"
-                                onclick="agregarAlCarrito({{ prod.id }}, '{{ prod.nombre|e }}', {{ prod.precio }})"
+                                onclick='agregarAlCarrito({{ prod.id }}, {{ prod.nombre | tojson | safe }}, {{ prod.precio }})'
                                 class="btn btn-fachero btn-sm w-100 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2">
                                 <i class="bi bi-bag-plus"></i> AGREGAR
                             </button>

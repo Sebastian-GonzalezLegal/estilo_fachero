@@ -241,58 +241,58 @@
     const salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ fechas_grafico | tojson }},
-    datasets: [{
-        label: 'Ventas ($)',
-        data: {{ valores_grafico | tojson }},
-        borderColor: '#4F5D2F',
-        backgroundColor: (context) => {
-            const ctx = context.chart.ctx;
-            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
-            gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
-            return gradient;
-        },
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: '#4F5D2F',
-        pointRadius: 4,
-        pointHoverRadius: 6
+            labels: JSON.parse('{{ fechas_grafico | tojson | safe }}'),
+            datasets: [{
+                label: 'Ventas ($)',
+                data: JSON.parse('{{ valores_grafico | tojson | safe }}'),
+                borderColor: '#4F5D2F',
+                backgroundColor: (context) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
+                    gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
+                    return gradient;
+                },
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#4F5D2F',
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
-    options: {
-        responsive: true,
+        options: {
+            responsive: true,
             plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                backgroundColor: 'rgba(44, 51, 51, 0.9)',
-                    padding: 12,
-                        cornerRadius: 8,
-                            displayColors: false,
-                                titleFont: { family: 'Montserrat', size: 13 },
-                bodyFont: { family: 'Inter', size: 13 }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                    grid: {
-                    borderDash: [4, 4],
-                        color: '#f0f0f0',
-                            drawBorder: false
+                legend: {
+                    display: false
                 },
-                ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                tooltip: {
+                    backgroundColor: 'rgba(44, 51, 51, 0.9)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    titleFont: { family: 'Montserrat', size: 13 },
+                    bodyFont: { family: 'Inter', size: 13 }
+                }
             },
-            x: {
-                grid: { display: false },
-                ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        borderDash: [4, 4],
+                        color: '#f0f0f0',
+                        drawBorder: false
+                    },
+                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                }
             }
         }
-    }
     });
 </script>
 {% endblock %}
