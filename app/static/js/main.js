@@ -88,8 +88,21 @@ async function updateProducts(url) {
     const productGrid = document.querySelector('.row.g-4');
     if (!productGrid) return;
 
-    // Mostrar loading
-    productGrid.style.opacity = '0.5';
+    // Mostrar Skeleton Loading
+    const skeletonHTML = `
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100 border-0 shadow-sm product-card">
+                <div class="skeleton skeleton-img"></div>
+                <div class="card-body d-flex flex-column align-items-start mt-2">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-price"></div>
+                    <div class="skeleton skeleton-btn mt-auto"></div>
+                </div>
+            </div>
+        </div>
+    `.repeat(8); // Mostrar 8 esqueletos por defecto
+
+    productGrid.innerHTML = skeletonHTML;
     productGrid.style.pointerEvents = 'none';
 
     try {
@@ -104,7 +117,6 @@ async function updateProducts(url) {
         const newPagination = doc.querySelector('nav[aria-label="Navegación de productos"]');
 
         productGrid.innerHTML = newContent;
-        productGrid.style.opacity = '1';
         productGrid.style.pointerEvents = 'auto';
 
         // Actualizar paginación
@@ -262,23 +274,6 @@ function agregarAlCarrito(id, nombre, precio) {
         offcanvas.show();
     }
 
-    // Feedback visual premium con Toast de SweetAlert2
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-    });
-
-    Toast.fire({
-        icon: 'success',
-        title: `${nombre} agregado al carrito`
-    });
 
     const btn = document.querySelector(`#btn-agregar-${id}`);
     if (btn) {
@@ -290,6 +285,39 @@ function agregarAlCarrito(id, nombre, precio) {
             btn.classList.replace('btn-success', 'btn-fachero');
         }, 2000);
     }
+}
+
+function cambiarCantidad(index, delta) {
+    let prod = carrito[index];
+    let nuevaCantidad = prod.cantidad + delta;
+
+    if (nuevaCantidad <= 0) {
+        eliminar(index);
+        return;
+    }
+
+    // Validar el stock disponible usando el cache
+    const prodDisponible = productosDisponibles[prod.id];
+    if (prodDisponible && nuevaCantidad > prodDisponible.stock) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin más stock',
+            text: `Solo quedan ${prodDisponible.stock} unidades de este producto.`,
+            confirmButtonColor: '#4F5D2F',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+        });
+        return;
+    }
+
+    prod.cantidad = nuevaCantidad;
+    actualizarStorage();
+    mostrarCarrito();
+    actualizarBadge();
+    actualizarEstadoProductos();
+    actualizarOffcanvas();
 }
 
 function eliminar(index) {
@@ -311,6 +339,11 @@ function actualizarBadge() {
     const totalItems = carrito.reduce((acc, prod) => acc + prod.cantidad, 0);
     badge.innerText = totalItems;
     badge.style.display = totalItems > 0 ? 'inline-block' : 'none';
+
+    // Animación Pop
+    badge.classList.remove('pop-animation');
+    void badge.offsetWidth; // Trigger reflow para reiniciar la animación
+    badge.classList.add('pop-animation');
 
     // Si el offcanvas está abierto, actualizar su contenido también
     const offcanvasEl = document.getElementById('offcanvasCart');
@@ -351,13 +384,17 @@ function actualizarOffcanvas() {
         let item = `
             <div class="d-flex align-items-center mb-3 border-bottom pb-3">
                 <div class="flex-grow-1">
-                    <h6 class="mb-0 fw-bold">${prod.nombre}</h6>
-                    <small class="text-muted">${prod.cantidad} x $${prod.precio}</small>
+                    <h6 class="mb-1 fw-bold">${prod.nombre}</h6>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <button onclick="cambiarCantidad(${index}, -1)" class="btn btn-sm btn-outline-secondary px-2 py-0 border-0 fs-5 lh-1">-</button>
+                        <span class="fw-bold fs-6">${prod.cantidad}</span>
+                        <button onclick="cambiarCantidad(${index}, 1)" class="btn btn-sm btn-outline-secondary px-2 py-0 border-0 fs-5 lh-1">+</button>
+                    </div>
                 </div>
-                <div class="text-end">
+                <div class="text-end ms-2">
                     <span class="d-block fw-bold text-success">$${subtotal}</span>
                     <button onclick="eliminar(${index})" class="btn btn-sm text-danger p-0 mt-1 text-decoration-none" title="Eliminar">
-                        <small><i class="bi bi-trash"></i> Eliminar</small>
+                        <small><i class="bi bi-trash"></i></small>
                     </button>
                 </div>
             </div>
@@ -462,7 +499,11 @@ function mostrarCarrito() {
                 <td class="align-middle fw-bold ps-4">${prod.nombre}</td>
                 <td class="align-middle">$${prod.precio}</td>
                 <td class="align-middle text-center">
-                    <span class="badge bg-light text-dark border">${prod.cantidad}</span>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <button onclick="cambiarCantidad(${index}, -1)" class="btn btn-sm btn-light border">-</button>
+                        <span class="fw-bold" style="width: 24px;">${prod.cantidad}</span>
+                        <button onclick="cambiarCantidad(${index}, 1)" class="btn btn-sm btn-light border">+</button>
+                    </div>
                 </td>
                 <td class="align-middle fw-bold text-success">$${subtotal}</td>
                 <td class="align-middle text-end pe-4">

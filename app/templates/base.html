@@ -102,17 +102,29 @@
         <div class="container mt-4">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small text-uppercase fw-bold text-muted mb-0">
+                    {% block breadcrumbs %}
                     <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Inicio</a></li>
+
                     {% if '/productos' in request.path %}
+                    {% if request.path == '/productos' %}
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Productos</li>
+                    {% else %}
                     <li class="breadcrumb-item"><a href="/productos"
                             class="text-decoration-none text-muted">Productos</a></li>
+                    {% if producto and producto.nombre %}
+                    <li class="breadcrumb-item active text-dark" aria-current="page">{{ producto.nombre }}</li>
                     {% endif %}
+                    {% endif %}
+                    {% endif %}
+
                     {% if '/contacto' in request.path %}
-                    <li class="breadcrumb-item active text-dark">Contacto</li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Contacto</li>
                     {% endif %}
+
                     {% if '/carrito' in request.path %}
-                    <li class="breadcrumb-item active text-dark">Carrito</li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Carrito</li>
                     {% endif %}
+                    {% endblock %}
                 </ol>
             </nav>
         </div>

@@ -12,14 +12,8 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
 
 {% block content %}
 <div class="container my-5">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb bg-transparent p-0 small text-uppercase fw-bold text-muted">
-            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Inicio</a></li>
-            <li class="breadcrumb-item"><a href="/productos" class="text-decoration-none text-muted">Productos</a></li>
-            <li class="breadcrumb-item active text-dark" aria-current="page">{{ producto.nombre }}</li>
-        </ol>
-    </nav>
+    <!-- Breadcrumb Local (Solo si base.html no lo muestra) -->
+    {# El breadcrumb ya se maneja en base.html mediante condicionales de ruta #}
 
     <div class="row g-5">
         <!-- Galería de Fotos -->
