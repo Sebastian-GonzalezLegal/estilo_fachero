@@ -132,28 +132,24 @@ async function updateProducts(url) {
 }
 
 async function abrirVistaRapida(id) {
-    const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+    const modalEl = document.getElementById('quickViewModal');
+    if (!modalEl) return;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     const content = document.getElementById('quick-view-content');
 
     content.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-primary" role="status"></div></div>';
     modal.show();
 
     try {
-        const response = await fetch(`/api/admin/producto/${id}`); // Reutilizamos el endpoint de admin que devuelve un HTML similar
+        const response = await fetch(`/api/producto/${id}`);
         const data = await response.json();
 
-        // El HTML de admin necesita unos ajustes para la vista pública (quitar botón editar, etc.)
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.html, 'text/html');
-
-        // Quitar el botón de editar
-        const adminBtn = doc.querySelector('.btn-primary');
-        if (adminBtn) adminBtn.remove();
-
-        // Ajustar enlaces de imágenes si es necesario
-        content.innerHTML = doc.body.innerHTML;
+        // El HTML ya viene listo para la vista pública desde el nuevo endpoint
+        content.innerHTML = data.html;
 
     } catch (e) {
+        console.error('Error al cargar vista rápida:', e);
         content.innerHTML = '<div class="p-5 text-center text-danger">Error al cargar el producto.</div>';
     }
 }
