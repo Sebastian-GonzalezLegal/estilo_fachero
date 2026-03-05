@@ -65,7 +65,8 @@ login_manager.login_message_category = 'info'
 
 # --- CONFIGURACIÓN ---
 MI_EMAIL = "seba10gl1@gmail.com"
-GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUJLNZH593kh-5hjdViRXnvusZvmyRhpGznY4XIVYDGc98TdTN1Imh9tyMKjFbPZ1I/exec"
+GOOGLE_APPS_SCRIPT_URL = os.getenv('GOOGLE_APPS_SCRIPT_URL')
+EMAIL_WEBHOOK_TOKEN = os.getenv('EMAIL_WEBHOOK_TOKEN', 'mi_token_secreto')
 
 # Número y link de WhatsApp para enviar el comprobante de pago
 # Cambiá estos valores por tu número real si querés.
@@ -357,7 +358,8 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
         payload_cliente = {
             "to": email_cliente,
             "subject": "¡Gracias por tu compra en Estilo Fachero! Instrucciones de pago",
-            "htmlBody": cuerpo_cliente_html
+            "htmlBody": cuerpo_cliente_html,
+            "token": EMAIL_WEBHOOK_TOKEN
         }
         requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload_cliente)
 
@@ -365,7 +367,8 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
         payload_vendedor = {
             "to": MI_EMAIL,
             "subject": f"¡NUEVA VENTA! - {nombre}",
-            "htmlBody": cuerpo_vendedor_html
+            "htmlBody": cuerpo_vendedor_html,
+            "token": EMAIL_WEBHOOK_TOKEN
         }
         requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload_vendedor)
 
@@ -737,7 +740,8 @@ def enviar_mail_despacho(pedido):
         payload = {
             "to": pedido.email_cliente,
             "subject": f"Tu pedido #{pedido.id} ha sido enviado",
-            "htmlBody": cuerpo_html
+            "htmlBody": cuerpo_html,
+            "token": EMAIL_WEBHOOK_TOKEN
         }
         r = requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload)
         return r.status_code == 200
@@ -1185,7 +1189,8 @@ def enviar_mail_confirmacion_pago(pedido, payment_id):
             payload = {
                 "to": p_email,
                 "subject": f"Pago confirmado - Pedido #{p_id}",
-                "htmlBody": cuerpo_html
+                "htmlBody": cuerpo_html,
+                "token": EMAIL_WEBHOOK_TOKEN
             }
             requests.post(GOOGLE_APPS_SCRIPT_URL, json=payload)
             
