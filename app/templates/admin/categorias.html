@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 fade-in-up">
+    <!-- Header Admin -->
+    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">Categorías Dinámicas</h2>
+            <p class="text-muted mb-0">Administra las categorías de tus productos.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-fachero shadow-sm d-flex align-items-center gap-2"
+                data-bs-toggle="modal" data-bs-target="#nuevaCategoriaModal">
+                <i class="bi bi-plus-lg"></i> Nueva Categoría
+            </button>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4"
+        role="alert">
+        <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="admin-table-wrapper shadow-sm bg-white mb-5">
+        <table class="admin-table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width: 50%;">Nombre</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in categorias %}
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">{{ c.nombre }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.admin_categoria_toggle', id=c.id) }}"
+                            class="d-inline">
+                            <div class="form-check form-switch p-0 m-0 d-flex align-items-center gap-2">
+                                <input class="form-check-input m-0" type="checkbox" role="switch"
+                                    onchange="this.form.submit()" {% if c.activa %}checked{% endif %}
+                                    style="cursor: pointer;">
+                                <label class="form-check-label mb-0">
+                                    {% if c.activa %}
+                                    <span class="status-badge success mb-0 py-1 px-2"><span
+                                            class="status-dot"></span>Activa</span>
+                                    {% else %}
+                                    <span class="status-badge secondary mb-0 py-1 px-2"><span
+                                            class="status-dot"></span>Inactiva</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </form>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm"
+                            title="Editar Categoría" data-bs-toggle="modal"
+                            data-bs-target="#editarCategoriaModal{{ c.id }}">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center py-5">
+                        <div class="text-muted opacity-50 mb-2">
+                            <i class="bi bi-tags fs-1"></i>
+                        </div>
+                        <p class="text-muted fw-bold">No hay categorías cargadas.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- Modal Nueva Categoría -->
+<div class="modal fade" id="nuevaCategoriaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="{{ url_for('admin.admin_categoria_nueva') }}" method="POST">
+                <div class="modal-header border-bottom-0 bg-light">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-plus-circle-fill me-2 text-primary"></i>
+                        Nueva Categoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label small fw-bold text-muted">NOMBRE DE CATEGORÍA</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej: Remeras"
+                            required>
+                        <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i> Se mostrará en el menú de
+                            la tienda pública si está activa.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fachero shadow-sm">Crear Categoría</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modals Editar Categoría -->
+{% for c in categorias %}
+<div class="modal fade" id="editarCategoriaModal{{ c.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form action="{{ url_for('admin.admin_categoria_editar', id=c.id) }}" method="POST">
+                <div class="modal-header border-bottom-0 bg-light">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>
+                        Editar Categoría</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="nombre_editar{{ c.id }}" class="form-label small fw-bold text-muted">NOMBRE DE
+                            CATEGORÍA</label>
+                        <input type="text" class="form-control" id="nombre_editar{{ c.id }}" name="nombre"
+                            value="{{ c.nombre }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fachero shadow-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

@@ -21,10 +21,16 @@ def create_app(config_class=Config):
         
     @app.context_processor
     def inject_globals():
+        from .models import Categoria
+        try:
+            categorias = Categoria.query.filter_by(activa=True).order_by(Categoria.nombre).all()
+        except:
+            categorias = []
         return dict(
             whatsapp_link=app.config['WHATSAPP_LINK'],
             whatsapp_numero=app.config['WHATSAPP_NUMERO'],
-            email_contacto=app.config['MI_EMAIL']
+            email_contacto=app.config['MI_EMAIL'],
+            categorias=categorias
         )
 
     # Registrar Blueprints

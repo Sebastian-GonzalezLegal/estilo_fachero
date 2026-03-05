@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5 fade-in-up">
+    <!-- Header Admin -->
+    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">Gestión de Productos</h2>
+            <p class="text-muted mb-0">Administra tu inventario, precios y disponibilidad.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.admin_producto_nuevo') }}"
+                class="btn btn-fachero shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> Nuevo Producto
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda -->
+    <div class="admin-card mb-5">
+        <div class="card-body p-4">
+            <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Productos
+            </h6>
+            <form action="{{ url_for('admin.admin_productos') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted fw-bold mb-1">Buscar Producto</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i
+                                class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="search"
+                            value="{{ search or '' }}" placeholder="Ej: Gorra Nike">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold mb-1">Categoría</label>
+                    <select class="form-select" name="categoria_id">
+                        <option value="">Todas</option>
+                        {% for c in categorias %}
+                        <option value="{{ c.id }}" {% if filtro_categoria==c.id %}selected{% endif %}>{{ c.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted fw-bold mb-1">Estado</label>
+                    <select class="form-select" name="estado">
+                        <option value="">Todos</option>
+                        <option value="activo" {% if filtro_estado=='activo' %}selected{% endif %}>Activo</option>
+                        <option value="inactivo" {% if filtro_estado=='inactivo' %}selected{% endif %}>Inactivo
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
+                    {% if search or filtro_categoria or filtro_estado %}
+                    <a href="{{ url_for('admin.admin_productos') }}" class="btn btn-light border w-auto"
+                        title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-table-wrapper shadow-sm bg-white mb-5">
+        <table class="admin-table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th class="ps-4">Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos.items %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if producto.primera_foto() %}
+                            <img src="{{ url_for('api.imagen_producto', filename=producto.primera_foto()) }}"
+                                class="avatar shadow-sm" alt="{{ producto.nombre }}">
+                            {% else %}
+                            <div class="avatar bg-light d-flex align-items-center justify-content-center text-muted">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold text-dark">{{ producto.nombre }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">{{
+                                    producto.descripcion or 'Sin descripción' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border fw-normal text-uppercase">{{
+                            producto.categoria.nombre if producto.categoria else producto.tipo
+                            }}</span>
+                    </td>
+                    <td>
+                        <div id="display-precio-{{ producto.id }}" class="fw-bold text-dark" style="cursor: pointer;"
+                            onclick="enableEdit('precio', {{ producto.id }})">
+                            $<span id="text-precio-{{ producto.id }}">{{ producto.precio }}</span>
+                            <i class="bi bi-pencil-fill text-muted ms-1" style="font-size: 0.7rem; opacity: 0.5;"></i>
+                        </div>
+                        <div id="edit-precio-{{ producto.id }}" class="d-none input-group input-group-sm"
+                            style="width: 110px;">
+                            <span class="input-group-text py-0 px-1">$</span>
+                            <input type="number" step="0.01" class="form-control form-control-sm py-0 px-1"
+                                id="input-precio-{{ producto.id }}" value="{{ producto.precio }}">
+                            <button class="btn btn-success py-0 px-1" onclick="saveEdit('precio', {{ producto.id }})"><i
+                                    class="bi bi-check"></i></button>
+                            <button class="btn btn-outline-secondary py-0 px-1"
+                                onclick="cancelEdit('precio', {{ producto.id }})"><i class="bi bi-x"></i></button>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="display-stock-{{ producto.id }}" style="cursor: pointer;"
+                            onclick="enableEdit('stock', {{ producto.id }})">
+                            <span id="text-stock-{{ producto.id }}"
+                                class="fw-bold {% if producto.stock > 5 %}text-success{% elif producto.stock > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                {{ producto.stock }}
+                            </span> <span class="text-muted small">unid.</span>
+                            <i class="bi bi-pencil-fill text-muted ms-1" style="font-size: 0.7rem; opacity: 0.5;"></i>
+                        </div>
+                        <div id="edit-stock-{{ producto.id }}" class="d-none input-group input-group-sm"
+                            style="width: 100px;">
+                            <input type="number" step="1" min="0" class="form-control form-control-sm py-0 px-1"
+                                id="input-stock-{{ producto.id }}" value="{{ producto.stock }}">
+                            <button class="btn btn-success py-0 px-1" onclick="saveEdit('stock', {{ producto.id }})"><i
+                                    class="bi bi-check"></i></button>
+                            <button class="btn btn-outline-secondary py-0 px-1"
+                                onclick="cancelEdit('stock', {{ producto.id }})"><i class="bi bi-x"></i></button>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-check form-switch d-inline-block p-0 m-0 d-flex align-items-center gap-2">
+                            <input class="form-check-input m-0" type="checkbox" role="switch"
+                                id="toggle-{{ producto.id }}" {% if producto.activo %}checked{% endif %}
+                                onchange="toggleStatus({{ producto.id }}, this.checked)" style="cursor: pointer;">
+                            <label class="form-check-label mb-0" for="toggle-{{ producto.id }}"
+                                id="label-status-{{ producto.id }}">
+                                {% if producto.activo %}
+                                <span class="status-badge success mb-0 py-1 px-2"><span
+                                        class="status-dot"></span>Activo</span>
+                                {% else %}
+                                <span class="status-badge secondary mb-0 py-1 px-2"><span
+                                        class="status-dot"></span>Inactivo</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="btn-group">
+                            <a href="{{ url_for('admin.admin_producto_editar', id=producto.id) }}"
+                                class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm"
+                                title="Editar producto completo">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="text-muted opacity-50 mb-2">
+                            <i class="bi bi-box2 fs-1"></i>
+                        </div>
+                        <p class="text-muted fw-bold">No hay productos cargados.</p>
+                        <a href="{{ url_for('admin.admin_producto_nuevo') }}"
+                            class="btn btn-sm btn-outline-primary mt-2">Cargar el primero</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if productos.pages > 1 %}
+    <nav aria-label="Navegación de páginas de productos" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination pagination-sm shadow-sm">
+            <li class="page-item {% if not productos.has_prev %}disabled{% endif %}">
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_productos', page=productos.prev_num, search=search, categoria_id=filtro_categoria, estado=filtro_estado) if productos.has_prev else '#' }}"
+                    tabindex="-1" aria-disabled="true">Anterior</a>
+            </li>
+
+            {% for page_num in productos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+            {% if productos.page == page_num %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item"><a class="page-link text-success"
+                    href="{{ url_for('admin.admin_productos', page=page_num, search=search, categoria_id=filtro_categoria, estado=filtro_estado) }}">{{
+                    page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if not productos.has_next %}disabled{% endif %}">
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_productos', page=productos.next_num, search=search, categoria_id=filtro_categoria, estado=filtro_estado) if productos.has_next else '#' }}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- Funciones para UX Inline y AJAX ---
+    function toggleStatus(productId, isActive) {
+        fetch(`/admin/productos/${productId}/toggle_activo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ activo: isActive })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    const label = document.getElementById(`label-status-${productId}`);
+                    if (isActive) {
+                        label.innerHTML = '<span class="status-badge success mb-0 py-1 px-2"><span class="status-dot"></span>Activo</span>';
+                    } else {
+                        label.innerHTML = '<span class="status-badge secondary mb-0 py-1 px-2"><span class="status-dot"></span>Inactivo</span>';
+                    }
+                } else {
+                    alert('Error: ' + data.error);
+                    // revert toggle
+                    const toggle = document.getElementById(`toggle-${productId}`);
+                    toggle.checked = !isActive;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error de conexión.');
+                document.getElementById(`toggle-${productId}`).checked = !isActive;
+            });
+    }
+
+    function enableEdit(field, id) {
+        document.getElementById(`display-${field}-${id}`).classList.add('d-none');
+        document.getElementById(`edit-${field}-${id}`).classList.remove('d-none');
+        document.getElementById(`input-${field}-${id}`).focus();
+    }
+
+    function cancelEdit(field, id) {
+        document.getElementById(`edit-${field}-${id}`).classList.add('d-none');
+        document.getElementById(`display-${field}-${id}`).classList.remove('d-none');
+    }
+
+    function saveEdit(field, id) {
+        const inputVal = document.getElementById(`input-${field}-${id}`).value;
+        const payload = {};
+        payload[field] = inputVal;
+
+        fetch(`/admin/productos/${id}/quick_edit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    // Actualizar interfaz
+                    const textSpan = document.getElementById(`text-${field}-${id}`);
+                    if (field === 'precio') {
+                        textSpan.textContent = parseFloat(data.producto.precio).toFixed(1); // o 2 si querés decimales
+                    } else if (field === 'stock') {
+                        const newStock = parseInt(data.producto.stock);
+                        textSpan.textContent = newStock;
+
+                        // Actualizar color
+                        textSpan.className = 'fw-bold';
+                        if (newStock > 5) textSpan.classList.add('text-success');
+                        else if (newStock > 0) textSpan.classList.add('text-warning');
+                        else textSpan.classList.add('text-danger');
+                    }
+
+                    // Actualizar valor de input por las dudas
+                    document.getElementById(`input-${field}-${id}`).value = inputVal;
+
+                    // Cerrar edicion
+                    cancelEdit(field, id);
+                } else {
+                    alert('Error al guardar: ' + data.error);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error de conexión.');
+            });
+    }
+
+    // Permitir Enter para guardar
+    document.querySelectorAll('[id^="input-precio-"], [id^="input-stock-"]').forEach(input => {
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const parts = this.id.split('-');
+                const field = parts[1];
+                const id = parts[2];
+                saveEdit(field, id);
+            }
+        });
+    });
+</script>
+{% endblock %}

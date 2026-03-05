@@ -76,7 +76,7 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
             <div class="ps-lg-4">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge bg-light text-dark border fw-normal text-uppercase tracking-wider">{{
-                        producto.tipo }}</span>
+                        producto.categoria.nombre if producto.categoria else producto.tipo }}</span>
                     {% if producto.stock < 5 and producto.stock> 0 %}
                         <span class="badge bg-warning text-dark"><i class="bi bi-fire me-1"></i>¡ÚLTIMOS!</span>
                         {% endif %}
@@ -260,7 +260,7 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
         </div>
 
         <div class="row g-4 mb-5">
-            {% set productos_relacionados = query_productos_por_tipo(producto.tipo, producto.id) %}
+            {% set productos_relacionados = query_productos_por_categoria(producto.categoria_id, producto.id) %}
             {% if productos_relacionados %}
             {% for prod in productos_relacionados[:4] %}
             <div class="col-md-3 col-6">

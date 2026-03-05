@@ -3,7 +3,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime
 from app.extensions import db
-from app.models import Admin, Producto, Pedido
+from app.models import Admin, Producto, Pedido, Categoria
 from app.services.email_service import enviar_mail_despacho
 from flask import current_app
 
@@ -39,9 +39,6 @@ def admin_logout():
 @admin_bp.route('/')
 @login_required
 def admin_panel():
-    page = request.args.get('page', 1, type=int)
-    productos = Producto.query.order_by(Producto.id.desc()).paginate(page=page, per_page=10, error_out=False)
-    
     total_ventas = db.session.query(func.sum(Pedido.total)).scalar() or 0
     total_pedidos = Pedido.query.count()
     productos_bajo_stock = Producto.query.filter(Producto.stock < 5, Producto.activo == True).count()
@@ -56,13 +53,41 @@ def admin_panel():
     fechas_grafico = sorted(ventas_por_fecha.keys())[-7:]
     valores_grafico = [ventas_por_fecha[f] for f in fechas_grafico]
 
-    return render_template('admin/panel.html', 
-                         productos=productos,
+    return render_template('admin/panel.html',
                          total_ventas=total_ventas,
                          total_pedidos=total_pedidos,
                          productos_bajo_stock=productos_bajo_stock,
                          fechas_grafico=fechas_grafico,
                          valores_grafico=valores_grafico)
+
+@admin_bp.route('/productos')
+@login_required
+def admin_productos():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+    filtro_categoria = request.args.get('categoria_id', type=int)
+    filtro_estado = request.args.get('estado', '').strip()
+    
+    query = Producto.query
+    
+    if search:
+        query = query.filter(Producto.nombre.ilike(f'%{search}%'))
+    if filtro_categoria:
+        query = query.filter(Producto.categoria_id == filtro_categoria)
+    if filtro_estado == 'activo':
+        query = query.filter(Producto.activo == True)
+    elif filtro_estado == 'inactivo':
+        query = query.filter(Producto.activo == False)
+        
+    productos = query.order_by(Producto.id.desc()).paginate(page=page, per_page=10, error_out=False)
+    categorias = Categoria.query.order_by(Categoria.nombre).all()
+    
+    return render_template('admin/productos.html', 
+                         productos=productos,
+                         categorias=categorias,
+                         search=search,
+                         filtro_categoria=filtro_categoria,
+                         filtro_estado=filtro_estado)
 
 @admin_bp.route('/ventas')
 @login_required
@@ -134,8 +159,8 @@ def admin_actualizar_venta(id):
 import os
 from uuid import uuid4
 from flask import jsonify
-from app.models import ProductoImagen, TipoEnvio
-from app.models import TIPOS_PRODUCTO
+from app.models import ProductoImagen, TipoEnvio, Categoria
+from app.models import TIPOS_PRODUCTO  # Keep for backwards compatibility if needed
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -189,7 +214,7 @@ def _guardar_fotos_subidas(request):
 def admin_producto_nuevo():
     if request.method == 'POST':
         nombre = request.form.get('nombre', '').strip()
-        tipo = request.form.get('tipo', '').strip().lower()
+        categoria_id = request.form.get('categoria_id')
         descripcion = request.form.get('descripcion', '').strip() or None
         fotos_subidas = _guardar_fotos_subidas(request)
         fotos_urls = _parse_fotos_from_form(request.form.get('fotos', ''))
@@ -203,6 +228,7 @@ def admin_producto_nuevo():
         largo_cm = request.form.get('largo_cm', '10')
         
         try:
+            categoria_id = int(categoria_id) if categoria_id else None
             precio = float(precio)
             stock = int(stock)
             peso_g = int(peso_g)
@@ -213,13 +239,13 @@ def admin_producto_nuevo():
             flash('Error en los valores numéricos', 'error')
             return redirect(url_for('admin.admin_producto_nuevo'))
         
-        if not nombre or tipo not in TIPOS_PRODUCTO or precio <= 0:
-            flash('Completa nombre, tipo (gorra/lentes/medias) y precio válido', 'error')
+        if not nombre or not categoria_id or precio <= 0:
+            flash('Completa nombre, categoría y precio válido', 'error')
             return redirect(url_for('admin.admin_producto_nuevo'))
         
         producto = Producto(
             nombre=nombre,
-            tipo=tipo,
+            categoria_id=categoria_id,
             descripcion=descripcion,
             fotos=fotos if fotos else None,
             stock=max(0, stock),
@@ -234,9 +260,10 @@ def admin_producto_nuevo():
         db.session.add(producto)
         db.session.commit()
         flash('Producto creado exitosamente', 'success')
-        return redirect(url_for('admin.admin_panel'))
+        return redirect(url_for('admin.admin_productos'))
     
-    return render_template('admin/producto_form.html', producto=None, tipos=TIPOS_PRODUCTO)
+    categorias = Categoria.query.filter_by(activa=True).order_by(Categoria.nombre).all()
+    return render_template('admin/producto_form.html', producto=None, categorias=categorias)
 
 
 @admin_bp.route('/productos/<int:id>/editar', methods=['GET', 'POST'])
@@ -246,7 +273,7 @@ def admin_producto_editar(id):
     
     if request.method == 'POST':
         producto.nombre = request.form.get('nombre', '').strip()
-        producto.tipo = request.form.get('tipo', '').strip().lower()
+        categoria_id_form = request.form.get('categoria_id')
         producto.descripcion = request.form.get('descripcion', '').strip() or None
         # Mantener fotos que ya tenía (fotos_actuales) + nuevas subidas
         fotos_actuales_raw = request.form.get('fotos_actuales', '')
@@ -258,6 +285,7 @@ def admin_producto_editar(id):
             producto.fotos = None
         
         try:
+            producto.categoria_id = int(categoria_id_form) if categoria_id_form else None
             producto.precio = float(request.form.get('precio', '0'))
             producto.stock = max(0, int(request.form.get('stock', '0')))
             producto.peso_g = int(request.form.get('peso_g', '100'))
@@ -268,15 +296,21 @@ def admin_producto_editar(id):
             flash('Error en los valores numéricos', 'error')
             return redirect(url_for('admin.admin_producto_editar', id=id))
         
-        if not producto.nombre or producto.tipo not in TIPOS_PRODUCTO or producto.precio <= 0:
-            flash('Completa nombre, tipo (gorra/lentes/medias) y precio válido', 'error')
+        if not producto.nombre or not producto.categoria_id or producto.precio <= 0:
+            flash('Completa nombre, categoría y precio válido', 'error')
             return redirect(url_for('admin.admin_producto_editar', id=id))
         
         db.session.commit()
         flash('Producto actualizado exitosamente', 'success')
-        return redirect(url_for('admin.admin_panel'))
+        return redirect(url_for('admin.admin_productos'))
     
-    return render_template('admin/producto_form.html', producto=producto, tipos=TIPOS_PRODUCTO)
+    categorias = Categoria.query.filter_by(activa=True).order_by(Categoria.nombre).all()
+    # Si el producto tiene una categoría asignada que ahora está inactiva, la agregamos a la lista para no romper el select
+    if producto.categoria and not producto.categoria.activa:
+        if producto.categoria not in categorias:
+            categorias.append(producto.categoria)
+            
+    return render_template('admin/producto_form.html', producto=producto, categorias=categorias)
 
 
 @admin_bp.route('/productos/<int:id>/eliminar', methods=['POST'])
@@ -286,7 +320,7 @@ def admin_producto_eliminar(id):
     producto.activo = False
     db.session.commit()
     flash('Producto desactivado exitosamente', 'success')
-    return redirect(url_for('admin.admin_panel'))
+    return redirect(url_for('admin.admin_productos'))
 
 
 @admin_bp.route('/productos/<int:id>/activar', methods=['POST'])
@@ -296,7 +330,53 @@ def admin_producto_activar(id):
     producto.activo = True
     db.session.commit()
     flash('Producto activado exitosamente', 'success')
-    return redirect(url_for('admin.admin_panel'))
+    return redirect(url_for('admin.admin_productos'))
+
+
+@admin_bp.route('/productos/<int:id>/toggle_activo', methods=['POST'])
+@login_required
+def admin_producto_toggle_activo(id):
+    producto = Producto.query.get_or_404(id)
+    data = request.get_json()
+    if 'activo' in data:
+        producto.activo = bool(data['activo'])
+        db.session.commit()
+        return jsonify({'ok': True, 'activo': producto.activo})
+    return jsonify({'ok': False, 'error': 'Dato inválido'}), 400
+
+
+@admin_bp.route('/productos/<int:id>/quick_edit', methods=['POST'])
+@login_required
+def admin_producto_quick_edit(id):
+    producto = Producto.query.get_or_404(id)
+    data = request.get_json()
+    
+    try:
+        if 'precio' in data:
+            nuevo_precio = float(data['precio'])
+            if nuevo_precio < 0:
+                raise ValueError
+            producto.precio = nuevo_precio
+            
+        if 'stock' in data:
+            nuevo_stock = int(data['stock'])
+            if nuevo_stock < 0:
+                raise ValueError
+            producto.stock = nuevo_stock
+            
+        db.session.commit()
+        return jsonify({
+            'ok': True, 
+            'producto': {
+                'id': producto.id,
+                'precio': producto.precio,
+                'stock': producto.stock
+            }
+        })
+    except ValueError:
+        return jsonify({'ok': False, 'error': 'Valor numérico inválido o negativo'}), 400
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
 
 
 @admin_bp.route('/productos/<int:id>/eliminar_foto', methods=['POST'])
@@ -401,3 +481,66 @@ def admin_envio_activar(id):
     db.session.commit()
     flash('Envío activado', 'success')
     return redirect(url_for('admin.admin_envios'))
+
+# --- RUTAS ADMIN CATEGORIAS ---
+@admin_bp.route('/categorias')
+@login_required
+def admin_categorias():
+    categorias = Categoria.query.order_by(Categoria.nombre.asc()).all()
+    return render_template('admin/categorias.html', categorias=categorias)
+
+@admin_bp.route('/categorias/nuevo', methods=['POST'])
+@login_required
+def admin_categoria_nueva():
+    nombre = request.form.get('nombre', '').strip()
+    
+    if not nombre:
+        flash('Falta nombre de la categoría', 'error')
+        return redirect(url_for('admin.admin_categorias'))
+        
+    # Validar que no exista
+    existente = Categoria.query.filter(func.lower(Categoria.nombre) == func.lower(nombre)).first()
+    if existente:
+        flash('Ya existe una categoría con ese nombre', 'error')
+        return redirect(url_for('admin.admin_categorias'))
+        
+    nueva = Categoria(nombre=nombre.capitalize(), activa=True)
+    db.session.add(nueva)
+    db.session.commit()
+    
+    flash('Categoría creada exitosamente', 'success')
+    return redirect(url_for('admin.admin_categorias'))
+
+@admin_bp.route('/categorias/<int:id>/toggle', methods=['POST'])
+@login_required
+def admin_categoria_toggle(id):
+    categoria = Categoria.query.get_or_404(id)
+    categoria.activa = not categoria.activa
+    db.session.commit()
+    
+    estado = "activada" if categoria.activa else "desactivada"
+    flash(f'Categoría {estado}', 'success')
+    return redirect(url_for('admin.admin_categorias'))
+
+@admin_bp.route('/categorias/<int:id>/editar', methods=['POST'])
+@login_required
+def admin_categoria_editar(id):
+    categoria = Categoria.query.get_or_404(id)
+    nuevo_nombre = request.form.get('nombre', '').strip()
+    
+    if not nuevo_nombre:
+        flash('El nombre no puede estar vacío', 'error')
+        return redirect(url_for('admin.admin_categorias'))
+        
+    # Verificar colisión
+    existente = Categoria.query.filter(Categoria.id != id, func.lower(Categoria.nombre) == func.lower(nuevo_nombre)).first()
+    if existente:
+        flash('Ya existe otra categoría con ese nombre', 'error')
+        return redirect(url_for('admin.admin_categorias'))
+        
+    categoria.nombre = nuevo_nombre.capitalize()
+    db.session.commit()
+    
+    flash('Categoría actualizada', 'success')
+    return redirect(url_for('admin.admin_categorias'))
+

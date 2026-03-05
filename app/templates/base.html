@@ -84,11 +84,28 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <span class="nav-link text-white-high fw-bold"><i class="bi bi-shield-lock me-2"></i>Panel de
-                            Administración</span>
+                        <a class="nav-link {{ 'active' if request.path == '/admin/' or request.path == '/admin' }}"
+                            href="/admin/"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/"><i class="bi bi-box-arrow-right me-1"></i> Ir al Sitio</a>
+                        <a class="nav-link {{ 'active' if '/admin/productos' in request.path }}"
+                            href="/admin/productos"><i class="bi bi-box-seam me-1"></i> Productos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if '/admin/categorias' in request.path }}"
+                            href="/admin/categorias"><i class="bi bi-tags me-1"></i> Categorías</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if '/admin/ventas' in request.path }}" href="/admin/ventas"><i
+                                class="bi bi-receipt me-1"></i> Ventas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if '/admin/envios' in request.path }}" href="/admin/envios"><i
+                                class="bi bi-truck me-1"></i> Envíos</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-sm btn-outline-light rounded-pill px-3" href="/"><i
+                                class="bi bi-box-arrow-right me-1"></i> Ir al Sitio</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -200,10 +217,17 @@
                         <li><a href="/" class="text-white-50 text-decoration-none hover-white">Inicio</a></li>
                         <li><a href="/productos" class="text-white-50 text-decoration-none hover-white">Todos los
                                 Productos</a></li>
+                        {% if categorias is defined %}
+                        {% for c in categorias %}
+                        <li><a href="/productos?categoria={{ c.id }}"
+                                class="text-white-50 text-decoration-none hover-white">{{ c.nombre }}</a></li>
+                        {% endfor %}
+                        {% else %}
                         <li><a href="/productos?tipo=gorra"
                                 class="text-white-50 text-decoration-none hover-white">Gorras</a></li>
                         <li><a href="/productos?tipo=lentes"
                                 class="text-white-50 text-decoration-none hover-white">Lentes</a></li>
+                        {% endif %}
                     </ul>
                 </div>
 

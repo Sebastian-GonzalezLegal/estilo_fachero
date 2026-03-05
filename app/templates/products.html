@@ -14,15 +14,15 @@
             <div
                 class="filters-container d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between p-3 bg-white rounded-4 shadow-sm border">
                 <!-- Filtros -->
-                <div class="d-flex gap-2 overflow-auto pb-2 pb-md-0 w-100 w-md-auto" style="scrollbar-width: none;">
+                <div class="d-flex flex-wrap gap-2 pb-md-0 w-100 w-md-auto">
                     <a href="/productos"
-                        class="filter-btn btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('tipo') else 'btn-light text-muted border' }}">
+                        class="filter-btn btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('categoria') and not request.args.get('tipo') else 'btn-light text-muted border' }}">
                         Todo
                     </a>
-                    {% for t in tipos %}
-                    <a href="/productos?tipo={{ t }}"
-                        class="filter-btn btn btn-sm rounded-pill px-3 text-capitalize fw-bold {{ 'btn-dark' if request.args.get('tipo') == t else 'btn-light text-muted border' }}">
-                        {{ t }}
+                    {% for c in categorias %}
+                    <a href="/productos?categoria={{ c.id }}"
+                        class="filter-btn btn btn-sm rounded-pill px-3 text-capitalize fw-bold {{ 'btn-dark' if tipo_actual == c.id else 'btn-light text-muted border' }}">
+                        {{ c.nombre }}
                     </a>
                     {% endfor %}
                 </div>
@@ -38,7 +38,9 @@
                     </select>
 
                     <form action="/productos" method="GET" class="d-flex flex-grow-1">
-                        {% if request.args.get('tipo') %}
+                        {% if request.args.get('categoria') %}
+                        <input type="hidden" name="categoria" value="{{ request.args.get('categoria') }}">
+                        {% elif request.args.get('tipo') %}
                         <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
                         {% endif %}
                         <div class="input-group">
@@ -60,7 +62,7 @@
     {% if busqueda %}
     <div class="mb-4 text-center">
         <p class="text-muted">Resultados para: <span class="fw-bold text-dark">"{{ busqueda }}"</span>
-            <a href="/productos{{ '?tipo=' + request.args.get('tipo') if request.args.get('tipo') else '' }}"
+            <a href="/productos{{ '?categoria=' ~ request.args.get('categoria') if request.args.get('categoria') else ('?tipo=' ~ request.args.get('tipo') if request.args.get('tipo') else '') }}"
                 class="text-decoration-none ms-2 text-danger small">
                 <i class="bi bi-x-circle"></i> Limpiar
             </a>
@@ -76,7 +78,8 @@
                 <!-- Badges -->
                 <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-start pointer-events-none"
                     style="z-index: 2;">
-                    <span class="badge bg-white text-dark shadow-sm text-uppercase border">{{ prod.tipo }}</span>
+                    <span class="badge bg-white text-dark shadow-sm text-uppercase border">{{ prod.categoria.nombre if
+                        prod.categoria else prod.tipo }}</span>
                     {% if prod.stock <= 0 %} <span class="badge bg-danger shadow-sm">AGOTADO</span>
                         {% elif prod.stock < 5 %} <span class="badge bg-warning text-dark shadow-sm">¡ÚLTIMOS!</span>
                             {% endif %}
@@ -177,7 +180,7 @@
         <ul class="pagination pagination-lg shadow-sm">
             <li class="page-item {% if not productos.has_prev %}disabled{% endif %}">
                 <a class="page-link text-dark rounded-start-pill px-4"
-                    href="{{ url_for('main.productos', page=productos.prev_num, q=busqueda, tipo=request.args.get('tipo')) if productos.has_prev else '#' }}"
+                    href="{{ url_for('main.productos', page=productos.prev_num, q=busqueda, categoria=request.args.get('categoria'), tipo=request.args.get('tipo')) if productos.has_prev else '#' }}"
                     tabindex="-1" aria-disabled="true">
                     <i class="bi bi-chevron-left"></i>
                 </a>
@@ -192,7 +195,7 @@
             {% else %}
             <li class="page-item">
                 <a class="page-link text-dark fw-medium"
-                    href="{{ url_for('main.productos', page=page_num, q=busqueda, tipo=request.args.get('tipo')) }}">
+                    href="{{ url_for('main.productos', page=page_num, q=busqueda, categoria=request.args.get('categoria'), tipo=request.args.get('tipo')) }}">
                     {{ page_num }}
                 </a>
             </li>
@@ -206,7 +209,7 @@
 
             <li class="page-item {% if not productos.has_next %}disabled{% endif %}">
                 <a class="page-link text-dark rounded-end-pill px-4"
-                    href="{{ url_for('main.productos', page=productos.next_num, q=busqueda, tipo=request.args.get('tipo')) if productos.has_next else '#' }}">
+                    href="{{ url_for('main.productos', page=productos.next_num, q=busqueda, categoria=request.args.get('categoria'), tipo=request.args.get('tipo')) if productos.has_next else '#' }}">
                     <i class="bi bi-chevron-right"></i>
                 </a>
             </li>

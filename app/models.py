@@ -5,6 +5,20 @@ from datetime import datetime
 
 TIPOS_PRODUCTO = ('gorra', 'lentes', 'medias')
 
+class Categoria(db.Model):
+    __tablename__ = 'categorias'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), unique=True, nullable=False)
+    activa = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "activa": self.activa
+        }
+
+
 class ProductoImagen(db.Model):
     __tablename__ = 'producto_imagenes'
     id = db.Column(db.Integer, primary_key=True)
@@ -33,7 +47,8 @@ class Producto(db.Model):
     __tablename__ = 'productos'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(200), nullable=False)
-    tipo = db.Column(db.String(50), nullable=False)  # gorra | lentes | medias
+    tipo = db.Column(db.String(50))  # Mantenido temporalmente para compatibilidad
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'))
     descripcion = db.Column(db.Text)
     fotos = db.Column(db.JSON)  # lista de nombres/urls: ["foto1.jpg", "foto2.jpg"]
     stock = db.Column(db.Integer, default=0)
@@ -43,6 +58,8 @@ class Producto(db.Model):
     ancho_cm = db.Column(db.Integer, default=10)
     largo_cm = db.Column(db.Integer, default=10)
     activo = db.Column(db.Boolean, default=True)
+    
+    categoria = db.relationship('Categoria', backref='productos')
 
     def promedio_calificacion(self):
         """Devuelve el promedio de estrellas."""
@@ -66,7 +83,9 @@ class Producto(db.Model):
         return {
             "id": self.id,
             "nombre": self.nombre,
-            "tipo": self.tipo,
+            "tipo": self.tipo, # Fallback backward compat
+            "categoria_id": self.categoria_id,
+            "categoria_nombre": self.categoria.nombre if self.categoria else (self.tipo or ""),
             "descripcion": self.descripcion or "",
             "fotos": self.fotos_lista(),
             "stock": self.stock,

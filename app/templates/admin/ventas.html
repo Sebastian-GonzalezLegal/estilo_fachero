@@ -16,27 +16,6 @@
         </div>
     </div>
 
-    <!-- Navegación -->
-    <div class="mb-5">
-        <ul class="nav admin-nav d-flex gap-2">
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin.admin_panel') }}">
-                    <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="{{ url_for('admin.admin_ventas') }}">
-                    <i class="bi bi-receipt me-2"></i> Ventas
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('admin.admin_envios') }}">
-                    <i class="bi bi-truck me-2"></i> Envíos
-                </a>
-            </li>
-        </ul>
-    </div>
-
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     {% for category, message in messages %}
