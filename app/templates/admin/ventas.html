@@ -9,7 +9,8 @@
             <p class="text-muted mb-0">Controla y administra los pedidos de tus clientes.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('admin.admin_logout') }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
+            <a href="{{ url_for('admin.admin_logout') }}"
+                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>
@@ -35,29 +36,33 @@
             </li>
         </ul>
     </div>
-    
+
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
-                    <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4"
+        role="alert">
+        <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
 
     <!-- Filtros -->
     <div class="admin-card mb-5">
         <div class="card-body p-4">
-            <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Pedidos</h6>
+            <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Pedidos
+            </h6>
             <form method="GET" action="{{ url_for('admin.admin_ventas') }}" class="row g-3 align-items-end">
                 <div class="col-md-5">
                     <label class="form-label small fw-bold text-muted">Cliente</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" name="cliente" placeholder="Nombre..." value="{{ filtro_cliente or '' }}">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i
+                                class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" name="cliente"
+                            placeholder="Nombre..." value="{{ filtro_cliente or '' }}">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -67,7 +72,8 @@
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
                     {% if filtro_cliente or filtro_fecha %}
-                    <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                    <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i
+                            class="bi bi-x-lg"></i></a>
                     {% endif %}
                 </div>
             </form>
@@ -88,48 +94,58 @@
                 </tr>
             </thead>
             <tbody>
-                {% for pedido in pedidos %}
+                {% for pedido in pedidos.items %}
                 <tr>
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="avatar bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-5">
+                            <div
+                                class="avatar bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-5">
                                 #{{ pedido.id }}
                             </div>
                             <div>
-                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{ pedido.fecha_pedido.strftime('%d %b %Y') }}</div>
+                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{
+                                    pedido.fecha_pedido.strftime('%d %b %Y') }}</div>
                                 <div class="small text-muted">{{ pedido.fecha_pedido.strftime('%H:%M') }} hs</div>
                             </div>
                         </div>
                     </td>
                     <td>
                         <div class="fw-bold text-dark">{{ pedido.nombre_cliente }}</div>
-                        <div class="small text-muted"><a href="mailto:{{ pedido.email_cliente }}" class="text-muted text-decoration-none">{{ pedido.email_cliente }}</a></div>
+                        <div class="small text-muted"><a href="mailto:{{ pedido.email_cliente }}"
+                                class="text-muted text-decoration-none">{{ pedido.email_cliente }}</a></div>
                     </td>
                     <td>
                         {% if pedido.estado == 'Pendiente' %}
-                            <span class="status-badge warning"><span class="status-dot"></span>Pendiente</span>
+                        <span class="status-badge warning"><span class="status-dot"></span>Pendiente</span>
                         {% elif pedido.estado == 'En Aprobación' %}
-                            <span class="status-badge info"><span class="status-dot"></span>En Aprobación</span>
+                        <span class="status-badge info"><span class="status-dot"></span>En Aprobación</span>
                         {% elif pedido.estado == 'Enviado' %}
-                            <span class="status-badge primary" style="background-color: #e0e7ff; color: #3730a3;"><span class="status-dot"></span>Enviado</span>
+                        <span class="status-badge primary" style="background-color: #e0e7ff; color: #3730a3;"><span
+                                class="status-dot"></span>Enviado</span>
                         {% elif pedido.estado == 'Entregado' %}
-                            <span class="status-badge success"><span class="status-dot"></span>Entregado</span>
+                        <span class="status-badge success"><span class="status-dot"></span>Entregado</span>
                         {% else %}
-                            <span class="status-badge secondary"><span class="status-dot"></span>{{ pedido.estado or 'Desconocido' }}</span>
+                        <span class="status-badge secondary"><span class="status-dot"></span>{{ pedido.estado or
+                            'Desconocido' }}</span>
                         {% endif %}
                     </td>
                     <td>
                         {% if pedido.pagado %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3"><i class="bi bi-check-circle-fill me-1"></i> Pagado</span>
+                        <span
+                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3"><i
+                                class="bi bi-check-circle-fill me-1"></i> Pagado</span>
                         {% else %}
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3"><i class="bi bi-hourglass-split me-1"></i> Pendiente</span>
+                        <span
+                            class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3"><i
+                                class="bi bi-hourglass-split me-1"></i> Pendiente</span>
                         {% endif %}
                     </td>
                     <td class="text-end fw-bold text-dark fs-6">
                         ${{ "%.2f"|format(pedido.total) }}
                     </td>
                     <td class="text-end pe-4">
-                        <a href="{{ url_for('admin.admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
+                        <a href="{{ url_for('admin.admin_detalle_venta', id=pedido.id) }}"
+                            class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
                             Ver <i class="bi bi-arrow-right-short"></i>
                         </a>
                     </td>
@@ -148,5 +164,40 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Paginación de Ventas -->
+    {% if pedidos.pages > 1 %}
+    <nav aria-label="Navegación de páginas de ventas" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination pagination-sm shadow-sm">
+            <li class="page-item {% if not pedidos.has_prev %}disabled{% endif %}">
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_ventas', page=pedidos.prev_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_prev else '#' }}"
+                    tabindex="-1" aria-disabled="true">Anterior</a>
+            </li>
+
+            {% for page_num in pedidos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+            {% if pedidos.page == page_num %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item"><a class="page-link text-success"
+                    href="{{ url_for('admin.admin_ventas', page=page_num, cliente=filtro_cliente, fecha=filtro_fecha) }}">{{
+                    page_num }}</a></li>
+            {% endif %}
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if not pedidos.has_next %}disabled{% endif %}">
+                <a class="page-link text-success"
+                    href="{{ url_for('admin.admin_ventas', page=pedidos.next_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_next else '#' }}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 </div>
 {% endblock %}

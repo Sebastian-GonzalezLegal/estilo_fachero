@@ -108,7 +108,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for producto in productos %}
+                {% for producto in productos.items %}
                 <tr>
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
@@ -179,6 +179,36 @@
             </tbody>
         </table>
     </div>
+
+    <!-- Paginación de Productos -->
+    {% if productos.pages > 1 %}
+    <nav aria-label="Navegación de páginas de productos" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination pagination-sm shadow-sm">
+            <li class="page-item {% if not productos.has_prev %}disabled{% endif %}">
+                <a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=productos.prev_num) if productos.has_prev else '#' }}" tabindex="-1" aria-disabled="true">Anterior</a>
+            </li>
+            
+            {% for page_num in productos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    {% if productos.page == page_num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=page_num) }}">{{ page_num }}</a></li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            
+            <li class="page-item {% if not productos.has_next %}disabled{% endif %}">
+                <a class="page-link text-success" href="{{ url_for('admin.admin_panel', page=productos.next_num) if productos.has_next else '#' }}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
 </div>
 
 <!-- Chart.js -->

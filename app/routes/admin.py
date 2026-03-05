@@ -39,7 +39,8 @@ def admin_logout():
 @admin_bp.route('/')
 @login_required
 def admin_panel():
-    productos = Producto.query.order_by(Producto.id.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    productos = Producto.query.order_by(Producto.id.desc()).paginate(page=page, per_page=10, error_out=False)
     
     total_ventas = db.session.query(func.sum(Pedido.total)).scalar() or 0
     total_pedidos = Pedido.query.count()
@@ -68,6 +69,7 @@ def admin_panel():
 def admin_ventas():
     filtro_cliente = request.args.get('cliente', '').strip()
     filtro_fecha = request.args.get('fecha', '').strip()
+    page = request.args.get('page', 1, type=int)
     
     query = Pedido.query
     
@@ -82,7 +84,7 @@ def admin_ventas():
         except Exception:
             pass
     
-    pedidos = query.order_by(Pedido.fecha_pedido.desc()).all()
+    pedidos = query.order_by(Pedido.fecha_pedido.desc()).paginate(page=page, per_page=15, error_out=False)
     
     return render_template('admin/ventas.html', pedidos=pedidos, filtro_cliente=filtro_cliente, filtro_fecha=filtro_fecha)
 
