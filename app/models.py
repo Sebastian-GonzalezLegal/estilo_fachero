@@ -58,6 +58,7 @@ class Producto(db.Model):
     ancho_cm = db.Column(db.Integer, default=10)
     largo_cm = db.Column(db.Integer, default=10)
     activo = db.Column(db.Boolean, default=True)
+    umbral_stock = db.Column(db.Integer, default=5)
     
     categoria = db.relationship('Categoria', backref='productos')
 
@@ -93,7 +94,8 @@ class Producto(db.Model):
             "peso_g": self.peso_g,
             "alto_cm": self.alto_cm,
             "ancho_cm": self.ancho_cm,
-            "largo_cm": self.largo_cm
+            "largo_cm": self.largo_cm,
+            "umbral_stock": self.umbral_stock
         }
 
 
@@ -230,3 +232,21 @@ class Configuracion(db.Model):
             db.session.add(config)
             db.session.commit()
         return config
+
+
+class CuponDescuento(db.Model):
+    __tablename__ = 'cupones'
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(50), unique=True, nullable=False)
+    descuento_porcentaje = db.Column(db.Float, nullable=False)
+    activo = db.Column(db.Boolean, default=True)
+    fecha_expiracion = db.Column(db.DateTime, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "codigo": self.codigo,
+            "descuento_porcentaje": self.descuento_porcentaje,
+            "activo": self.activo,
+            "fecha_expiracion": self.fecha_expiracion.isoformat() if self.fecha_expiracion else None
+        }

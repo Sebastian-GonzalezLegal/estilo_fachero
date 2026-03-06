@@ -56,7 +56,7 @@
                         </div>
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-4" id="containerNotificar" style="display: none;">
                         <div class="form-check form-switch p-3 bg-light rounded border">
                             <input class="form-check-input ms-0 me-3" type="checkbox" id="checkNotificar" name="notificar" checked>
                             <label class="form-check-label fw-bold" for="checkNotificar">¿Notificar al cliente por email?</label>
@@ -174,7 +174,10 @@
     function toggleEnvioFields() {
         const estado = document.getElementById('selectEstado').value;
         const camposEnvio = document.getElementById('camposEnvio');
+        const containerNotificar = document.getElementById('containerNotificar');
+        
         camposEnvio.style.display = (estado === 'Enviado' || estado === 'Entregado') ? 'block' : 'none';
+        containerNotificar.style.display = (estado === 'Enviado') ? 'block' : 'none';
     }
     document.addEventListener('DOMContentLoaded', toggleEnvioFields);
 

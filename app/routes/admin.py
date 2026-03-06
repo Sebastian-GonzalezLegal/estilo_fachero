@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.extensions import db
 from app.models import Admin, Producto, Pedido, Categoria, Configuracion
 from app.services.email_service import enviar_mail_despacho
@@ -41,7 +41,8 @@ def admin_logout():
 def admin_panel():
     total_ventas = db.session.query(func.sum(Pedido.total)).scalar() or 0
     total_pedidos = Pedido.query.count()
-    productos_bajo_stock = Producto.query.filter(Producto.stock < 5, Producto.activo == True).count()
+    # Ahora usamos el umbral dinámico por producto
+    productos_bajo_stock = Producto.query.filter(Producto.stock < Producto.umbral_stock, Producto.activo == True).count()
     
     # Nuevo KPI: Crecimiento Semanal
     from datetime import timedelta
@@ -178,6 +179,8 @@ def admin_actualizar_venta(id):
         else:
             msg_extra = " pero falló el envío del mail"
             
+    flash(f'Pedido #{id} actualizado correctamente{msg_extra}', 'success')
+    return redirect(url_for('admin.admin_detalle_venta', id=id))
 import os
 from uuid import uuid4
 from flask import jsonify
@@ -276,6 +279,7 @@ def admin_producto_nuevo():
         alto_cm = request.form.get('alto_cm', '10')
         ancho_cm = request.form.get('ancho_cm', '10')
         largo_cm = request.form.get('largo_cm', '10')
+        umbral_stock = request.form.get('umbral_stock', '5')
         
         try:
             categoria_id = int(categoria_id) if categoria_id else None
@@ -285,6 +289,7 @@ def admin_producto_nuevo():
             alto_cm = int(alto_cm)
             ancho_cm = int(ancho_cm)
             largo_cm = int(largo_cm)
+            umbral_stock = int(umbral_stock)
         except ValueError:
             flash('Error en los valores numéricos', 'error')
             return redirect(url_for('admin.admin_producto_nuevo'))
@@ -309,6 +314,7 @@ def admin_producto_nuevo():
             alto_cm=alto_cm,
             ancho_cm=ancho_cm,
             largo_cm=largo_cm,
+            umbral_stock=umbral_stock,
             activo=True
         )
         
@@ -347,6 +353,7 @@ def admin_producto_editar(id):
             producto.alto_cm = int(request.form.get('alto_cm', '10'))
             producto.ancho_cm = int(request.form.get('ancho_cm', '10'))
             producto.largo_cm = int(request.form.get('largo_cm', '10'))
+            producto.umbral_stock = int(request.form.get('umbral_stock', '5'))
             
             # Actualizar 'tipo' para compatibilidad
             if producto.categoria:
@@ -674,6 +681,37 @@ def admin_productos_bulk_action():
             
         db.session.commit()
         return jsonify({'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(product_ids)} productos.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/ventas/bulk_action', methods=['POST'])
+@login_required
+def admin_ventas_bulk_action():
+    data = request.get_json()
+    order_ids = data.get('ids', [])
+    accion = data.get('accion')
+    
+    if not order_ids or not accion:
+        return jsonify({'ok': False, 'error': 'Faltan datos'}), 400
+        
+    try:
+        if accion == 'pagado':
+            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.pagado: True}, synchronize_session=False)
+        elif accion == 'no_pagado':
+            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.pagado: False}, synchronize_session=False)
+        elif accion == 'estado_pendiente':
+            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Pendiente'}, synchronize_session=False)
+        elif accion == 'estado_enviado':
+            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Enviado'}, synchronize_session=False)
+        elif accion == 'estado_entregado':
+            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Entregado'}, synchronize_session=False)
+        else:
+            return jsonify({'ok': False, 'error': 'Acción no válida'}), 400
+            
+        db.session.commit()
+        return jsonify({'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(order_ids)} pedidos.'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'ok': False, 'error': str(e)}), 500

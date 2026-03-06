@@ -14,27 +14,33 @@ if __name__ == '__main__':
         try:
             with db.engine.connect() as connection:
                 from sqlalchemy import text
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS estado VARCHAR(50) DEFAULT 'Pendiente'"))
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagado BOOLEAN DEFAULT FALSE"))
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS codigo_seguimiento VARCHAR(100)"))
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS link_seguimiento VARCHAR(300)"))
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_envio VARCHAR(100)"))
-                connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(50) DEFAULT 'transferencia'"))
                 
-                # Columnas para configuración de inicio
-                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_1 VARCHAR(255)"))
-                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_2 VARCHAR(255)"))
-                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_3 VARCHAR(255)"))
-                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_4 VARCHAR(255)"))
+                # Lista de comandos de migración seguros
+                commands = [
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS estado VARCHAR(50) DEFAULT 'Pendiente'",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pagado BOOLEAN DEFAULT FALSE",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS codigo_seguimiento VARCHAR(100)",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS link_seguimiento VARCHAR(300)",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_envio VARCHAR(100)",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(50) DEFAULT 'transferencia'",
+                    "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_1 VARCHAR(255)",
+                    "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_2 VARCHAR(255)",
+                    "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_3 VARCHAR(255)",
+                    "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_4 VARCHAR(255)",
+                    "ALTER TABLE productos ADD COLUMN IF NOT EXISTS umbral_stock INTEGER DEFAULT 5",
+                    "ALTER TABLE configuracion DROP COLUMN IF EXISTS google_apps_script_url",
+                    "ALTER TABLE configuracion DROP COLUMN IF EXISTS email_webhook_token"
+                ]
                 
-                # Eliminar columnas sensibles si existen (ya no se manejan desde el admin)
-                try:
-                    connection.execute(text("ALTER TABLE configuracion DROP COLUMN google_apps_script_url"))
-                    connection.execute(text("ALTER TABLE configuracion DROP COLUMN email_webhook_token"))
-                except:
-                    pass
+                for cmd in commands:
+                    try:
+                        # Usamos begin() para una transacción individual por comando
+                        with db.engine.begin() as conn:
+                            conn.execute(text(cmd))
+                    except Exception:
+                        # Ignorar errores individuales (ej. si la columna ya existe y el IF NOT EXISTS no basta)
+                        pass
                 
-                connection.commit()
                 print("Base de datos actualizada: Columnas nuevas verificadas.")
         except Exception as e:
             print(f"Nota: No se pudo actualizar la estructura de la DB automáticamente (puede que ya esté actualizada): {e}")

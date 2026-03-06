@@ -50,13 +50,48 @@
     </div>
 </div>
 
+<!-- Barra de Acciones por Lote (Inicialmente oculta) -->
+<div id="batch-action-bar" class="admin-card mb-4 bg-primary text-white d-none shadow-lg animate__animated animate__fadeInUp" style="position: sticky; top: 80px; z-index: 1040; overflow: visible !important;">
+    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-white text-primary rounded-pill fs-6" id="selected-count">0</span>
+            <span class="fw-bold">Pedidos seleccionados</span>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm dropdown-toggle fw-bold text-primary px-3" type="button" data-bs-toggle="dropdown">
+                    Cambiar Estado
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><a class="dropdown-item" href="#" onclick="aplicarAccionLote('estado_pendiente')">Pendiente</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="aplicarAccionLote('estado_enviado')">Enviado</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="aplicarAccionLote('estado_entregado')">Entregado</a></li>
+                </ul>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm dropdown-toggle fw-bold text-primary px-3" type="button" data-bs-toggle="dropdown">
+                    Pago
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li><a class="dropdown-item" href="#" onclick="aplicarAccionLote('pagado')">Marcar como Pagado</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="aplicarAccionLote('no_pagado')">Marcar como Pendiente</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-outline-light btn-sm px-3" onclick="deseleccionarTodo()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <!-- Lista de Pedidos -->
 <div class="admin-card overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 card-table">
             <thead class="bg-light">
                 <tr>
-                    <th class="ps-4 py-3">Pedido / Fecha</th>
+                    <th class="ps-4 py-3" style="width: 40px;">
+                        <input type="checkbox" class="form-check-input" id="check-all">
+                    </th>
+                    <th class="py-3">Pedido / Fecha</th>
                     <th class="py-3">Cliente</th>
                     <th class="py-3">Estado</th>
                     <th class="py-3">Pago</th>
@@ -66,8 +101,11 @@
             </thead>
             <tbody>
                 {% for pedido in pedidos.items %}
-                <tr>
-                    <td class="ps-4" data-label="Pedido / Fecha">
+                <tr class="order-row" data-id="{{ pedido.id }}">
+                    <td class="ps-4">
+                        <input type="checkbox" class="form-check-input order-checkbox" value="{{ pedido.id }}">
+                    </td>
+                    <td data-label="Pedido / Fecha">
                         <div class="d-flex align-items-center gap-3">
                             <div class="bg-light rounded p-2 text-primary fw-bold" style="min-width: 45px; text-align: center;">
                                 #{{ pedido.id }}
@@ -113,7 +151,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center py-5">
+                    <td colspan="7" class="text-center py-5">
                         <i class="bi bi-inbox fs-1 text-muted opacity-25"></i>
                         <p class="text-muted fw-bold mt-2">No se encontraron ventas</p>
                     </td>
@@ -124,7 +162,7 @@
     </div>
 </div>
 
-<!-- Paginación -->
+<!-- Paginación ... (se mantiene igual) -->
 {% if pedidos.pages > 1 %}
 <nav class="mt-4 d-flex justify-content-center">
     <ul class="pagination pagination-sm shadow-sm">
@@ -147,9 +185,71 @@
 </nav>
 {% endif %}
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkAll = document.getElementById('check-all');
+        const checkboxes = document.querySelectorAll('.order-checkbox');
+        const batchBar = document.getElementById('batch-action-bar');
+        const selectedCountLabel = document.getElementById('selected-count');
+
+        function updateBatchBar() {
+            const selected = document.querySelectorAll('.order-checkbox:checked');
+            selectedCountLabel.textContent = selected.length;
+            if (selected.length > 0) {
+                batchBar.classList.remove('d-none');
+            } else {
+                batchBar.classList.add('d-none');
+            }
+        }
+
+        checkAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = checkAll.checked);
+            updateBatchBar();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateBatchBar);
+        });
+
+        window.deseleccionarTodo = function() {
+            checkAll.checked = false;
+            checkboxes.forEach(cb => cb.checked = false);
+            updateBatchBar();
+        };
+
+        window.aplicarAccionLote = function(accion) {
+            const ids = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(cb => cb.value);
+            if (ids.length === 0) return;
+
+            if (!confirm(`¿Aplicar acción "${accion}" a ${ids.length} pedidos?`)) return;
+
+            fetch('{{ url_for("admin.admin_ventas_bulk_action") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids, accion })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(err => {
+                Swal.fire('Error', 'Hubo un problema al procesar la solicitud.', 'error');
+            });
+        };
+    });
+</script>
+
 <style>
     .extra-small { font-size: 0.75rem; }
     .pagination .page-link { color: var(--admin-accent); border: none; }
     .pagination .page-item.active .page-link { background-color: var(--admin-accent); color: white; }
+    .order-row.selected { background-color: rgba(79, 93, 47, 0.05); }
+    #batch-action-bar { transition: all 0.3s ease; }
 </style>
 {% endblock %}

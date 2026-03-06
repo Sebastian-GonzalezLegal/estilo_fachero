@@ -104,6 +104,15 @@
                         <input type="number" class="form-control" name="stock" value="{{ producto.stock if producto else 0 }}" min="0">
                     </div>
 
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Aviso de Stock Bajo</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-bell"></i></span>
+                            <input type="number" class="form-control" name="umbral_stock" value="{{ producto.umbral_stock if producto else 5 }}" min="0">
+                        </div>
+                        <div class="extra-small text-muted mt-1">Recibirás un aviso en el panel cuando el stock sea menor a este valor.</div>
+                    </div>
+
                     <div class="p-3 bg-light rounded border mb-4">
                         <div class="small fw-bold text-muted text-uppercase mb-2"><i class="bi bi-truck me-1"></i> Logística</div>
                         <div class="row g-2">
