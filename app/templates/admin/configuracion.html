@@ -18,7 +18,51 @@
         </div>
     </div>
 
-    <form method="POST" class="row g-4">
+    <form method="POST" class="row g-4" enctype="multipart/form-data">
+        <!-- Diseño de Inicio (Hero) -->
+        <div class="col-12 animate__animated animate__fadeInUp">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-2">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-palette-fill text-primary"></i>
+                        <h5 class="fw-bold mb-0 text-dark">Diseño de Inicio (Sección Hero)</h5>
+                    </div>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <p class="text-muted small mb-4">Sube imágenes para reemplazar los íconos de la pantalla de inicio. Se recomienda usar imágenes con fondo transparente o estilo collage de productos.</p>
+                    <div class="row g-4">
+                        {% for i in range(1, 5) %}
+                        {% set field_name = 'hero_image_' ~ i %}
+                        {% set current_img = config[field_name] %}
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold small text-uppercase">Imagen {{ i }}</label>
+                            <div class="position-relative group mb-2">
+                                <div class="ratio ratio-1x1 bg-light rounded-3 overflow-hidden border">
+                                    {% if current_img %}
+                                    <img src="{{ url_for('api.imagen_producto', filename=current_img) }}" class="img-fluid object-fit-cover" id="preview-{{ field_name }}">
+                                    {% else %}
+                                    <div class="d-flex flex-column align-items-center justify-content-center text-muted opacity-50" id="preview-{{ field_name }}">
+                                        <i class="bi bi-image fs-1"></i>
+                                        <span class="small">Sin imagen</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <label for="{{ field_name }}" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 m-2 rounded-circle shadow" title="Cambiar imagen">
+                                    <i class="bi bi-camera-fill"></i>
+                                </label>
+                                <input type="file" name="{{ field_name }}" id="{{ field_name }}" class="d-none hero-input" data-preview="preview-{{ field_name }}" accept="image/*">
+                            </div>
+                            <div class="form-check form-switch small">
+                                <input class="form-check-input" type="checkbox" name="remove_{{ field_name }}" value="true" id="remove-{{ field_name }}">
+                                <label class="form-check-label text-muted" for="remove-{{ field_name }}">Quitar imagen</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Información General -->
         <div class="col-lg-8 animate__animated animate__fadeInUp">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
@@ -92,19 +136,6 @@
                             <input type="text" name="direccion" class="form-control bg-light border-0 rounded-3" value="{{ config.direccion }}">
                         </div>
                     </div>
-
-                    <div class="small fw-bold text-primary mt-4 mb-3 text-uppercase border-bottom pb-2">Configuración de Mensajería (Email)</div>
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label fw-semibold">Google Apps Script URL (Webhook)</label>
-                            <input type="text" name="google_apps_script_url" class="form-control bg-light border-0 rounded-3" value="{{ config.google_apps_script_url or '' }}" placeholder="https://script.google.com/macros/s/...">
-                            <div class="form-text">URL del script que envía los correos.</div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Webhook Token</label>
-                            <input type="password" name="email_webhook_token" class="form-control bg-light border-0 rounded-3" value="{{ config.email_webhook_token or '' }}" placeholder="Token de seguridad">
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -148,4 +179,33 @@
         min-height: 100px;
     }
 </style>
+{% block scripts %}
+<script>
+document.querySelectorAll('.hero-input').forEach(input => {
+    input.addEventListener('change', function() {
+        const previewId = this.getAttribute('data-preview');
+        const previewElement = document.getElementById(previewId);
+        const file = this.files[0];
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Si ya había una imagen, actualizamos su src
+                if (previewElement.tagName === 'IMG') {
+                    previewElement.src = e.target.result;
+                } else {
+                    // Si era el placeholder (div), lo reemplazamos por una imagen
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'img-fluid object-fit-cover';
+                    img.id = previewId;
+                    previewElement.parentNode.replaceChild(img, previewElement);
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

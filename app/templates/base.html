@@ -36,76 +36,80 @@
 <body class="d-flex flex-column min-vh-100">
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-fachero sticky-top shadow-sm" id="mainNavbar">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
-                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Estilo Fachero"
-                    class="nav-logo shadow-sm" loading="eager">
-                <span class="brand-text d-none d-sm-block">{{ config_tienda.nombre_tienda if config_tienda else 'ESTILO FACHERO' }}</span>
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="mainNavbar">
+        <div class="container py-1">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="logo-container rounded-circle">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ config_tienda.nombre_tienda if config_tienda else 'Estilo Fachero' }}" class="nav-logo" loading="eager">
+                </div>
+                <div class="brand-info">
+                    <span class="brand-text fw-800 text-uppercase ls-tight d-block">{{ config_tienda.nombre_tienda if config_tienda else 'ESTILO FACHERO' }}</span>
+                </div>
             </a>
 
-            <div class="d-flex align-items-center gap-2 order-lg-3">
+            <div class="d-flex align-items-center gap-3 order-lg-3">
                 <!-- Mobile Cart Toggle -->
                 {% if 'admin' not in request.path %}
-                <a class="nav-link btn-cart-nav d-lg-none position-relative me-2" href="#offcanvasCart"
+                <a class="nav-link btn-cart-nav d-lg-none position-relative" href="#offcanvasCart"
                     data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart">
-                    <i class="bi bi-bag-fill"></i>
-                    <span id="badge-carrito-mobile" class="badge rounded-pill bg-danger cart-badge"
-                        style="display: none;">0</span>
+                    <i class="bi bi-bag-heart"></i>
+                    <span id="badge-carrito-mobile" class="badge rounded-pill bg-primary cart-badge-dot"></span>
                 </a>
                 {% endif %}
 
-                <button class="navbar-toggler border-0 p-2" type="button" data-bs-toggle="collapse"
+                <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarNav" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                    <div class="toggler-icon">
+                        <span></span>
+                        <span></span>
+                    </div>
                 </button>
             </div>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-lg-1">
+                <ul class="navbar-nav ms-auto align-items-center gap-lg-2">
                     {% if 'admin' not in request.path %}
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">Inicio</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if '/productos' in request.path }}"
-                            href="/productos">Productos</a>
+                            href="/productos">Tienda</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if '/contacto' in request.path }}" href="/contacto">Contacto</a>
                     </li>
-                    <li class="nav-item ms-lg-3 d-none d-lg-block">
-                        <a class="nav-link btn-cart-nav position-relative" href="#offcanvasCart"
+                    <li class="nav-item ms-lg-2 d-none d-lg-block">
+                        <a class="nav-link btn-cart-glass position-relative" href="#offcanvasCart"
                             data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart" title="Ver Carrito">
-                            <i class="bi bi-bag-fill"></i>
-                            <span id="badge-carrito" class="badge rounded-pill bg-danger cart-badge"
-                                style="display: none;">0</span>
+                            <i class="bi bi-bag-heart-fill"></i>
+                            <span id="badge-carrito" class="badge-carrito-count">0</span>
                         </a>
                     </li>
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.path == '/admin/' or request.path == '/admin' }}"
-                            href="/admin/"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                            href="/admin/"><i class="bi bi-grid-1x2-fill me-1"></i> Panel</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if '/admin/productos' in request.path }}"
-                            href="/admin/productos"><i class="bi bi-box-seam me-1"></i> Productos</a>
+                            href="/admin/productos"><i class="bi bi-box-seam-fill me-1"></i> Productos</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if '/admin/categorias' in request.path }}"
-                            href="/admin/categorias"><i class="bi bi-tags me-1"></i> Categorías</a>
+                            href="/admin/categorias"><i class="bi bi-tags-fill me-1"></i> Categorías</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if '/admin/ventas' in request.path }}" href="/admin/ventas"><i
-                                class="bi bi-receipt me-1"></i> Ventas</a>
+                                class="bi bi-receipt-cutoff me-1"></i> Ventas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if '/admin/envios' in request.path }}" href="/admin/envios"><i
-                                class="bi bi-truck me-1"></i> Envíos</a>
+                        <a class="nav-link {{ 'active' if '/admin/configuracion' in request.path }}" href="/admin/configuracion"><i
+                                class="bi bi-gear-fill me-1"></i> Config</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a class="btn btn-sm btn-outline-light rounded-pill px-3" href="/"><i
-                                class="bi bi-box-arrow-right me-1"></i> Ir al Sitio</a>
+                        <a class="btn btn-sm btn-light rounded-pill px-4 fw-bold" href="/"><i
+                                class="bi bi-eye-fill me-1"></i> Ver Sitio</a>
                     </li>
                     {% endif %}
                 </ul>

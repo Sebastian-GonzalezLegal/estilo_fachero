@@ -209,9 +209,11 @@ class Configuracion(db.Model):
     facebook_url = db.Column(db.String(255), default="#")
     direccion = db.Column(db.String(255), default="Adolfo Sourdeaux, Buenos Aires")
     
-    # Configuración de Mensajería (Email)
-    google_apps_script_url = db.Column(db.String(500), nullable=True)
-    email_webhook_token = db.Column(db.String(100), nullable=True)
+    # Imágenes de Inicio (Hero)
+    hero_image_1 = db.Column(db.String(255), nullable=True) # Arriba-Izquierda
+    hero_image_2 = db.Column(db.String(255), nullable=True) # Abajo-Izquierda
+    hero_image_3 = db.Column(db.String(255), nullable=True) # Arriba-Derecha
+    hero_image_4 = db.Column(db.String(255), nullable=True) # Abajo-Derecha
     
     # FAQ / Información fija
     envio_info = db.Column(db.Text, default="Hacemos envíos a todo el país a través de Correo Argentino (MiCorreo). Podés elegir envío a domicilio o retiro en sucursal más cercana. El costo se calcula automáticamente en el carrito ingresando tu código postal.")

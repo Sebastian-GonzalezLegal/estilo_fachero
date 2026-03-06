@@ -12,21 +12,14 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
     whatsapp_numero = current_app.config.get('WHATSAPP_NUMERO')
     whatsapp_link = current_app.config.get('WHATSAPP_LINK')
 
-    # Intentar obtener config de la base de datos
+    # Intentar obtener config de la base de datos para datos NO sensibles
     from app.models import Configuracion
     config_db = Configuracion.get_solo()
     if config_db:
-        if config_db.google_apps_script_url:
-            google_script_url = config_db.google_apps_script_url
-        if config_db.email_webhook_token:
-            token = config_db.email_webhook_token
         if config_db.whatsapp_numero:
             whatsapp_numero = config_db.whatsapp_numero
         if config_db.whatsapp_link:
             whatsapp_link = config_db.whatsapp_link
-        if config_db.email_contacto:
-            # Aunque enviamos 'to' desde el parámetro, podemos usar esto si fuera necesario
-            pass
 
     try:
         # -------- Mail para el cliente con instrucciones de pago (HTML) --------
@@ -214,15 +207,7 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
 
 
 def enviar_mail_despacho(pedido, url_script=None, token=None):
-    # Intentar obtener config dinámica si no se pasaron
-    if not url_script or not token:
-        from app.models import Configuracion
-        config_db = Configuracion.get_solo()
-        if config_db:
-            url_script = url_script or config_db.google_apps_script_url
-            token = token or config_db.email_webhook_token
-            
-    # Fallback a config
+    # Fallback a config (Preferimos siempre las variables de entorno para seguridad)
     url_script = url_script or current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
     token = token or current_app.config.get('EMAIL_WEBHOOK_TOKEN')
 
@@ -289,15 +274,7 @@ def enviar_mail_confirmacion_pago(pedido, payment_id, url_script, token):
     p_email = pedido.email_cliente
     p_total = pedido.total
 
-    # Intentar obtener config dinámica si no se pasaron (para compatibilidad)
-    if not url_script or not token:
-        from app.models import Configuracion
-        config_db = Configuracion.get_solo()
-        if config_db:
-            url_script = url_script or config_db.google_apps_script_url
-            token = token or config_db.email_webhook_token
-            
-    # Fallback a config si sigue siendo None
+    # Fallback a config (Preferimos siempre las variables de entorno para seguridad)
     url_script = url_script or current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
     token = token or current_app.config.get('EMAIL_WEBHOOK_TOKEN')
 

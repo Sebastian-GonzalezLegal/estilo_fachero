@@ -178,16 +178,61 @@ def admin_actualizar_venta(id):
         else:
             msg_extra = " pero falló el envío del mail"
             
-    flash(f'Pedido actualizado{msg_extra}.', 'success')
-    return redirect(url_for('admin.admin_detalle_venta', id=id))
-
 import os
 from uuid import uuid4
 from flask import jsonify
+from PIL import Image
+import io
 from app.models import ProductoImagen, TipoEnvio, Categoria
 from app.models import TIPOS_PRODUCTO  # Keep for backwards compatibility if needed
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+def _procesar_y_guardar_imagen(file, prefix="", max_size=(1200, 1200), quality=75):
+    """Procesa una imagen (redimensiona y comprime) y la guarda en la DB."""
+    if not file or not file.filename or not _allowed_file(file.filename):
+        return None
+        
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    # Usamos webp para hero images si es posible, o mantenemos el original si es gif
+    if ext == 'gif':
+        nombre_seguro = f"{prefix}{uuid4().hex}.gif"
+        file.seek(0)
+        datos = file.read()
+        mimetype = 'image/gif'
+    else:
+        # Procesar con Pillow
+        file.seek(0)
+        img = Image.open(file)
+        
+        # Convertir a RGB si es necesario
+        if img.mode in ("RGBA", "P"):
+            target_format = "WEBP"
+            mimetype = "image/webp"
+            ext_final = "webp"
+        else:
+            img = img.convert("RGB")
+            target_format = "JPEG"
+            mimetype = "image/jpeg"
+            ext_final = "jpg"
+            
+        # Resize manteniendo aspect ratio
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Guardar en buffer
+        buffer = io.BytesIO()
+        img.save(buffer, format=target_format, quality=quality, optimize=True)
+        buffer.seek(0)
+        datos = buffer.read()
+        nombre_seguro = f"{prefix}{uuid4().hex}.{ext_final}"
+    
+    nueva_imagen = ProductoImagen(
+        nombre=nombre_seguro,
+        datos=datos,
+        mimetype=mimetype
+    )
+    db.session.add(nueva_imagen)
+    return nombre_seguro
 
 def _parse_fotos_from_form(fotos_raw):
     """Convierte texto (una por línea o separadas por coma) en lista de strings."""
@@ -207,29 +252,9 @@ def _guardar_fotos_subidas(request):
     guardados = []
     files = request.files.getlist('fotos_nuevas')
     for f in files:
-        if not f or not f.filename:
-            continue
-        if not _allowed_file(f.filename):
-            continue
-        ext = f.filename.rsplit('.', 1)[1].lower()
-        nombre_seguro = f"{uuid4().hex}.{ext}"
-        
-        try:
-            # Leer datos del archivo
-            datos = f.read()
-            mimetype = f.content_type or 'application/octet-stream'
-            
-            # Guardar en DB
-            nueva_imagen = ProductoImagen(
-                nombre=nombre_seguro,
-                datos=datos,
-                mimetype=mimetype
-            )
-            db.session.add(nueva_imagen)
-            guardados.append(nombre_seguro)
-        except Exception as e:
-            print(f"Error guardando imagen {f.filename}: {e}")
-            pass
+        nombre = _procesar_y_guardar_imagen(f)
+        if nombre:
+            guardados.append(nombre)
             
     return guardados
 
@@ -668,8 +693,19 @@ def admin_configuracion():
         config.instagram_url = request.form.get('instagram_url')
         config.facebook_url = request.form.get('facebook_url')
         config.direccion = request.form.get('direccion')
-        config.google_apps_script_url = request.form.get('google_apps_script_url')
-        config.email_webhook_token = request.form.get('email_webhook_token')
+        
+        # Hero Images
+        for i in range(1, 5):
+            field_name = f'hero_image_{i}'
+            file = request.files.get(field_name)
+            if file:
+                nombre_seguro = _procesar_y_guardar_imagen(file, prefix=f"hero_{i}_")
+                if nombre_seguro:
+                    setattr(config, field_name, nombre_seguro)
+            
+            # Check if user wants to remove the image (if we add a remove button later)
+            if request.form.get(f'remove_{field_name}') == 'true':
+                setattr(config, field_name, None)
         
         # FAQ
         config.envio_info = request.form.get('envio_info')

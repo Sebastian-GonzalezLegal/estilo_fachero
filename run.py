@@ -20,6 +20,20 @@ if __name__ == '__main__':
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS link_seguimiento VARCHAR(300)"))
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS empresa_envio VARCHAR(100)"))
                 connection.execute(text("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(50) DEFAULT 'transferencia'"))
+                
+                # Columnas para configuración de inicio
+                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_1 VARCHAR(255)"))
+                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_2 VARCHAR(255)"))
+                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_3 VARCHAR(255)"))
+                connection.execute(text("ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_4 VARCHAR(255)"))
+                
+                # Eliminar columnas sensibles si existen (ya no se manejan desde el admin)
+                try:
+                    connection.execute(text("ALTER TABLE configuracion DROP COLUMN google_apps_script_url"))
+                    connection.execute(text("ALTER TABLE configuracion DROP COLUMN email_webhook_token"))
+                except:
+                    pass
+                
                 connection.commit()
                 print("Base de datos actualizada: Columnas nuevas verificadas.")
         except Exception as e:
