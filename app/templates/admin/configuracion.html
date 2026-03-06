@@ -1,0 +1,151 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block title %}Configuración de la Tienda | Dashboard Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 animate__animated animate__fadeIn">
+        <div class="col-12">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-4">
+                    <i class="bi bi-gear-fill fs-2 text-primary"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold mb-0">Configuración de la Tienda</h2>
+                    <p class="text-muted mb-0">Gestiona la información pública, contacto y FAQ de tu sitio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="row g-4">
+        <!-- Información General -->
+        <div class="col-lg-8 animate__animated animate__fadeInUp">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold mb-0 text-dark">Información de la Tienda</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Nombre de la Tienda</label>
+                            <input type="text" name="nombre_tienda" class="form-control form-control-lg bg-light border-0 rounded-3" value="{{ config.nombre_tienda }}" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Descripción (SEO / Pie de página)</label>
+                            <textarea name="descripcion_tienda" class="form-control bg-light border-0 rounded-3" rows="3">{{ config.descripcion_tienda }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold mb-0 text-dark">Preguntas Frecuentes (FAQ)</h5>
+                </div>
+                <div class="card-body p-4 text-dark">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-truck me-2 text-primary"></i> Información de Envíos</label>
+                            <textarea name="envio_info" class="form-control bg-light border-0 rounded-3" rows="3">{{ config.envio_info }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-credit-card me-2 text-primary"></i> Medios de Pago</label>
+                            <textarea name="pagos_info" class="form-control bg-light border-0 rounded-3" rows="3">{{ config.pagos_info }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-arrow-repeat me-2 text-primary"></i> Cambios y Devoluciones</label>
+                            <textarea name="cambios_info" class="form-control bg-light border-0 rounded-3" rows="3">{{ config.cambios_info }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-clock me-2 text-primary"></i> Tiempos de Entrega</label>
+                            <textarea name="tiempos_info" class="form-control bg-light border-0 rounded-3" rows="3">{{ config.tiempos_info }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacto y Redes -->
+        <div class="col-lg-4 animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold mb-0 text-dark">Canales de Contacto</h5>
+                </div>
+                <div class="card-body p-4 text-dark">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Email de Contacto</label>
+                            <input type="email" name="email_contacto" class="form-control bg-light border-0 rounded-3" value="{{ config.email_contacto }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">WhatsApp (Número visible)</label>
+                            <input type="text" name="whatsapp_numero" class="form-control bg-light border-0 rounded-3" value="{{ config.whatsapp_numero }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">WhatsApp Link (wa.me)</label>
+                            <input type="url" name="whatsapp_link" class="form-control bg-light border-0 rounded-3" value="{{ config.whatsapp_link }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Dirección / Localidad</label>
+                            <input type="text" name="direccion" class="form-control bg-light border-0 rounded-3" value="{{ config.direccion }}">
+                        </div>
+                    </div>
+
+                    <div class="small fw-bold text-primary mt-4 mb-3 text-uppercase border-bottom pb-2">Configuración de Mensajería (Email)</div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Google Apps Script URL (Webhook)</label>
+                            <input type="text" name="google_apps_script_url" class="form-control bg-light border-0 rounded-3" value="{{ config.google_apps_script_url or '' }}" placeholder="https://script.google.com/macros/s/...">
+                            <div class="form-text">URL del script que envía los correos.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Webhook Token</label>
+                            <input type="password" name="email_webhook_token" class="form-control bg-light border-0 rounded-3" value="{{ config.email_webhook_token or '' }}" placeholder="Token de seguridad">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom-0">
+                    <h5 class="fw-bold mb-0 text-dark">Redes Sociales</h5>
+                </div>
+                <div class="card-body p-4 text-dark">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-instagram me-2"></i> Instagram URL</label>
+                            <input type="text" name="instagram_url" class="form-control bg-light border-0 rounded-3" value="{{ config.instagram_url }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold"><i class="bi bi-facebook me-2"></i> Facebook URL</label>
+                            <input type="text" name="facebook_url" class="form-control bg-light border-0 rounded-3" value="{{ config.facebook_url }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 sticky-lg-top" style="top: 100px; z-index: 10;">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm">
+                    <i class="bi bi-check-circle me-2"></i> Guardar Cambios
+                </button>
+                <a href="{{ url_for('admin.admin_panel') }}" class="btn btn-light btn-lg rounded-pill">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+        border: 1px solid rgba(13, 110, 253, 0.2) !important;
+    }
+    textarea.form-control {
+        min-height: 100px;
+    }
+</style>
+{% endblock %}

@@ -6,11 +6,27 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
                           envio_nombre, envio_tipo_label, envio_precio, total, 
                           filas_carrito, fila_envio_html, datos_vendedor):
     
-    google_script_url = current_app.config['GOOGLE_APPS_SCRIPT_URL']
-    token = current_app.config['EMAIL_WEBHOOK_TOKEN']
-    mi_email = current_app.config['MI_EMAIL']
-    whatsapp_numero = current_app.config['WHATSAPP_NUMERO']
-    whatsapp_link = current_app.config['WHATSAPP_LINK']
+    google_script_url = current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
+    token = current_app.config.get('EMAIL_WEBHOOK_TOKEN')
+    mi_email = current_app.config.get('MI_EMAIL')
+    whatsapp_numero = current_app.config.get('WHATSAPP_NUMERO')
+    whatsapp_link = current_app.config.get('WHATSAPP_LINK')
+
+    # Intentar obtener config de la base de datos
+    from app.models import Configuracion
+    config_db = Configuracion.get_solo()
+    if config_db:
+        if config_db.google_apps_script_url:
+            google_script_url = config_db.google_apps_script_url
+        if config_db.email_webhook_token:
+            token = config_db.email_webhook_token
+        if config_db.whatsapp_numero:
+            whatsapp_numero = config_db.whatsapp_numero
+        if config_db.whatsapp_link:
+            whatsapp_link = config_db.whatsapp_link
+        if config_db.email_contacto:
+            # Aunque enviamos 'to' desde el parámetro, podemos usar esto si fuera necesario
+            pass
 
     try:
         # -------- Mail para el cliente con instrucciones de pago (HTML) --------
@@ -197,7 +213,23 @@ def enviar_emails_checkout(nombre, email_cliente, telefono_cliente, direccion_cl
         print(f"Error en configuración de mails: {e}")
 
 
-def enviar_mail_despacho(pedido, url_script, token):
+def enviar_mail_despacho(pedido, url_script=None, token=None):
+    # Intentar obtener config dinámica si no se pasaron
+    if not url_script or not token:
+        from app.models import Configuracion
+        config_db = Configuracion.get_solo()
+        if config_db:
+            url_script = url_script or config_db.google_apps_script_url
+            token = token or config_db.email_webhook_token
+            
+    # Fallback a config
+    url_script = url_script or current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
+    token = token or current_app.config.get('EMAIL_WEBHOOK_TOKEN')
+
+    if not url_script:
+        print("Error: GOOGLE_APPS_SCRIPT_URL no configurada para despacho.")
+        return False
+
     try:
         cuerpo_html = f"""
         <html>
@@ -257,7 +289,23 @@ def enviar_mail_confirmacion_pago(pedido, payment_id, url_script, token):
     p_email = pedido.email_cliente
     p_total = pedido.total
 
+    # Intentar obtener config dinámica si no se pasaron (para compatibilidad)
+    if not url_script or not token:
+        from app.models import Configuracion
+        config_db = Configuracion.get_solo()
+        if config_db:
+            url_script = url_script or config_db.google_apps_script_url
+            token = token or config_db.email_webhook_token
+            
+    # Fallback a config si sigue siendo None
+    url_script = url_script or current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
+    token = token or current_app.config.get('EMAIL_WEBHOOK_TOKEN')
+
     def _enviar():
+        if not url_script:
+            print("Error: GOOGLE_APPS_SCRIPT_URL no configurada.", flush=True)
+            return
+
         try:
             cuerpo_html = f"""
             <html>

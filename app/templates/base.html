@@ -4,19 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Estilo Fachero | Urban Outfit{% endblock %}</title>
+    <title>{% block title %}{{ config_tienda.nombre_tienda if config_tienda else 'Estilo Fachero' }} | Urban Outfit{% endblock %}</title>
 
     <!-- SEO & Redes Sociales -->
     <meta name="description"
-        content="{% block description %}Descubrí los accesorios que definen tu estilo. Gorras, lentes y medias con la mejor calidad y diseño. Envíos a todo el país.{% endblock %}">
+        content="{% block description %}{{ config_tienda.descripcion_tienda if config_tienda else 'Descubrí los accesorios que definen tu estilo. Gorras, lentes y medias con la mejor calidad y diseño. Envíos a todo el país.' }}{% endblock %}">
     <meta name="keywords" content="moda urbana, accesorios, gorras, lentes de sol, medias, argentina, estilo fachero">
 
     <!-- Open Graph / Redes Sociales -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="{% block og_title %}Estilo Fachero | Urban Outfit{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ config_tienda.nombre_tienda if config_tienda else 'Estilo Fachero' }} | Urban Outfit{% endblock %}">
     <meta property="og:description"
-        content="{% block og_description %}Elevá tu estilo con nuestra colección exclusiva de accesorios. Calidad y diseño en cada detalle.{% endblock %}">
+        content="{% block og_description %}{{ config_tienda.descripcion_tienda if config_tienda else 'Elevá tu estilo con nuestra colección exclusiva de accesorios. Calidad y diseño en cada detalle.' }}{% endblock %}">
     <meta property="og:image"
         content="{% block og_image %}{{ url_for('static', filename='img/logo.png', _external=True) }}{% endblock %}">
 
@@ -41,7 +41,7 @@
             <a class="navbar-brand d-flex align-items-center gap-3" href="/">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Estilo Fachero"
                     class="nav-logo shadow-sm" loading="eager">
-                <span class="brand-text d-none d-sm-block">ESTILO FACHERO</span>
+                <span class="brand-text d-none d-sm-block">{{ config_tienda.nombre_tienda if config_tienda else 'ESTILO FACHERO' }}</span>
             </a>
 
             <div class="d-flex align-items-center gap-2 order-lg-3">
@@ -199,13 +199,12 @@
             <div class="row g-5 justify-content-center text-center text-md-start">
                 <div class="col-md-4">
                     <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 gap-2">
-                        <h4 class="fw-bold text-white mb-0" style="letter-spacing: -1px;">ESTILO FACHERO</h4>
+                        <h4 class="fw-bold text-white mb-0" style="letter-spacing: -1px;">{{ config_tienda.nombre_tienda if config_tienda else 'ESTILO FACHERO' }}</h4>
                     </div>
-                    <p class="text-white-50 mb-4">Elevá tu estilo con nuestra colección exclusiva de accesorios.
-                        Calidad, diseño y la mejor onda para vos.</p>
+                    <p class="text-white-50 mb-4">{{ config_tienda.descripcion_tienda if config_tienda else 'Elevá tu estilo con nuestra colección exclusiva de accesorios. Calidad, diseño y la mejor onda para vos.' }}</p>
                     <div class="social-icons">
-                        <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="{{ config_tienda.instagram_url if config_tienda else '#' }}" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="{{ config_tienda.facebook_url if config_tienda else '#' }}" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
                         <a href="{{ whatsapp_link }}" target="_blank" aria-label="WhatsApp"><i
                                 class="bi bi-whatsapp"></i></a>
                     </div>
@@ -236,15 +235,15 @@
                     <ul class="list-unstyled d-flex flex-column gap-3 text-white-50">
                         <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
                             <i class="bi bi-geo-alt text-accent fs-5"></i>
-                            <span>Adolfo Sourdeaux, Buenos Aires</span>
+                            <span>{{ config_tienda.direccion if config_tienda else 'Adolfo Sourdeaux, Buenos Aires' }}</span>
                         </li>
                         <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
                             <i class="bi bi-envelope text-accent fs-5"></i>
-                            <span>hola@estilofachero.com</span>
+                            <span>{{ email_contacto }}</span>
                         </li>
                         <li class="d-flex align-items-center justify-content-center justify-content-md-start gap-3">
                             <i class="bi bi-truck text-accent fs-5"></i>
-                            <span>Envíos a todo el país</span>
+                            <span>{{ config_tienda.envio_info.split('.')[0] if config_tienda else 'Envíos a todo el país' }}</span>
                         </li>
                     </ul>
                 </div>
@@ -254,7 +253,7 @@
 
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0 text-white-50 small">© 2026 <strong>Estilo Fachero</strong>. Todos los derechos
+                    <p class="mb-0 text-white-50 small">© 2026 <strong>{{ config_tienda.nombre_tienda if config_tienda else 'Estilo Fachero' }}</strong>. Todos los derechos
                         reservados.</p>
                 </div>
                 <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">

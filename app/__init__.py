@@ -21,16 +21,20 @@ def create_app(config_class=Config):
         
     @app.context_processor
     def inject_globals():
-        from .models import Categoria
+        from .models import Categoria, Configuracion
         try:
             categorias = Categoria.query.filter_by(activa=True).order_by(Categoria.nombre).all()
+            config_tienda = Configuracion.get_solo()
         except:
             categorias = []
+            config_tienda = None
+            
         return dict(
-            whatsapp_link=app.config['WHATSAPP_LINK'],
-            whatsapp_numero=app.config['WHATSAPP_NUMERO'],
-            email_contacto=app.config['MI_EMAIL'],
-            categorias=categorias
+            whatsapp_link=config_tienda.whatsapp_link if config_tienda else app.config['WHATSAPP_LINK'],
+            whatsapp_numero=config_tienda.whatsapp_numero if config_tienda else app.config['WHATSAPP_NUMERO'],
+            email_contacto=config_tienda.email_contacto if config_tienda else app.config['MI_EMAIL'],
+            categorias=categorias,
+            config_tienda=config_tienda
         )
 
     # Registrar Blueprints

@@ -191,3 +191,40 @@ class Resena(db.Model):
             "comentario": self.comentario,
             "fecha": self.fecha.strftime('%d/%m/%Y')
         }
+
+
+class Configuracion(db.Model):
+    __tablename__ = 'configuracion'
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Datos de la tienda
+    nombre_tienda = db.Column(db.String(100), default="Estilo Fachero")
+    descripcion_tienda = db.Column(db.Text, default="Elevá tu estilo con nuestra colección exclusiva de accesorios. Calidad, diseño y la mejor onda para vos.")
+    
+    # Contacto
+    email_contacto = db.Column(db.String(120), default="hola@estilofachero.com")
+    whatsapp_numero = db.Column(db.String(50), default="+54 9 11 1234-5678")
+    whatsapp_link = db.Column(db.String(255), default="https://wa.me/5491112345678")
+    instagram_url = db.Column(db.String(255), default="#")
+    facebook_url = db.Column(db.String(255), default="#")
+    direccion = db.Column(db.String(255), default="Adolfo Sourdeaux, Buenos Aires")
+    
+    # Configuración de Mensajería (Email)
+    google_apps_script_url = db.Column(db.String(500), nullable=True)
+    email_webhook_token = db.Column(db.String(100), nullable=True)
+    
+    # FAQ / Información fija
+    envio_info = db.Column(db.Text, default="Hacemos envíos a todo el país a través de Correo Argentino (MiCorreo). Podés elegir envío a domicilio o retiro en sucursal más cercana. El costo se calcula automáticamente en el carrito ingresando tu código postal.")
+    pagos_info = db.Column(db.Text, default="Actualmente aceptamos Transferencia Bancaria. Al finalizar tu compra, recibirás los datos de la cuenta y, una vez realizado el pago, deberás enviarnos el comprobante por WhatsApp o respondiendo al mail de confirmación para que despachemos tu pedido.")
+    cambios_info = db.Column(db.Text, default="Sí, todos nuestros productos tienen cambio por falla o talle dentro de los 15 días de recibida la compra. El producto debe estar sin uso y en perfectas condiciones.")
+    tiempos_info = db.Column(db.Text, default="El tiempo de despacho es de 24 a 48hs hábiles luego de acreditado el pago. Una vez despachado, Correo Argentino suele demorar entre 3 a 6 días hábiles dependiendo de tu ubicación.")
+
+    @staticmethod
+    def get_solo():
+        """Retrieve the single configuration record or create it if missing."""
+        config = Configuracion.query.first()
+        if not config:
+            config = Configuracion()
+            db.session.add(config)
+            db.session.commit()
+        return config

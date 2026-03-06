@@ -3,7 +3,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime
 from app.extensions import db
-from app.models import Admin, Producto, Pedido, Categoria
+from app.models import Admin, Producto, Pedido, Categoria, Configuracion
 from app.services.email_service import enviar_mail_despacho
 from flask import current_app
 
@@ -268,8 +268,13 @@ def admin_producto_nuevo():
             flash('Completa nombre, categoría y precio válido', 'error')
             return redirect(url_for('admin.admin_producto_nuevo'))
         
+        # Para compatibilidad con el campo viejo 'tipo'
+        categoria_obj = Categoria.query.get(categoria_id)
+        tipo = categoria_obj.nombre.lower() if categoria_obj else "desconocido"
+        
         producto = Producto(
             nombre=nombre,
+            tipo=tipo,
             categoria_id=categoria_id,
             descripcion=descripcion,
             fotos=fotos if fotos else None,
@@ -317,6 +322,10 @@ def admin_producto_editar(id):
             producto.alto_cm = int(request.form.get('alto_cm', '10'))
             producto.ancho_cm = int(request.form.get('ancho_cm', '10'))
             producto.largo_cm = int(request.form.get('largo_cm', '10'))
+            
+            # Actualizar 'tipo' para compatibilidad
+            if producto.categoria:
+                producto.tipo = producto.categoria.nombre.lower()
         except ValueError:
             flash('Error en los valores numéricos', 'error')
             return redirect(url_for('admin.admin_producto_editar', id=id))
@@ -643,4 +652,34 @@ def admin_productos_bulk_action():
     except Exception as e:
         db.session.rollback()
         return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/configuracion', methods=['GET', 'POST'])
+@login_required
+def admin_configuracion():
+    config = Configuracion.get_solo()
+    
+    if request.method == 'POST':
+        config.nombre_tienda = request.form.get('nombre_tienda')
+        config.descripcion_tienda = request.form.get('descripcion_tienda')
+        config.email_contacto = request.form.get('email_contacto')
+        config.whatsapp_numero = request.form.get('whatsapp_numero')
+        config.whatsapp_link = request.form.get('whatsapp_link')
+        config.instagram_url = request.form.get('instagram_url')
+        config.facebook_url = request.form.get('facebook_url')
+        config.direccion = request.form.get('direccion')
+        config.google_apps_script_url = request.form.get('google_apps_script_url')
+        config.email_webhook_token = request.form.get('email_webhook_token')
+        
+        # FAQ
+        config.envio_info = request.form.get('envio_info')
+        config.pagos_info = request.form.get('pagos_info')
+        config.cambios_info = request.form.get('cambios_info')
+        config.tiempos_info = request.form.get('tiempos_info')
+        
+        db.session.commit()
+        flash('Configuración actualizada correctamente', 'success')
+        return redirect(url_for('admin.admin_configuracion'))
+        
+    return render_template('admin/configuracion.html', config=config)
 

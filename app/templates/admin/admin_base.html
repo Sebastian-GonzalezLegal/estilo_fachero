@@ -385,6 +385,10 @@
             </a>
 
             <div class="nav-header mt-4">Sistema</div>
+            <a href="{{ url_for('admin.admin_configuracion') }}" class="sidebar-link {{ 'active' if '/admin/configuracion' in request.path }}">
+                <i class="bi bi-gear-fill"></i>
+                <span>Configuración</span>
+            </a>
             <a href="/" class="sidebar-link">
                 <i class="bi bi-shop"></i>
                 <span>Ir a la Tienda</span>
