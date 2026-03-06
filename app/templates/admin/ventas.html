@@ -1,182 +1,155 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
-{% block content %}
-<div class="container my-5 fade-in-up">
-    <!-- Header Admin -->
-    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <h2 class="fw-bold mb-1 text-dark">Gestión de Ventas</h2>
-            <p class="text-muted mb-0">Controla y administra los pedidos de tus clientes.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('admin.admin_logout') }}"
-                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
-                <i class="bi bi-box-arrow-right"></i> Salir
-            </a>
-        </div>
+{% block admin_content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-0">Gestión de Ventas</h2>
+        <p class="text-muted">Controla y administra los pedidos de tus clientes.</p>
     </div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4"
-        role="alert">
-        <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('admin.admin_exportar_ventas') }}" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+            <i class="bi bi-download me-2"></i> Exportar CSV
+        </a>
     </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+</div>
 
-    <!-- Filtros -->
-    <div class="admin-card mb-5">
-        <div class="card-body p-4">
-            <h6 class="mb-3 text-uppercase small text-muted fw-bold"><i class="bi bi-funnel me-1"></i> Filtrar Pedidos
-            </h6>
-            <form method="GET" action="{{ url_for('admin.admin_ventas') }}" class="row g-3 align-items-end">
-                <div class="col-md-5">
-                    <label class="form-label small fw-bold text-muted">Cliente</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i
-                                class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" name="cliente"
-                            placeholder="Nombre..." value="{{ filtro_cliente or '' }}">
-                    </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Filtros -->
+<div class="admin-card mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="{{ url_for('admin.admin_ventas') }}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-bold text-muted">Cliente</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" name="cliente" placeholder="Nombre..." value="{{ filtro_cliente or '' }}">
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label small fw-bold text-muted">Fecha</label>
-                    <input type="date" class="form-control" name="fecha" value="{{ filtro_fecha or '' }}">
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-fachero w-100 shadow-sm">Filtrar</button>
-                    {% if filtro_cliente or filtro_fecha %}
-                    <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i
-                            class="bi bi-x-lg"></i></a>
-                    {% endif %}
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Fecha</label>
+                <input type="date" class="form-control" name="fecha" value="{{ filtro_fecha or '' }}">
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 shadow-sm" style="background-color: var(--admin-accent); border: none;">Filtrar</button>
+                {% if filtro_cliente or filtro_fecha %}
+                <a href="{{ url_for('admin.admin_ventas') }}" class="btn btn-light border w-auto" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- Lista de Pedidos (Tabla) -->
-    <div class="admin-table-wrapper shadow-sm bg-white mb-5">
-        <table class="admin-table table-hover align-middle">
-            <thead>
+<!-- Lista de Pedidos -->
+<div class="admin-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 card-table">
+            <thead class="bg-light">
                 <tr>
-                    <th class="ps-4">Pedido / Fecha</th>
-                    <th>Cliente</th>
-                    <th>Estado</th>
-                    <th>Pago</th>
-                    <th class="text-end">Total</th>
-                    <th class="text-end pe-4">Acciones</th>
+                    <th class="ps-4 py-3">Pedido / Fecha</th>
+                    <th class="py-3">Cliente</th>
+                    <th class="py-3">Estado</th>
+                    <th class="py-3">Pago</th>
+                    <th class="text-end py-3">Total</th>
+                    <th class="text-end pe-4 py-3">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for pedido in pedidos.items %}
                 <tr>
-                    <td class="ps-4">
+                    <td class="ps-4" data-label="Pedido / Fecha">
                         <div class="d-flex align-items-center gap-3">
-                            <div
-                                class="avatar bg-light d-flex align-items-center justify-content-center text-primary fw-bold fs-5">
+                            <div class="bg-light rounded p-2 text-primary fw-bold" style="min-width: 45px; text-align: center;">
                                 #{{ pedido.id }}
                             </div>
                             <div>
-                                <div class="small text-muted text-uppercase fw-bold" style="font-size: 0.7rem;">{{
-                                    pedido.fecha_pedido.strftime('%d %b %Y') }}</div>
-                                <div class="small text-muted">{{ pedido.fecha_pedido.strftime('%H:%M') }} hs</div>
+                                <div class="small fw-bold text-dark">{{ pedido.fecha_pedido.strftime('%d %b %Y') }}</div>
+                                <div class="text-muted extra-small">{{ pedido.fecha_pedido.strftime('%H:%M') }} hs</div>
                             </div>
                         </div>
                     </td>
-                    <td>
+                    <td data-label="Cliente">
                         <div class="fw-bold text-dark">{{ pedido.nombre_cliente }}</div>
-                        <div class="small text-muted"><a href="mailto:{{ pedido.email_cliente }}"
-                                class="text-muted text-decoration-none">{{ pedido.email_cliente }}</a></div>
+                        <div class="extra-small text-muted text-truncate" style="max-width: 150px;">{{ pedido.email_cliente }}</div>
                     </td>
-                    <td>
+                    <td data-label="Estado">
                         {% if pedido.estado == 'Pendiente' %}
-                        <span class="status-badge warning"><span class="status-dot"></span>Pendiente</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3">Pendiente</span>
                         {% elif pedido.estado == 'En Aprobación' %}
-                        <span class="status-badge info"><span class="status-dot"></span>En Aprobación</span>
+                        <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3">En Aprobación</span>
                         {% elif pedido.estado == 'Enviado' %}
-                        <span class="status-badge primary" style="background-color: #e0e7ff; color: #3730a3;"><span
-                                class="status-dot"></span>Enviado</span>
+                        <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3">Enviado</span>
                         {% elif pedido.estado == 'Entregado' %}
-                        <span class="status-badge success"><span class="status-dot"></span>Entregado</span>
+                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3">Entregado</span>
                         {% else %}
-                        <span class="status-badge secondary"><span class="status-dot"></span>{{ pedido.estado or
-                            'Desconocido' }}</span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3">{{ pedido.estado }}</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td data-label="Pago">
                         {% if pedido.pagado %}
-                        <span
-                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3"><i
-                                class="bi bi-check-circle-fill me-1"></i> Pagado</span>
+                        <i class="bi bi-check-circle-fill text-success" title="Pagado"></i> <small class="text-success">Pagado</small>
                         {% else %}
-                        <span
-                            class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3"><i
-                                class="bi bi-hourglass-split me-1"></i> Pendiente</span>
+                        <i class="bi bi-hourglass-split text-danger" title="Pendiente"></i> <small class="text-danger">Pendiente</small>
                         {% endif %}
                     </td>
-                    <td class="text-end fw-bold text-dark fs-6">
-                        ${{ "%.2f"|format(pedido.total) }}
+                    <td class="text-end fw-bold text-dark" data-label="Total">
+                        ${{ "{:,.2f}".format(pedido.total) }}
                     </td>
                     <td class="text-end pe-4">
-                        <a href="{{ url_for('admin.admin_detalle_venta', id=pedido.id) }}"
-                            class="btn btn-sm btn-outline-primary border-0 bg-light rounded shadow-sm px-3 py-1 fw-bold">
-                            Ver <i class="bi bi-arrow-right-short"></i>
+                        <a href="{{ url_for('admin.admin_detalle_venta', id=pedido.id) }}" class="btn btn-sm btn-light border rounded-pill px-3 w-100-mobile">
+                            Ver Detalles
                         </a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
                     <td colspan="6" class="text-center py-5">
-                        <div class="text-muted opacity-25 mb-3">
-                            <i class="bi bi-inbox fs-1"></i>
-                        </div>
-                        <h6 class="text-muted fw-bold">No se encontraron ventas</h6>
-                        <p class="text-muted small mb-0">Intenta ajustar los filtros de búsqueda.</p>
+                        <i class="bi bi-inbox fs-1 text-muted opacity-25"></i>
+                        <p class="text-muted fw-bold mt-2">No se encontraron ventas</p>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
-    <!-- Paginación de Ventas -->
-    {% if pedidos.pages > 1 %}
-    <nav aria-label="Navegación de páginas de ventas" class="mt-4 d-flex justify-content-center">
-        <ul class="pagination pagination-sm shadow-sm">
-            <li class="page-item {% if not pedidos.has_prev %}disabled{% endif %}">
-                <a class="page-link text-success"
-                    href="{{ url_for('admin.admin_ventas', page=pedidos.prev_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_prev else '#' }}"
-                    tabindex="-1" aria-disabled="true">Anterior</a>
-            </li>
-
-            {% for page_num in pedidos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-            {% if page_num %}
-            {% if pedidos.page == page_num %}
-            <li class="page-item active" aria-current="page">
-                <span class="page-link bg-success border-success text-white">{{ page_num }}</span>
-            </li>
-            {% else %}
-            <li class="page-item"><a class="page-link text-success"
-                    href="{{ url_for('admin.admin_ventas', page=page_num, cliente=filtro_cliente, fecha=filtro_fecha) }}">{{
-                    page_num }}</a></li>
-            {% endif %}
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">...</span></li>
-            {% endif %}
-            {% endfor %}
-
-            <li class="page-item {% if not pedidos.has_next %}disabled{% endif %}">
-                <a class="page-link text-success"
-                    href="{{ url_for('admin.admin_ventas', page=pedidos.next_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_next else '#' }}">Siguiente</a>
-            </li>
-        </ul>
-    </nav>
-    {% endif %}
-
 </div>
+
+<!-- Paginación -->
+{% if pedidos.pages > 1 %}
+<nav class="mt-4 d-flex justify-content-center">
+    <ul class="pagination pagination-sm shadow-sm">
+        <li class="page-item {% if not pedidos.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('admin.admin_ventas', page=pedidos.prev_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_prev else '#' }}">Anterior</a>
+        </li>
+        {% for page_num in pedidos.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {{ 'active' if pedidos.page == page_num }}">
+                    <a class="page-link" href="{{ url_for('admin.admin_ventas', page=page_num, cliente=filtro_cliente, fecha=filtro_fecha) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pedidos.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('admin.admin_ventas', page=pedidos.next_num, cliente=filtro_cliente, fecha=filtro_fecha) if pedidos.has_next else '#' }}">Siguiente</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .pagination .page-link { color: var(--admin-accent); border: none; }
+    .pagination .page-item.active .page-link { background-color: var(--admin-accent); color: white; }
+</style>
 {% endblock %}

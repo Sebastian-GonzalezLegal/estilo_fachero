@@ -1,138 +1,111 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
-{% block content %}
-<div class="container my-5 fade-in-up">
-    <!-- Header Admin -->
-    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <h2 class="fw-bold mb-1 text-dark">Gestión de Envíos</h2>
-            <p class="text-muted mb-0">Configura los métodos y costos de envío para tus clientes.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('admin.admin_logout') }}"
-                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 rounded-pill px-3">
-                <i class="bi bi-box-arrow-right"></i> Salir
-            </a>
-        </div>
+{% block admin_content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-12">
+        <h2 class="fw-bold mb-0">Gestión de Envíos</h2>
+        <p class="text-muted">Configura los métodos y costos de envío para tus clientes.</p>
     </div>
+</div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4"
-        role="alert">
-        <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+    <i class="bi {{ 'bi-exclamation-circle-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
-    <div class="row g-4">
-        <!-- Formulario Nuevo Envío -->
-        <div class="col-lg-4">
-            <div class="admin-card sticky-top" style="top: 20px;">
-                <div class="admin-card-header">
-                    <h5 class="mb-0"><i class="bi bi-plus-circle me-2 text-primary"></i> Agregar Nuevo Envío</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form action="{{ url_for('admin.admin_envio_nuevo') }}" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">NOMBRE DEL MÉTODO *</label>
-                            <input type="text" name="nombre" class="form-control" required
-                                placeholder="Ej: Moto Mensajería">
+<div class="row g-4">
+    <!-- Formulario Nuevo Envío -->
+    <div class="col-lg-4">
+        <div class="admin-card sticky-top" style="top: 100px; z-index: 10;">
+            <div class="p-4 border-bottom">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-primary"></i> Nuevo Método</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('admin.admin_envio_nuevo') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Nombre del método</label>
+                        <input type="text" name="nombre" class="form-control" required placeholder="Ej: Moto Mensajería">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Costo ($)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">$</span>
+                            <input type="number" step="0.01" name="precio" class="form-control border-start-0 fw-bold text-dark" required placeholder="0.00">
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted">COSTO ($) *</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted">$</span>
-                                <input type="number" step="0.01" name="precio"
-                                    class="form-control border-start-0 fw-bold text-dark" required placeholder="0.00">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-fachero w-100 shadow-sm">
-                            <i class="bi bi-plus-lg me-2"></i> Agregar Método
-                        </button>
-                    </form>
-                </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm" style="background-color: var(--admin-accent); border: none;">
+                        <i class="bi bi-plus-lg me-2"></i> Agregar Método
+                    </button>
+                </form>
             </div>
         </div>
+    </div>
 
-        <!-- Lista de Envíos -->
-        <div class="col-lg-8">
-            <div class="admin-card">
-                <div class="admin-card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul me-2 text-muted"></i> Listado de Envíos</h5>
-                    <span class="badge bg-white text-muted border">{{ envios|length }} métodos</span>
-                </div>
-                <div class="admin-table-wrapper border-0 rounded-0">
-                    <table class="admin-table table-hover align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th class="ps-4">Nombre</th>
-                                <th>Precio</th>
-                                <th>Estado</th>
-                                <th class="text-end pe-4">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for envio in envios %}
-                            <tr>
-                                <td class="ps-4 fw-bold text-dark">{{ envio.nombre }}</td>
-                                <td>
-                                    <span class="fw-bold text-dark">${{ "%.2f"|format(envio.precio) }}</span>
-                                </td>
-                                <td>
+    <!-- Lista de Envíos -->
+    <div class="col-lg-8">
+        <div class="admin-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 card-table">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">Nombre</th>
+                            <th class="py-3">Precio</th>
+                            <th class="py-3">Estado</th>
+                            <th class="text-end pe-4 py-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for envio in envios %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark" data-label="Nombre">{{ envio.nombre }}</td>
+                            <td data-label="Precio">
+                                <span class="fw-bold text-dark">${{ "{:,.2f}".format(envio.precio) }}</span>
+                            </td>
+                            <td data-label="Estado">
+                                {% if envio.activo %}
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3">Activo</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('admin.admin_envio_editar', id=envio.id) }}" class="btn btn-sm btn-light border-0 rounded-circle" title="Editar">
+                                        <i class="bi bi-pencil-fill text-muted"></i>
+                                    </a>
                                     {% if envio.activo %}
-                                    <span class="status-badge success"><span class="status-dot"></span>Activo</span>
+                                    <form action="{{ url_for('admin.admin_envio_eliminar', id=envio.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro deseas desactivar este envío?');">
+                                        <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle text-danger" title="Desactivar">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
                                     {% else %}
-                                    <span class="status-badge secondary"><span class="status-dot"></span>Inactivo</span>
+                                    <form action="{{ url_for('admin.admin_envio_activar', id=envio.id) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-light border-0 rounded-circle text-success" title="Activar">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
                                     {% endif %}
-                                </td>
-                                <td class="text-end pe-4">
-                                    <div class="btn-group">
-                                        <a href="{{ url_for('admin.admin_envio_editar', id=envio.id) }}"
-                                            class="btn btn-sm btn-outline-primary border-0 bg-light mx-1 rounded shadow-sm"
-                                            title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        {% if envio.activo %}
-                                        <form action="{{ url_for('admin.admin_envio_eliminar', id=envio.id) }}"
-                                            method="POST" class="d-inline"
-                                            onsubmit="return confirm('¿Seguro deseas desactivar este envío?');">
-                                            <button type="submit"
-                                                class="btn btn-sm btn-outline-danger border-0 bg-light mx-1 rounded shadow-sm"
-                                                title="Desactivar">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </form>
-                                        {% else %}
-                                        <form action="{{ url_for('admin.admin_envio_activar', id=envio.id) }}"
-                                            method="POST" class="d-inline">
-                                            <button type="submit"
-                                                class="btn btn-sm btn-outline-success border-0 bg-light mx-1 rounded shadow-sm"
-                                                title="Activar">
-                                                <i class="bi bi-check-lg"></i>
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center py-5">
-                                    <div class="text-muted opacity-25 mb-3">
-                                        <i class="bi bi-truck fs-1"></i>
-                                    </div>
-                                    <p class="text-muted fw-bold mb-0">No hay métodos de envío configurados.</p>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <i class="bi bi-truck fs-1 text-muted opacity-25"></i>
+                                <p class="text-muted fw-bold mt-2">No hay métodos de envío configurados.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

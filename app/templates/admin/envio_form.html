@@ -1,52 +1,48 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
-{% block content %}
-<div class="container my-5 fade-in-up">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+{% block admin_content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-8">
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ url_for('admin.admin_envios') }}" class="btn btn-outline-secondary rounded-circle" title="Volver">
+            <a href="{{ url_for('admin.admin_envios') }}" class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Volver">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h2 class="fw-bold mb-0 text-dark">{% if envio %}Editar{% else %}Nuevo{% endif %} Envío</h2>
-                <p class="text-muted mb-0">Configura los detalles del método de envío.</p>
+                <h2 class="fw-bold mb-0">{% if envio %}Editar{% else %}Nuevo{% endif %} Envío</h2>
+                <p class="text-muted mb-0">Configura los detalles del método de entrega.</p>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="admin-card shadow-sm">
-                <div class="admin-card-header bg-light">
-                    <h5 class="mb-0"><i class="bi bi-truck me-2 text-primary"></i> Información del Método</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form method="POST">
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted">NOMBRE DEL ENVÍO *</label>
-                            <input type="text" name="nombre" class="form-control" required 
-                                   value="{{ envio.nombre if envio else '' }}"
-                                   placeholder="Ej: Moto Mensajería">
-                        </div>
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="admin-card overflow-hidden">
+            <div class="p-4 border-bottom bg-light">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-truck me-2 text-primary"></i> Información del Método</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Nombre del Envío</label>
+                        <input type="text" name="nombre" class="form-control" required value="{{ envio.nombre if envio else '' }}" placeholder="Ej: Moto Mensajería">
+                    </div>
 
-                        <div class="mb-5">
-                            <label class="form-label small fw-bold text-muted">PRECIO ($) *</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-white border-end-0 text-muted">$</span>
-                                <input type="number" step="0.01" name="precio" class="form-control border-start-0 fw-bold text-dark" required 
-                                       value="{{ envio.precio if envio else '0.00' }}">
-                            </div>
+                    <div class="mb-5">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Precio ($)</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0 text-muted">$</span>
+                            <input type="number" step="0.01" name="precio" class="form-control border-start-0 fw-bold text-dark" required value="{{ envio.precio if envio else '0.00' }}">
                         </div>
+                    </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-fachero py-2 shadow-sm">
-                                <i class="bi bi-save me-2"></i> Guardar Cambios
-                            </button>
-                            <a href="{{ url_for('admin.admin_envios') }}" class="btn btn-outline-secondary border-0 py-2">Cancelar</a>
-                        </div>
-                    </form>
-                </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold shadow-sm" style="background-color: var(--admin-accent); border: none;">
+                            <i class="bi bi-save me-2"></i> Guardar Cambios
+                        </button>
+                        <a href="{{ url_for('admin.admin_envios') }}" class="btn btn-light border py-2">Cancelar</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -43,6 +43,29 @@ def admin_panel():
     total_pedidos = Pedido.query.count()
     productos_bajo_stock = Producto.query.filter(Producto.stock < 5, Producto.activo == True).count()
     
+    # Nuevo KPI: Crecimiento Semanal
+    from datetime import timedelta
+    hoy = datetime.now()
+    inicio_esta_semana = hoy - timedelta(days=7)
+    inicio_semana_pasada = hoy - timedelta(days=14)
+    
+    ventas_esta_semana = db.session.query(func.sum(Pedido.total)).filter(Pedido.fecha_pedido >= inicio_esta_semana).scalar() or 0
+    ventas_semana_pasada = db.session.query(func.sum(Pedido.total)).filter(Pedido.fecha_pedido >= inicio_semana_pasada, Pedido.fecha_pedido < inicio_esta_semana).scalar() or 0
+    
+    crecimiento = 0
+    if ventas_semana_pasada > 0:
+        crecimiento = ((ventas_esta_semana - ventas_semana_pasada) / ventas_semana_pasada) * 100
+    elif ventas_esta_semana > 0:
+        crecimiento = 100
+        
+    # Top Productos
+    from sqlalchemy import desc
+    from app.models import DetallePedido
+    top_productos = db.session.query(
+        Producto.nombre, 
+        func.sum(DetallePedido.cantidad).label('total_vendido')
+    ).join(DetallePedido).group_by(Producto.id).order_by(desc('total_vendido')).limit(5).all()
+
     ultimos_pedidos = Pedido.query.order_by(Pedido.fecha_pedido.desc()).limit(50).all()
     
     ventas_por_fecha = {}
@@ -57,6 +80,8 @@ def admin_panel():
                          total_ventas=total_ventas,
                          total_pedidos=total_pedidos,
                          productos_bajo_stock=productos_bajo_stock,
+                         crecimiento=crecimiento,
+                         top_productos=top_productos,
                          fechas_grafico=fechas_grafico,
                          valores_grafico=valores_grafico)
 
@@ -543,4 +568,79 @@ def admin_categoria_editar(id):
     
     flash('Categoría actualizada', 'success')
     return redirect(url_for('admin.admin_categorias'))
+
+
+@admin_bp.route('/categorias/<int:id>/eliminar', methods=['POST'])
+@login_required
+def admin_eliminar_categoria(id):
+    categoria = Categoria.query.get_or_404(id)
+    try:
+        db.session.delete(categoria)
+        db.session.commit()
+        flash('Categoría eliminada', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('No se puede eliminar la categoría porque tiene productos asociados', 'error')
+    return redirect(url_for('admin.admin_categorias'))
+
+
+@admin_bp.route('/ventas/exportar')
+@login_required
+def admin_exportar_ventas():
+    import csv
+    import io
+    from flask import Response
+    
+    pedidos = Pedido.query.order_by(Pedido.fecha_pedido.desc()).all()
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['ID Pedido', 'Fecha', 'Cliente', 'Email', 'Estado', 'Pagado', 'Total', 'Código Seguimiento'])
+    
+    for p in pedidos:
+        writer.writerow([
+            p.id,
+            p.fecha_pedido.strftime('%Y-%m-%d %H:%M'),
+            p.nombre_cliente,
+            p.email_cliente,
+            p.estado,
+            'Sí' if p.pagado else 'No',
+            p.total,
+            p.codigo_seguimiento or ''
+        ])
+    
+    output.seek(0)
+    
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={"Content-disposition": "attachment; filename=ventas_estilo_fachero.csv"}
+    )
+
+
+@admin_bp.route('/productos/bulk_action', methods=['POST'])
+@login_required
+def admin_productos_bulk_action():
+    data = request.get_json()
+    product_ids = data.get('ids', [])
+    accion = data.get('accion')
+    
+    if not product_ids or not accion:
+        return jsonify({'ok': False, 'error': 'Faltan datos'}), 400
+        
+    try:
+        if accion == 'desactivar':
+            Producto.query.filter(Producto.id.in_(product_ids)).update({Producto.activo: False}, synchronize_session=False)
+        elif accion == 'activar':
+            Producto.query.filter(Producto.id.in_(product_ids)).update({Producto.activo: True}, synchronize_session=False)
+        elif accion == 'eliminar':
+            Producto.query.filter(Producto.id.in_(product_ids)).update({Producto.activo: False}, synchronize_session=False)
+            
+        db.session.commit()
+        return jsonify({'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(product_ids)} productos.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': str(e)}), 500
 

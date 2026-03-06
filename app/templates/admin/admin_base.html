@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    :root {
+        --admin-sidebar-width: 260px;
+        --admin-sidebar-collapsed-width: 80px;
+        --admin-bg: #f8f9fa;
+        --admin-sidebar-bg: #1a1c1e;
+        --admin-accent: #4F5D2F;
+        --admin-accent-hover: #3d4a24;
+        --admin-text-muted: #6c757d;
+        --admin-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    body {
+        background-color: var(--admin-bg);
+    }
+
+    #mainNavbar {
+        display: none !important;
+    }
+
+    .admin-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .admin-sidebar {
+        width: var(--admin-sidebar-width);
+        background: var(--admin-sidebar-bg);
+        color: white;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1040; /* Ajustado para estar debajo de los Offcanvas de Bootstrap (1045+) */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .admin-sidebar.collapsed {
+        width: var(--admin-sidebar-collapsed-width);
+    }
+
+    .sidebar-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 80px;
+    }
+
+    .sidebar-brand {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+    }
+
+    .admin-sidebar.collapsed .sidebar-brand span {
+        opacity: 0;
+        width: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-brand img {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        flex-shrink: 0;
+    }
+
+    .sidebar-nav {
+        padding: 1.5rem 0;
+        flex-grow: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .nav-header {
+        padding: 0 1.5rem 0.75rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.4);
+        letter-spacing: 1px;
+        white-space: nowrap;
+    }
+
+    .admin-sidebar.collapsed .nav-header {
+        opacity: 0;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.8rem 1.5rem;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border-left: 4px solid transparent;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .sidebar-link i {
+        font-size: 1.25rem;
+        min-width: 24px;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .sidebar-link span {
+        transition: opacity 0.2s;
+    }
+
+    .admin-sidebar.collapsed .sidebar-link span {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-link:hover {
+        background: rgba(255,255,255,0.05);
+        color: white;
+    }
+
+    .sidebar-link.active {
+        background: rgba(79, 93, 47, 0.15);
+        color: white;
+        border-left-color: var(--admin-accent);
+    }
+
+    .sidebar-link.active i {
+        color: var(--admin-accent);
+    }
+
+    .sidebar-footer {
+        padding: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Main Content Area */
+    .admin-main {
+        flex-grow: 1;
+        margin-left: var(--admin-sidebar-width);
+        padding: 2rem;
+        min-width: 0;
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .admin-sidebar.collapsed + .admin-main {
+        margin-left: var(--admin-sidebar-collapsed-width);
+    }
+
+    /* Top Bar */
+    .admin-top-bar {
+        background: white;
+        padding: 1rem 2rem;
+        margin: -2rem -2rem 2rem -2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        position: sticky;
+        top: 0;
+        z-index: 900;
+    }
+
+    .sidebar-toggle-btn {
+        background: #f1f3f5;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--admin-sidebar-bg);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .sidebar-toggle-btn:hover {
+        background: #e9ecef;
+    }
+
+    /* Cards */
+    .admin-card {
+        background: white;
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--admin-card-shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stats-card {
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .stats-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    /* Mobile Table Cards */
+    @media (max-width: 767.98px) {
+        .card-table thead {
+            display: none;
+        }
+        .card-table tbody tr {
+            display: block;
+            margin-bottom: 2rem;
+            border: none !important;
+            border-radius: 20px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Decoración lateral */
+        .card-table tbody tr::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: var(--admin-accent);
+            opacity: 0.8;
+        }
+        .card-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px dashed #eee !important;
+            text-align: right;
+        }
+        .card-table td:last-child {
+            border-bottom: none !important;
+            margin-top: 1rem;
+            padding-top: 1.5rem;
+            justify-content: center;
+            gap: 15px;
+        }
+        .card-table td::before {
+            content: attr(data-label);
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            color: var(--admin-text-muted);
+            text-align: left;
+            margin-right: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .admin-main {
+            padding: 1.5rem;
+        }
+        .admin-top-bar {
+            margin: -1.5rem -1.5rem 2rem -1.5rem;
+            padding: 1rem 1.5rem;
+        }
+        .w-100-mobile {
+            width: 100% !important;
+        }
+    }
+
+    /* Sidebar Mobile Backdrop */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 1050; /* Por encima de todo */
+        display: none;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+    .admin-sidebar.show ~ .sidebar-overlay {
+        display: block;
+    }
+
+    /* Close button only for mobile */
+    .btn-close-sidebar {
+        display: none;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.2s;
+    }
+    .btn-close-sidebar:hover {
+        background: rgba(255,255,255,0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .btn-close-sidebar {
+            display: flex;
+        }
+        .admin-sidebar {
+            transform: translateX(-100%);
+            width: var(--admin-sidebar-width) !important;
+            box-shadow: none;
+            z-index: 1060;
+        }
+        .admin-sidebar.show {
+            transform: translateX(0);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+        }
+        .admin-main {
+            margin-left: 0 !important;
+        }
+    }
+</style>
+
+<div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <a href="/admin/" class="sidebar-brand">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo">
+                <span>ESTILO FACHERO</span>
+            </a>
+            <button class="btn-close-sidebar" id="closeSidebar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-header">Principal</div>
+            <a href="/admin/" class="sidebar-link {{ 'active' if request.path == '/admin/' or request.path == '/admin' }}">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="nav-header mt-4">Gestión</div>
+            <a href="/admin/ventas" class="sidebar-link {{ 'active' if '/admin/ventas' in request.path }}">
+                <i class="bi bi-cart-check-fill"></i>
+                <span>Ventas</span>
+            </a>
+            <a href="/admin/productos" class="sidebar-link {{ 'active' if '/admin/productos' in request.path }}">
+                <i class="bi bi-box-seam-fill"></i>
+                <span>Productos</span>
+            </a>
+            <a href="/admin/categorias" class="sidebar-link {{ 'active' if '/admin/categorias' in request.path }}">
+                <i class="bi bi-tags-fill"></i>
+                <span>Categorías</span>
+            </a>
+            <a href="/admin/envios" class="sidebar-link {{ 'active' if '/admin/envios' in request.path }}">
+                <i class="bi bi-truck"></i>
+                <span>Envíos</span>
+            </a>
+
+            <div class="nav-header mt-4">Sistema</div>
+            <a href="/" class="sidebar-link">
+                <i class="bi bi-shop"></i>
+                <span>Ir a la Tienda</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('admin.admin_logout') }}" class="sidebar-link text-danger">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Salir</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <div class="admin-top-bar">
+            <button class="sidebar-toggle-btn" id="toggleSidebar">
+                <i class="bi bi-list"></i>
+            </button>
+            
+            <div class="user-profile d-flex align-items-center gap-3">
+                <div class="d-none d-sm-block text-end">
+                    <div class="fw-bold small">{{ current_user.email if current_user.is_authenticated else 'Admin' }}</div>
+                    <div class="text-muted extra-small">Administrador</div>
+                </div>
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 35px; height: 35px; background-color: var(--admin-accent) !important;">
+                    {{ current_user.email[0].upper() if current_user.is_authenticated else 'A' }}
+                </div>
+            </div>
+        </div>
+
+        <div class="fade-in-up">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Bloque para Modales (Fuera del contexto de transformaciones para evitar bloqueo de pantalla) -->
+{% block admin_modals %}{% endblock %}
+
+<script>
+    const sidebar = document.getElementById('adminSidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const closeBtn = document.getElementById('closeSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    // Check local storage for sidebar state
+    if (localStorage.getItem('sidebar-collapsed') === 'true' && window.innerWidth >= 992) {
+        sidebar.classList.add('collapsed');
+    }
+
+    function toggleSidebar() {
+        if (window.innerWidth < 992) {
+            sidebar.classList.toggle('show');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+        }
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('show');
+    }
+
+    toggleBtn.addEventListener('click', toggleSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Close on mobile when clicking links
+    if (window.innerWidth < 992) {
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', closeSidebar);
+        });
+    }
+</script>
+
+<style>
+    .extra-small { font-size: 0.7rem; }
+</style>
+
+{% endblock %}

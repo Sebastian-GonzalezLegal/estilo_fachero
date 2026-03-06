@@ -63,6 +63,17 @@ def api_producto_detalle(id):
     else:
         imagen_html = '<div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 250px"><i class="bi bi-image text-muted fs-1"></i></div>'
     
+    is_admin = request.args.get('admin') == '1'
+    boton_publico = ""
+    if not is_admin:
+        boton_publico = f"""
+            <div class="d-grid gap-2 mt-4">
+                <a href="{url_for('main.producto_detalle', id=producto.id)}" class="btn btn-dark btn-lg rounded-pill fw-bold py-3 shadow-sm">
+                    VER DETALLE COMPLETO <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        """
+
     html = f"""
     <div class="row g-4 p-3">
         <div class="col-md-5 text-center d-flex flex-column justify-content-center border-end-md">
@@ -106,11 +117,7 @@ def api_producto_detalle(id):
                 </div>
             </div>
             
-            <div class="d-grid gap-2 mt-4">
-                <a href="{url_for('main.producto_detalle', id=producto.id)}" class="btn btn-dark btn-lg rounded-pill fw-bold py-3 shadow-sm">
-                    VER DETALLE COMPLETO <i class="bi bi-arrow-right ms-2"></i>
-                </a>
-            </div>
+            {boton_publico}
         </div>
     </div>
     <style>

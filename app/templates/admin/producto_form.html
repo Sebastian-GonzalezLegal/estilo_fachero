@@ -1,241 +1,161 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
-{% block content %}
-<div class="container my-5 fade-in-up">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+{% block admin_content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-8">
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ url_for('admin.admin_productos') }}" class="btn btn-outline-secondary rounded-circle"
-                title="Volver">
+            <a href="{{ url_for('admin.admin_productos') }}" class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;" title="Volver">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h2 class="fw-bold mb-0 text-dark">{{ 'Editar' if producto else 'Nuevo' }} Producto</h2>
-                <p class="text-muted mb-0">Completa la información del producto para publicarlo.</p>
+                <h2 class="fw-bold mb-0">{{ 'Editar' if producto else 'Nuevo' }} Producto</h2>
+                <p class="text-muted mb-0">Configura la información y disponibilidad.</p>
             </div>
         </div>
     </div>
-
-    <form method="POST" enctype="multipart/form-data">
-        <div class="row g-4 justify-content-center">
-
-            <!-- Columna Izquierda: Info Principal -->
-            <div class="col-lg-8">
-
-                <!-- Sección 1: Información Básica -->
-                <div class="admin-card mb-4">
-                    <div class="admin-card-header">
-                        <h5 class="mb-0"><i class="bi bi-tag me-2 text-primary"></i> Información Básica</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <label for="nombre" class="form-label small fw-bold text-muted">NOMBRE DEL PRODUCTO
-                                    *</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre"
-                                    value="{{ producto.nombre if producto else '' }}"
-                                    placeholder="Ej: Gorra Trucker Negra" required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="categoria_id" class="form-label small fw-bold text-muted">CATEGORÍA
-                                    *</label>
-                                <select class="form-select" id="categoria_id" name="categoria_id" required>
-                                    <option value="">Seleccionar...</option>
-                                    {% for c in categorias %}
-                                    <option value="{{ c.id }}" {{ 'selected' if producto and producto.categoria_id==c.id
-                                        else '' }}>{{
-                                        c.nombre }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label for="descripcion" class="form-label small fw-bold text-muted">DESCRIPCIÓN</label>
-                                <textarea class="form-control" id="descripcion" name="descripcion" rows="4"
-                                    placeholder="Describe el producto (material, talle, detalles, etc.)">{{ producto.descripcion if producto and producto.descripcion else '' }}</textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección 2: Imágenes -->
-                <div class="admin-card mb-4">
-                    <div class="admin-card-header">
-                        <h5 class="mb-0"><i class="bi bi-images me-2 text-primary"></i> Galería de Imágenes</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <!-- Fotos actuales -->
-                        {% if producto and producto.fotos_lista() %}
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted mb-3">FOTOS ACTUALES</label>
-                            <div class="d-flex flex-wrap gap-3">
-                                {% for foto in producto.fotos_lista() %}
-                                <div class="position-relative shadow-sm border rounded overflow-hidden group-hover-btn">
-                                    {% if foto.startswith('http') %}
-                                    <img src="{{ foto }}" alt="Foto"
-                                        style="height: 100px; width: 100px; object-fit: cover;">
-                                    {% else %}
-                                    <img src="{{ url_for('api.imagen_producto', filename=foto) }}" alt="Foto"
-                                        style="height: 100px; width: 100px; object-fit: cover;">
-                                    {% endif %}
-                                    <button type="button"
-                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                                        style="width: 24px; height: 24px; padding: 0;"
-                                        onclick="eliminarFoto({{ producto.id }}, '{{ foto }}', this)"
-                                        title="Eliminar foto">
-                                        <i class="bi bi-x"></i>
-                                    </button>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <input type="hidden" name="fotos_actuales" value="{{ producto.fotos_lista()|join(',') }}">
-                        </div>
-                        <hr class="text-muted opacity-25">
-                        {% else %}
-                        <input type="hidden" name="fotos_actuales" value="">
-                        {% endif %}
-
-                        <!-- Subir nuevas -->
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">SUBIR NUEVAS FOTOS</label>
-                            <div class="input-group">
-                                <input type="file" class="form-control" id="fotos_nuevas" name="fotos_nuevas" multiple
-                                    accept="image/*">
-                            </div>
-                            <div id="nombres-archivos" class="small text-muted mt-2 fst-italic"></div>
-                        </div>
-
-                        <!-- URLs Adicionales -->
-                        <div class="accordion accordion-flush border rounded" id="accordionFotos">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed py-2 small fw-bold text-muted"
-                                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseUrls">
-                                        <i class="bi bi-link-45deg me-2"></i> AGREGAR POR URL EXTERNA
-                                    </button>
-                                </h2>
-                                <div id="collapseUrls" class="accordion-collapse collapse"
-                                    data-bs-parent="#accordionFotos">
-                                    <div class="accordion-body p-3 bg-light">
-                                        <textarea class="form-control form-control-sm font-monospace" id="fotos"
-                                            name="fotos" rows="3"
-                                            placeholder="https://ejemplo.com/foto1.jpg&#10;https://ejemplo.com/foto2.jpg">{% if producto and producto.fotos_lista() %}{% for f in producto.fotos_lista() %}{% if f.startswith('http') %}{{ f }}{% if not loop.last %}&#10;{% endif %}{% endif %}{% endfor %}{% endif %}</textarea>
-                                        <div class="form-text small">Una URL por línea.</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Columna Derecha: Precios y Stock -->
-            <div class="col-lg-4">
-                <div class="admin-card mb-4 sticky-top" style="top: 100px; z-index: 10;">
-                    <div class="admin-card-header bg-light">
-                        <h5 class="mb-0 fs-6"><i class="bi bi-sliders me-2 text-primary"></i> Configuración</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <label for="precio" class="form-label small fw-bold text-muted">PRECIO ($) *</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-white border-end-0 text-muted">$</span>
-                                <input type="number" step="0.01" class="form-control border-start-0 fw-bold text-dark"
-                                    id="precio" name="precio" value="{{ producto.precio if producto else '' }}" min="0"
-                                    required>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="stock" class="form-label small fw-bold text-muted">STOCK DISPONIBLE</label>
-                            <input type="number" class="form-control" id="stock" name="stock"
-                                value="{{ producto.stock if producto else 0 }}" min="0">
-                        </div>
-
-                        <hr class="text-muted opacity-25">
-
-                        <h6 class="small fw-bold text-muted mb-3"><i class="bi bi-box-seam me-1"></i> ENVÍO</h6>
-
-                        <div class="row g-2 mb-2">
-                            <div class="col-12">
-                                <label for="peso_g" class="form-label small text-muted mb-1">Peso (gramos)</label>
-                                <input type="number" class="form-control form-control-sm" id="peso_g" name="peso_g"
-                                    value="{{ producto.peso_g if producto else 100 }}" min="1">
-                            </div>
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-4">
-                                <label for="alto_cm" class="form-label small text-muted mb-1">Alto</label>
-                                <input type="number" class="form-control form-control-sm" id="alto_cm" name="alto_cm"
-                                    value="{{ producto.alto_cm if producto else 10 }}" min="1" placeholder="cm">
-                            </div>
-                            <div class="col-4">
-                                <label for="ancho_cm" class="form-label small text-muted mb-1">Ancho</label>
-                                <input type="number" class="form-control form-control-sm" id="ancho_cm" name="ancho_cm"
-                                    value="{{ producto.ancho_cm if producto else 10 }}" min="1" placeholder="cm">
-                            </div>
-                            <div class="col-4">
-                                <label for="largo_cm" class="form-label small text-muted mb-1">Largo</label>
-                                <input type="number" class="form-control form-control-sm" id="largo_cm" name="largo_cm"
-                                    value="{{ producto.largo_cm if producto else 10 }}" min="1" placeholder="cm">
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2 mt-5">
-                            <button type="submit" class="btn btn-fachero py-2 shadow-sm">
-                                <i class="bi bi-check-lg me-2"></i> {{ 'GUARDAR CAMBIOS' if producto else 'CREAR
-                                PRODUCTO' }}
-                            </button>
-                            <a href="{{ url_for('admin.admin_productos') }}"
-                                class="btn btn-outline-secondary py-2 border-0">Cancelar</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </form>
 </div>
 
+<form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+        <!-- Izquierda: Formulario Principal -->
+        <div class="col-lg-8">
+            <div class="admin-card mb-4">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i> Información General</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Nombre del Producto</label>
+                            <input type="text" class="form-control" name="nombre" value="{{ producto.nombre if producto else '' }}" required placeholder="Ej: Gorra Blanca">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Categoría</label>
+                            <select class="form-select" name="categoria_id" required>
+                                <option value="">Seleccionar...</option>
+                                {% for c in categorias %}
+                                <option value="{{ c.id }}" {{ 'selected' if producto and producto.categoria_id==c.id else '' }}>{{ c.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="5" placeholder="Materiales, talles, otros detalles...">{{ producto.descripcion if producto and producto.descripcion else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card mb-4">
+                <div class="p-4 border-bottom">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-images me-2 text-primary"></i> Galería fotográfica</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if producto and producto.fotos_lista() %}
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-3">Imágenes Actuales</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            {% for foto in producto.fotos_lista() %}
+                            <div class="position-relative border rounded shadow-sm overflow-hidden" style="width: 100px; height: 100px;">
+                                <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle" style="padding: 0; width: 22px; height: 22px;" onclick="eliminarFoto({{ producto.id }}, '{{ foto }}', this)">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="fotos_actuales" value="{{ producto.fotos_lista()|join(',') }}">
+                    </div>
+                    <hr>
+                    {% else %}
+                    <input type="hidden" name="fotos_actuales" value="">
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Subir archivos</label>
+                        <input type="file" class="form-control" name="fotos_nuevas" multiple accept="image/*">
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold text-muted text-uppercase">O agregar por URL</label>
+                        <textarea class="form-control font-monospace extra-small" name="fotos" rows="3" placeholder="https://...un-link-por-linea"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Derecha: Precios y Estado -->
+        <div class="col-lg-4">
+            <div class="admin-card sticky-top" style="top: 100px; z-index: 10;">
+                <div class="p-4 border-bottom bg-light bg-opacity-50">
+                    <h5 class="mb-0 fw-bold fs-6"><i class="bi bi-sliders me-2 text-primary"></i> Configuración de Venta</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Precio de Venta</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-end-0 text-muted">$</span>
+                            <input type="number" step="0.01" class="form-control border-start-0 fw-bold text-dark" name="precio" value="{{ producto.precio if producto else '' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Stock actual</label>
+                        <input type="number" class="form-control" name="stock" value="{{ producto.stock if producto else 0 }}" min="0">
+                    </div>
+
+                    <div class="p-3 bg-light rounded border mb-4">
+                        <div class="small fw-bold text-muted text-uppercase mb-2"><i class="bi bi-truck me-1"></i> Logística</div>
+                        <div class="row g-2">
+                            <div class="col-12 mb-2">
+                                <label class="extra-small text-muted">Peso (g)</label>
+                                <input type="number" class="form-control form-control-sm" name="peso_g" value="{{ producto.peso_g if producto else 100 }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="extra-small text-muted">Alto (cm)</label>
+                                <input type="number" class="form-control form-control-sm" name="alto_cm" value="{{ producto.alto_cm if producto else 10 }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="extra-small text-muted">Ancho (cm)</label>
+                                <input type="number" class="form-control form-control-sm" name="ancho_cm" value="{{ producto.ancho_cm if producto else 10 }}">
+                            </div>
+                            <div class="col-4">
+                                <label class="extra-small text-muted">Largo (cm)</label>
+                                <input type="number" class="form-control form-control-sm" name="largo_cm" value="{{ producto.largo_cm if producto else 10 }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold" style="background-color: var(--admin-accent); border: none;">
+                            <i class="bi bi-check-lg me-2"></i> {{ 'GUARDAR CAMBIOS' if producto else 'CREAR PRODUCTO' }}
+                        </button>
+                        <a href="{{ url_for('admin.admin_productos') }}" class="btn btn-light border py-2">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
 <script>
-    document.getElementById('fotos_nuevas').addEventListener('change', function () {
-        var names = [];
-        for (var i = 0; i < this.files.length; i++) names.push(this.files[i].name);
-        const container = document.getElementById('nombres-archivos');
-        if (names.length) {
-            container.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> ' + names.length + ' archivo(s) seleccionado(s)';
-        } else {
-            container.innerHTML = '';
-        }
-    });
-
-    function eliminarFoto(productoId, filename, btnElement) {
-        if (!confirm('¿Seguro querés eliminar esta foto?')) return;
-
+    function eliminarFoto(productoId, filename, btn) {
+        if (!confirm('¿Seguro?')) return;
         fetch(`/admin/productos/${productoId}/eliminar_foto`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ filename: filename })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.ok) {
-                    btnElement.closest('.position-relative').remove();
-                    const inputFotos = document.querySelector('input[name="fotos_actuales"]');
-                    let fotos = inputFotos.value.split(',');
-                    fotos = fotos.filter(f => f !== filename);
-                    inputFotos.value = fotos.join(',');
-                } else {
-                    alert('Error al eliminar foto: ' + (data.error || 'Desconocido'));
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error de conexión al eliminar foto.');
-            });
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename })
+        }).then(res => res.json()).then(data => {
+            if (data.ok) {
+                btn.closest('.position-relative').remove();
+                let input = document.querySelector('input[name="fotos_actuales"]');
+                input.value = input.value.split(',').filter(f => f !== filename).join(',');
+            }
+        });
     }
 </script>
+
+<style>
+    .extra-small { font-size: 0.7rem; }
+</style>
 {% endblock %}

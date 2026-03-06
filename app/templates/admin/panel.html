@@ -1,71 +1,109 @@
-{% extends 'base.html' %}
+{% extends 'admin/admin_base.html' %}
 
-{% block content %}
-<div class="container my-5 fade-in-up">
-    <!-- Header Admin -->
-    <div class="admin-header d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div>
-            <h2 class="fw-bold mb-1 text-dark">Panel de Administración</h2>
-            <p class="text-muted mb-0">Resumen de actividad y gestión de la tienda.</p>
+{% block admin_content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-0">Dashboard Operativo</h2>
+        <p class="text-muted">Resumen ejecutivo del desempeño de tu tienda.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="badge bg-white text-dark border p-2 px-3 shadow-sm">
+            <i class="bi bi-calendar3 me-2 text-primary"></i>
+            {{ hoy.strftime('%d %b, %Y') if hoy else 'Hoy' }}
         </div>
     </div>
+</div>
 
-    <!-- KPI Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-4">
-            <div class="admin-card stats-card h-100">
-                <div class="stats-icon bg-success bg-opacity-10 text-success">
-                    <i class="bi bi-currency-dollar"></i>
-                </div>
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Ventas
-                        Totales</h6>
-                    <h3 class="fw-bold mb-0 text-dark">${{ total_ventas }}</h3>
-                </div>
+<!-- Main KPIs -->
+<div class="row g-4 mb-5">
+    <!-- Ventas Totales -->
+    <div class="col-md-4">
+        <div class="admin-card stats-card h-100">
+            <div class="stats-icon bg-success bg-opacity-10 text-success">
+                <i class="bi bi-currency-dollar"></i>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="admin-card stats-card h-100">
-                <div class="stats-icon bg-primary bg-opacity-10 text-primary">
-                    <i class="bi bi-bag-check"></i>
-                </div>
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Pedidos
-                        Totales</h6>
-                    <h3 class="fw-bold mb-0 text-dark">{{ total_pedidos }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="admin-card stats-card h-100">
-                <div class="stats-icon bg-warning bg-opacity-10 text-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                </div>
-                <div>
-                    <h6 class="text-muted mb-1 text-uppercase small fw-bold" style="letter-spacing: 0.5px;">Bajo Stock
-                    </h6>
-                    <h3 class="fw-bold mb-0 text-dark">{{ productos_bajo_stock }}</h3>
-                    <small class="text-danger fw-bold" style="font-size: 0.75rem;">&lt; 5 unidades</small>
+            <div>
+                <h6 class="text-muted mb-1 text-uppercase small fw-bold">Ventas Totales</h6>
+                <h3 class="fw-bold mb-0">${{ "{:,.2f}".format(total_ventas) }}</h3>
+                <div class="small mt-1 {{ 'text-success' if crecimiento >= 0 else 'text-danger' }}">
+                    <i class="bi {{ 'bi-arrow-up' if crecimiento >= 0 else 'bi-arrow-down' }}"></i>
+                    {{ "{:,.1f}".format(crecimiento|abs) }}% <span class="text-muted">vs sem. pasada</span>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Chart Section -->
-    <div class="admin-card mb-5">
-        <div class="admin-card-header">
-            <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas (Últimos 7 días)
-            </h5>
-        </div>
-        <div class="card-body">
-            <canvas id="salesChart" height="80"></canvas>
+    <!-- Pedidos -->
+    <div class="col-md-4">
+        <div class="admin-card stats-card h-100">
+            <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-bag-check"></i>
+            </div>
+            <div>
+                <h6 class="text-muted mb-1 text-uppercase small fw-bold">Pedidos</h6>
+                <h3 class="fw-bold mb-0">{{ total_pedidos }}</h3>
+                <span class="text-muted small">En toda la historia</span>
+            </div>
         </div>
     </div>
+    <!-- Bajo Stock -->
+    <div class="col-md-4">
+        <div class="admin-card stats-card h-100">
+            <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h6 class="text-muted mb-1 text-uppercase small fw-bold">Bajo Stock</h6>
+                <h3 class="fw-bold mb-0">{{ productos_bajo_stock }}</h3>
+                <small class="text-danger fw-bold" style="font-size: 0.75rem;">&lt; 5 unidades</small>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- Contenido del Dashboard -->
-    <div class="row">
-        <div class="col-12 text-center text-muted mb-4 mt-2">
-            <p>Utilizá la barra de navegación de arriba para acceder a las secciones del panel administrativo.</p>
+<div class="row g-4 mb-5">
+    <!-- Sales Chart -->
+    <div class="col-lg-8">
+        <div class="admin-card h-100">
+            <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-2 text-primary"></i>Tendencia de Ventas</h5>
+                <span class="badge bg-light text-dark">Últimos 7 días</span>
+            </div>
+            <div class="p-4">
+                <canvas id="salesChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Top Products -->
+    <div class="col-lg-4">
+        <div class="admin-card h-100">
+            <div class="p-4 border-bottom">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-award me-2 text-warning"></i>Más Vendidos</h5>
+            </div>
+            <div class="p-4">
+                <div class="list-group list-group-flush">
+                    {% for p in top_productos %}
+                    <div class="list-group-item px-0 border-0 mb-3 d-flex align-items-center">
+                        <div class="bg-light rounded p-2 me-3 text-primary fw-bold" style="width: 40px; text-align: center;">
+                            #{{ loop.index }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold text-dark small">{{ p.nombre }}</div>
+                            <div class="text-muted extra-small">{{ p.total_vendido }} unidades vendidas</div>
+                        </div>
+                        <div class="text-end">
+                            <i class="bi bi-chevron-right text-muted small"></i>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-4 small">Aún no hay datos de ventas disponibles.</p>
+                    {% endfor %}
+                </div>
+                {% if top_productos %}
+                <div class="d-grid mt-3">
+                    <a href="/admin/productos" class="btn btn-sm btn-outline-primary rounded-pill">Gestionar Stock</a>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -73,64 +111,76 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    const salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: JSON.parse('{{ fechas_grafico | tojson | safe }}'),
-            datasets: [{
-                label: 'Ventas ($)',
-                data: JSON.parse('{{ valores_grafico | tojson | safe }}'),
-                borderColor: '#4F5D2F',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                    gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
-                    gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
-                    return gradient;
-                },
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#4F5D2F',
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(44, 51, 51, 0.9)',
-                    padding: 12,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    titleFont: { family: 'Montserrat', size: 13 },
-                    bodyFont: { family: 'Inter', size: 13 }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        borderDash: [4, 4],
-                        color: '#f0f0f0',
-                        drawBorder: false
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: JSON.parse('{{ fechas_grafico | tojson | safe }}'),
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: JSON.parse('{{ valores_grafico | tojson | safe }}'),
+                    borderColor: '#4F5D2F',
+                    backgroundColor: (context) => {
+                        const ctx = context.chart.ctx;
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(79, 93, 47, 0.2)');
+                        gradient.addColorStop(1, 'rgba(79, 93, 47, 0)');
+                        return gradient;
                     },
-                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#4F5D2F',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#4F5D2F'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1a1c1e',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        displayColors: false
+                    }
                 },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Inter', size: 11 }, color: '#9ca3af' }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f0f0f0',
+                            drawBorder: false
+                        },
+                        ticks: { 
+                            callback: function(value) { return '$' + value.toLocaleString(); },
+                            font: { size: 11 },
+                            color: '#abb0b8'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 }, color: '#abb0b8' }
+                    }
                 }
             }
-        }
+        });
     });
-
-
 </script>
+
+<style>
+    .extra-small { font-size: 0.75rem; }
+    .bg-light { background-color: #f8f9fa !important; }
+</style>
+
 {% endblock %}
