@@ -383,6 +383,18 @@
                 <i class="bi bi-truck"></i>
                 <span>Envíos</span>
             </a>
+            <a href="{{ url_for('admin.admin_clientes') }}" class="sidebar-link {{ 'active' if '/admin/clientes' in request.path }}">
+                <i class="bi bi-people-fill"></i>
+                <span>Fidelización (CRM)</span>
+            </a>
+            <a href="{{ url_for('admin.admin_cupones') }}" class="sidebar-link {{ 'active' if '/admin/cupones' in request.path }}">
+                <i class="bi bi-ticket-perforated-fill"></i>
+                <span>Cupones</span>
+            </a>
+            <a href="{{ url_for('admin.admin_resenas') }}" class="sidebar-link {{ 'active' if '/admin/resenas' in request.path }}">
+                <i class="bi bi-star-half"></i>
+                <span>Reseñas</span>
+            </a>
 
             <div class="nav-header mt-4">Sistema</div>
             <a href="{{ url_for('admin.admin_configuracion') }}" class="sidebar-link {{ 'active' if '/admin/configuracion' in request.path }}">

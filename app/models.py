@@ -133,6 +133,8 @@ class Pedido(db.Model):
     codigo_seguimiento = db.Column(db.String(100))
     empresa_envio = db.Column(db.String(100))
     metodo_pago = db.Column(db.String(50), default='transferencia')
+    cupon_codigo = db.Column(db.String(50))
+    descuento_monto = db.Column(db.Float, default=0)
 
     detalles = db.relationship('DetallePedido', backref='pedido', lazy=True, cascade='all, delete-orphan')
 
@@ -149,6 +151,8 @@ class Pedido(db.Model):
             "envio_precio": self.envio_precio,
             "total_productos": self.total_productos,
             "total": self.total,
+            "cupon_codigo": self.cupon_codigo,
+            "descuento_monto": self.descuento_monto,
             "fecha_pedido": self.fecha_pedido.isoformat() if self.fecha_pedido else None,
             "detalles": [d.to_dict() for d in self.detalles]
         }
@@ -222,6 +226,9 @@ class Configuracion(db.Model):
     pagos_info = db.Column(db.Text, default="Actualmente aceptamos Transferencia Bancaria. Al finalizar tu compra, recibirás los datos de la cuenta y, una vez realizado el pago, deberás enviarnos el comprobante por WhatsApp o respondiendo al mail de confirmación para que despachemos tu pedido.")
     cambios_info = db.Column(db.Text, default="Sí, todos nuestros productos tienen cambio por falla o talle dentro de los 15 días de recibida la compra. El producto debe estar sin uso y en perfectas condiciones.")
     tiempos_info = db.Column(db.Text, default="El tiempo de despacho es de 24 a 48hs hábiles luego de acreditado el pago. Una vez despachado, Correo Argentino suele demorar entre 3 a 6 días hábiles dependiendo de tu ubicación.")
+    
+    # Configuración de Pagos
+    descuento_transferencia = db.Column(db.Float, default=10.0) # Porcentaje de descuento por transferencia
 
     @staticmethod
     def get_solo():

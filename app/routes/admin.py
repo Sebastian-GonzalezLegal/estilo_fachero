@@ -3,7 +3,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import Admin, Producto, Pedido, Categoria, Configuracion
+from app.models import Admin, Producto, Pedido, Categoria, Configuracion, CuponDescuento, Resena
 from app.services.email_service import enviar_mail_despacho
 from flask import current_app
 
@@ -125,7 +125,10 @@ def admin_ventas():
     query = Pedido.query
     
     if filtro_cliente:
-        query = query.filter(Pedido.nombre_cliente.ilike(f'%{filtro_cliente}%'))
+        query = query.filter(db.or_(
+            Pedido.nombre_cliente.ilike(f'%{filtro_cliente}%'),
+            Pedido.email_cliente.ilike(f'%{filtro_cliente}%')
+        ))
     
     if filtro_fecha:
         try:
@@ -751,9 +754,91 @@ def admin_configuracion():
         config.cambios_info = request.form.get('cambios_info')
         config.tiempos_info = request.form.get('tiempos_info')
         
+        # Pagos
+        config.descuento_transferencia = request.form.get('descuento_transferencia', type=float)
+        
         db.session.commit()
         flash('Configuración actualizada correctamente', 'success')
         return redirect(url_for('admin.admin_configuracion'))
         
     return render_template('admin/configuracion.html', config=config)
+
+@admin_bp.route('/cupones', methods=['GET'])
+@login_required
+def admin_cupones():
+    cupones = CuponDescuento.query.all()
+    return render_template('admin/cupones.html', cupones=cupones)
+
+@admin_bp.route('/cupones/nuevo', methods=['POST'])
+@login_required
+def admin_cupon_nuevo():
+    codigo = request.form.get('codigo', '').strip().upper()
+    descuento = request.form.get('descuento', type=float)
+    
+    if not codigo or descuento is None:
+        flash('Datos inválidos para el cupón', 'error')
+        return redirect(url_for('admin.admin_cupones'))
+    
+    # Verificar si ya existe
+    if CuponDescuento.query.filter_by(codigo=codigo).first():
+        flash('El código de cupón ya existe', 'error')
+        return redirect(url_for('admin.admin_cupones'))
+    
+    nuevo_cupon = CuponDescuento(
+        codigo=codigo,
+        descuento_porcentaje=descuento,
+        activo=True
+    )
+    
+    db.session.add(nuevo_cupon)
+    db.session.commit()
+    flash(f'Cupón {codigo} creado correctamente', 'success')
+    return redirect(url_for('admin.admin_cupones'))
+
+@admin_bp.route('/cupones/<int:id>/toggle', methods=['POST'])
+@login_required
+def admin_cupon_toggle(id):
+    cupon = CuponDescuento.query.get_or_404(id)
+    cupon.activo = not cupon.activo
+    db.session.commit()
+    return jsonify({'ok': True, 'activo': cupon.activo})
+
+@admin_bp.route('/cupones/<int:id>/eliminar', methods=['POST'])
+@login_required
+def admin_cupon_eliminar(id):
+    cupon = CuponDescuento.query.get_or_404(id)
+    db.session.delete(cupon)
+    db.session.commit()
+    flash('Cupón eliminado', 'success')
+    return redirect(url_for('admin.admin_cupones'))
+
+@admin_bp.route('/clientes')
+@login_required
+def admin_clientes():
+    # Agrupamos pedidos por email para tener una vista de "CRM"
+    # Calculamos: Total gastado, Cantidad de pedidos, Última compra
+    clientes_stats = db.session.query(
+        Pedido.email_cliente,
+        func.max(Pedido.nombre_cliente).label('nombre_cliente'),
+        func.count(Pedido.id).label('total_pedidos'),
+        func.sum(Pedido.total).label('total_gastado'),
+        func.max(Pedido.fecha_pedido).label('ultima_compra')
+    ).group_by(Pedido.email_cliente).order_by(func.sum(Pedido.total).desc()).all()
+    
+    return render_template('admin/clientes.html', clientes=clientes_stats)
+
+@admin_bp.route('/resenas')
+@login_required
+def admin_resenas():
+    resenas = Resena.query.order_by(Resena.fecha.desc()).all()
+    return render_template('admin/resenas.html', resenas=resenas)
+
+@admin_bp.route('/resenas/<int:id>/eliminar', methods=['POST'])
+@login_required
+def admin_eliminar_resena(id):
+    resena = Resena.query.get_or_404(id)
+    db.session.delete(resena)
+    db.session.commit()
+    flash('Reseña eliminada correctamente', 'success')
+    return redirect(url_for('admin.admin_resenas'))
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, flash, redirect, url_for, send_file, send_from_directory, current_app
 from io import BytesIO
 from app.extensions import db
-from app.models import TipoEnvio, ProductoImagen, Producto, Resena
+from app.models import TipoEnvio, ProductoImagen, Producto, Resena, CuponDescuento
 from flask_login import login_required
 
 api_bp = Blueprint('api', __name__)
@@ -149,3 +149,22 @@ def imagen_producto(filename):
 def api_productos():
     productos = Producto.query.filter_by(activo=True).all()
     return jsonify([p.to_dict() for p in productos])
+
+@api_bp.route('/validar-cupon', methods=['POST'])
+def validar_cupon():
+    data = request.get_json()
+    codigo = data.get('codigo', '').strip().upper()
+    
+    if not codigo:
+        return jsonify({'ok': False, 'error': 'Ingresá un código'})
+    
+    cupon = CuponDescuento.query.filter_by(codigo=codigo, activo=True).first()
+    
+    if not cupon:
+        return jsonify({'ok': False, 'error': 'Cupón inválido o expirado'})
+    
+    return jsonify({
+        'ok': True,
+        'codigo': cupon.codigo,
+        'descuento': cupon.descuento_porcentaje
+    })

@@ -1,0 +1,66 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-8">
+        <h2 class="fw-bold mb-0">Gestión de Clientes (CRM)</h2>
+        <p class="text-muted">Conoce a tus clientes recurrentes y fidelízalos.</p>
+    </div>
+</div>
+
+<div class="admin-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 card-table">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3">Cliente / Email</th>
+                    <th class="py-3 text-center">Pedidos</th>
+                    <th class="py-3 text-end">Total Gastado</th>
+                    <th class="py-3 text-end">Última Compra</th>
+                    <th class="text-end pe-4 py-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-sm bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold rounded-circle" style="width: 40px; height: 40px;">
+                                {{ cliente.nombre_cliente[0].upper() }}
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark">{{ cliente.nombre_cliente }}</div>
+                                <div class="extra-small text-muted">{{ cliente.email_cliente }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-3">
+                            {{ cliente.total_pedidos }} pedidos
+                        </span>
+                    </td>
+                    <td class="text-end fw-bold text-primary">
+                        ${{ "{:,.2f}".format(cliente.total_gastado) }}
+                    </td>
+                    <td class="text-end text-muted small">
+                        {{ cliente.ultima_compra.strftime('%d/%m/%Y') }}
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="{{ url_for('admin.admin_ventas', cliente=cliente.email_cliente) }}" class="btn btn-sm btn-light border rounded-pill px-3" title="Ver Historial">
+                            Ver Historial
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <i class="bi bi-people fs-1 text-muted opacity-25"></i>
+                        <p class="text-muted fw-bold mt-2">Aún no hay clientes registrados</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

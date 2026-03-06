@@ -28,6 +28,9 @@ if __name__ == '__main__':
                     "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_3 VARCHAR(255)",
                     "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS hero_image_4 VARCHAR(255)",
                     "ALTER TABLE productos ADD COLUMN IF NOT EXISTS umbral_stock INTEGER DEFAULT 5",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS cupon_codigo VARCHAR(50)",
+                    "ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS descuento_monto FLOAT DEFAULT 0",
+                    "ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS descuento_transferencia FLOAT DEFAULT 10.0",
                     "ALTER TABLE configuracion DROP COLUMN IF EXISTS google_apps_script_url",
                     "ALTER TABLE configuracion DROP COLUMN IF EXISTS email_webhook_token"
                 ]

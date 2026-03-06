@@ -1,0 +1,125 @@
+{% extends 'admin/admin_base.html' %}
+
+{% block admin_content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-0">Gestión de Cupones</h2>
+        <p class="text-muted">Crea y administra códigos de descuento para tus clientes.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button class="btn btn-primary rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#nuevoCuponModal" style="background-color: var(--admin-accent); border: none;">
+            <i class="bi bi-plus-lg me-2"></i> Nuevo Cupón
+        </button>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show shadow-sm mb-4" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="admin-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 card-table">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4 py-3">Código</th>
+                    <th class="py-3">Descuento (%)</th>
+                    <th class="py-3">Estado</th>
+                    <th class="text-end pe-4 py-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cupon in cupones %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="badge bg-dark px-3 py-2 fs-6 font-monospace">{{ cupon.codigo }}</span>
+                    </td>
+                    <td>
+                        <span class="fw-bold text-primary">{{ cupon.descuento_porcentaje }}%</span>
+                    </td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="toggle{{ cupon.id }}" 
+                                   {% if cupon.activo %}checked{% endif %} onchange="toggleCupon({{ cupon.id }})">
+                            <label class="form-check-label small text-muted" for="toggle{{ cupon.id }}">
+                                {{ 'Activo' if cupon.activo else 'Inactivo' }}
+                            </label>
+                        </div>
+                    </td>
+                    <td class="text-end pe-4">
+                        <form action="{{ url_for('admin.admin_cupon_eliminar', id=cupon.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este cupón?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 32px; height: 32px;">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <i class="bi bi-ticket-perforated fs-1 text-muted opacity-25"></i>
+                        <p class="text-muted fw-bold mt-2">No hay cupones creados</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_modals %}
+<!-- Modal Nuevo Cupón -->
+<div class="modal fade" id="nuevoCuponModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold text-white">Crear Nuevo Cupón</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('admin.admin_cupon_nuevo') }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Código</label>
+                        <input type="text" name="codigo" class="form-control fw-bold" placeholder="EJ: FACHERO10" required>
+                        <div class="form-text">Sin espacios, solo letras y números.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Descuento (%)</label>
+                        <div class="input-group">
+                            <input type="number" name="descuento" class="form-control" placeholder="10" min="1" max="100" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4" style="background-color: var(--admin-accent); border: none;">Crear Cupón</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleCupon(id) {
+        fetch(`/admin/cupones/${id}/toggle`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok) {
+                const label = document.querySelector(`label[for="toggle${id}"]`);
+                label.textContent = data.activo ? 'Activo' : 'Inactivo';
+            }
+        });
+    }
+</script>
+{% endblock %}

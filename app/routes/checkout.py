@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, json, current_app
 from app.extensions import db
-from app.models import Producto, Pedido, DetallePedido
+from app.models import Producto, Pedido, DetallePedido, CuponDescuento, Configuracion
 from app.services.email_service import enviar_emails_checkout, enviar_mail_confirmacion_pago
 from app.services.payment_service import PaymentService
 
@@ -8,6 +8,7 @@ checkout_bp = Blueprint('checkout', __name__)
 
 @checkout_bp.route('/finalizar', methods=['GET', 'POST'])
 def checkout():
+    config = Configuracion.get_solo()
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         email_cliente = request.form.get('email')
@@ -23,6 +24,9 @@ def checkout():
             envio_precio = float(envio_precio_raw)
         except Exception:
             envio_precio = 0.0
+
+        cupon_codigo = request.form.get('cupon_codigo', '').strip().upper()
+        descuento_monto = 0.0
 
         carrito_json = request.form.get('carrito_data')
         
@@ -62,7 +66,28 @@ def checkout():
         
         db.session.commit()
         
+        
         total_productos = sum(item['precio'] * item['cantidad'] for item in carrito)
+        
+        # --- VALIDACIÓN DE CUPÓN ---
+        if cupon_codigo:
+            cupon = CuponDescuento.query.filter_by(codigo=cupon_codigo, activo=True).first()
+            if cupon:
+                descuento_monto = total_productos * (cupon.descuento_porcentaje / 100)
+            else:
+                cupon_codigo = None # Ignorar si no es válido
+
+        total_productos = (total_productos - descuento_monto)
+        
+        # --- DESCUENTO POR TRANSFERENCIA (Dinámico) ---
+        config = Configuracion.get_solo()
+        descuento_transferencia = 0.0
+        pct_descuento = config.descuento_transferencia or 0.0
+        
+        if metodo_pago == 'transferencia' and pct_descuento > 0:
+            descuento_transferencia = total_productos * (pct_descuento / 100.0)
+            total_productos -= descuento_transferencia
+            
         total = total_productos + envio_precio
 
         # --- GUARDAR PEDIDO EN BASE DE DATOS ---
@@ -77,7 +102,9 @@ def checkout():
             envio_precio=envio_precio,
             total_productos=total_productos,
             total=total,
-            metodo_pago=metodo_pago
+            metodo_pago=metodo_pago,
+            cupon_codigo=cupon_codigo,
+            descuento_monto=descuento_monto
         )
         
         for item in carrito:
@@ -161,7 +188,7 @@ def checkout():
             total=total,
         )
 
-    return render_template('checkout.html')
+    return render_template('checkout.html', config=config)
 
 # --- RUTAS RETORNO MERCADO PAGO ---
 @checkout_bp.route('/mp/success')
