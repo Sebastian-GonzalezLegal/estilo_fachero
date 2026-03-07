@@ -3,7 +3,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.extensions import db
-from app.models import Admin, Producto, Pedido, Categoria, Configuracion, CuponDescuento, Resena
+from app.models import Admin, Producto, Pedido, Categoria, Configuracion, CuponDescuento, Resena, DetallePedido, ProductoImagen
 from app.services.email_service import enviar_mail_despacho
 from flask import current_app
 
@@ -153,19 +153,49 @@ def admin_detalle_venta(id):
 @login_required
 def admin_actualizar_venta(id):
     pedido = Pedido.query.get_or_404(id)
-    
-    if pedido.estado in ['Enviado', 'Entregado'] and request.form.get('estado') in ['Pendiente', 'En Aprobación']:
+    nuevo_estado = request.form.get('estado')
+    estado_anterior = pedido.estado
+
+    # Regla: No se puede volver de Enviado/Entregado a Pendiente/En Aprobación
+    if estado_anterior in ['Enviado', 'Entregado'] and nuevo_estado in ['Pendiente', 'En Aprobación']:
         flash('No se puede volver a un estado anterior una vez enviado.', 'error')
         return redirect(url_for('admin.admin_detalle_venta', id=id))
     
-    estado = request.form.get('estado')
+    # --- LÓGICA DE STOCK ---
+    # Caso 1: Se cancela un pedido que NO estaba cancelado -> Restaurar stock
+    if nuevo_estado == 'Cancelado' and estado_anterior != 'Cancelado':
+        for detalle in pedido.detalles:
+            if detalle.producto_id:
+                producto = db.session.get(Producto, detalle.producto_id)
+                if producto:
+                    producto.stock += detalle.cantidad
+        flash('Pedido cancelado y stock restaurado.', 'info')
+
+    # Caso 2: Se restablece un pedido que ESTABA cancelado -> Restar stock
+    elif estado_anterior == 'Cancelado' and nuevo_estado != 'Cancelado':
+        # Validar stock antes de proceder
+        for detalle in pedido.detalles:
+            if detalle.producto_id:
+                producto = db.session.get(Producto, detalle.producto_id)
+                if producto and producto.stock < detalle.cantidad:
+                    flash(f'No hay stock suficiente para restablecer el pedido. Producto: {producto.nombre} (Stock: {producto.stock})', 'error')
+                    return redirect(url_for('admin.admin_detalle_venta', id=id))
+        
+        # Si pasó la validación, restar
+        for detalle in pedido.detalles:
+            if detalle.producto_id:
+                producto = db.session.get(Producto, detalle.producto_id)
+                if producto:
+                    producto.stock -= detalle.cantidad
+        flash('Pedido restablecido y stock descontado.', 'info')
+    
     pagado = request.form.get('pagado') == 'on'
     codigo_seguimiento = request.form.get('codigo_seguimiento', '').strip()
     link_seguimiento = request.form.get('link_seguimiento', '').strip()
     empresa_envio = request.form.get('empresa_envio', '').strip()
     notificar = request.form.get('notificar') == 'on'
     
-    pedido.estado = estado
+    pedido.estado = nuevo_estado
     pedido.pagado = pagado
     pedido.codigo_seguimiento = codigo_seguimiento
     pedido.link_seguimiento = link_seguimiento
@@ -174,9 +204,9 @@ def admin_actualizar_venta(id):
     db.session.commit()
     
     msg_extra = ""
-    if estado == 'Enviado' and notificar:
-        url_script = current_app.config['GOOGLE_APPS_SCRIPT_URL']
-        token = current_app.config['EMAIL_WEBHOOK_TOKEN']
+    if nuevo_estado == 'Enviado' and notificar:
+        url_script = current_app.config.get('GOOGLE_APPS_SCRIPT_URL')
+        token = current_app.config.get('EMAIL_WEBHOOK_TOKEN')
         if enviar_mail_despacho(pedido, url_script, token):
             msg_extra = " y se notificó al cliente"
         else:
@@ -386,9 +416,28 @@ def admin_producto_editar(id):
 @login_required
 def admin_producto_eliminar(id):
     producto = Producto.query.get_or_404(id)
-    producto.activo = False
+    
+    # 1. Desvincular de pedidos (manualmente para asegurar integridad si el DB no tiene ON DELETE SET NULL)
+    DetallePedido.query.filter_by(producto_id=id).update({DetallePedido.producto_id: None})
+
+    # 2. Eliminar imágenes relacionadas de la DB y disco
+    for filename in producto.fotos_lista():
+        ProductoImagen.query.filter_by(nombre=filename).delete()
+        try:
+            path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            if os.path.exists(path):
+                os.remove(path)
+        except Exception:
+            pass
+
+    # 3. Eliminar reseñas relacionadas (manualmente para asegurar)
+    Resena.query.filter_by(producto_id=id).delete()
+
+    # 4. Hard delete del producto
+    db.session.delete(producto)
     db.session.commit()
-    flash('Producto desactivado exitosamente', 'success')
+    
+    flash('Producto eliminado definitivamente', 'success')
     return redirect(url_for('admin.admin_productos'))
 
 
@@ -618,13 +667,31 @@ def admin_categoria_editar(id):
 @login_required
 def admin_eliminar_categoria(id):
     categoria = Categoria.query.get_or_404(id)
+    nueva_categoria_id = request.form.get('nueva_categoria_id', type=int)
+    
     try:
+        # Migrar productos
+        productos_a_migrar = Producto.query.filter_by(categoria_id=id).all()
+        
+        # Si se especificó una nueva categoría (> 0)
+        if nueva_categoria_id and nueva_categoria_id > 0:
+            nueva_cat_obj = db.session.get(Categoria, nueva_categoria_id)
+            for p in productos_a_migrar:
+                p.categoria_id = nueva_categoria_id
+                if nueva_cat_obj:
+                    p.tipo = nueva_cat_obj.nombre.lower()
+        else:
+            # Caso "Sin categoría"
+            for p in productos_a_migrar:
+                p.categoria_id = None
+                p.tipo = "Sin categoría"
+        
         db.session.delete(categoria)
         db.session.commit()
-        flash('Categoría eliminada', 'success')
+        flash(f'Categoría "{categoria.nombre}" eliminada. {len(productos_a_migrar)} productos fueron actualizados.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash('No se puede eliminar la categoría porque tiene productos asociados', 'error')
+        flash(f'Error al eliminar la categoría: {str(e)}', 'error')
     return redirect(url_for('admin.admin_categorias'))
 
 
@@ -680,7 +747,18 @@ def admin_productos_bulk_action():
         elif accion == 'activar':
             Producto.query.filter(Producto.id.in_(product_ids)).update({Producto.activo: True}, synchronize_session=False)
         elif accion == 'eliminar':
-            Producto.query.filter(Producto.id.in_(product_ids)).update({Producto.activo: False}, synchronize_session=False)
+            # 1. Desvincular de pedidos
+            DetallePedido.query.filter(DetallePedido.producto_id.in_(product_ids)).update({DetallePedido.producto_id: None}, synchronize_session=False)
+            
+            # 2. Eliminar reseñas
+            Resena.query.filter(Resena.producto_id.in_(product_ids)).delete(synchronize_session=False)
+            
+            # 3. Eliminar imágenes y productos
+            productos = Producto.query.filter(Producto.id.in_(product_ids)).all()
+            for p in productos:
+                for filename in p.fotos_lista():
+                    ProductoImagen.query.filter_by(nombre=filename).delete()
+                db.session.delete(p)
             
         db.session.commit()
         return jsonify({'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(product_ids)} productos.'})
@@ -700,21 +778,63 @@ def admin_ventas_bulk_action():
         return jsonify({'ok': False, 'error': 'Faltan datos'}), 400
         
     try:
-        if accion == 'pagado':
-            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.pagado: True}, synchronize_session=False)
-        elif accion == 'no_pagado':
-            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.pagado: False}, synchronize_session=False)
-        elif accion == 'estado_pendiente':
-            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Pendiente'}, synchronize_session=False)
-        elif accion == 'estado_enviado':
-            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Enviado'}, synchronize_session=False)
-        elif accion == 'estado_entregado':
-            Pedido.query.filter(Pedido.id.in_(order_ids)).update({Pedido.estado: 'Entregado'}, synchronize_session=False)
-        else:
-            return jsonify({'ok': False, 'error': 'Acción no válida'}), 400
+        mensajes = []
+        errores = []
+        
+        for oid in order_ids:
+            pedido = Pedido.query.get(oid)
+            if not pedido: continue
             
+            estado_anterior = pedido.estado
+            
+            if accion == 'pagado':
+                pedido.pagado = True
+            elif accion == 'no_pagado':
+                pedido.pagado = False
+            elif accion == 'estado_pendiente':
+                # Si estaba cancelado, intentar descontar stock
+                if estado_anterior == 'Cancelado':
+                    puedo_restablecer = True
+                    for detalle in pedido.detalles:
+                        if detalle.producto_id:
+                            producto = db.session.get(Producto, detalle.producto_id)
+                            if producto and producto.stock < detalle.cantidad:
+                                puedo_restablecer = False
+                                errores.append(f"Pedido #{oid}: Sin stock de {producto.nombre}")
+                                break
+                    
+                    if puedo_restablecer:
+                        for detalle in pedido.detalles:
+                            if detalle.producto_id:
+                                producto = db.session.get(Producto, detalle.producto_id)
+                                if producto: producto.stock -= detalle.cantidad
+                        pedido.estado = 'Pendiente'
+                else:
+                    pedido.estado = 'Pendiente'
+                    
+            elif accion == 'estado_cancelado':
+                # Si NO estaba cancelado, restaurar stock
+                if estado_anterior != 'Cancelado':
+                    for detalle in pedido.detalles:
+                        if detalle.producto_id:
+                            producto = db.session.get(Producto, detalle.producto_id)
+                            if producto: producto.stock += detalle.cantidad
+                    pedido.estado = 'Cancelado'
+                else:
+                    pedido.estado = 'Cancelado'
+
+            elif accion == 'estado_enviado':
+                pedido.estado = 'Enviado'
+            elif accion == 'estado_entregado':
+                pedido.estado = 'Entregado'
+
         db.session.commit()
-        return jsonify({'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(order_ids)} pedidos.'})
+        
+        res = {'ok': True, 'mensaje': f'Acción "{accion}" aplicada a {len(order_ids)} pedidos.'}
+        if errores:
+            res['errores'] = errores
+        return jsonify(res)
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'ok': False, 'error': str(e)}), 500

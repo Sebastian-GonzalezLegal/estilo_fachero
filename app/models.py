@@ -162,7 +162,7 @@ class DetallePedido(db.Model):
     __tablename__ = 'detalles_pedido'
     id = db.Column(db.Integer, primary_key=True)
     pedido_id = db.Column(db.Integer, db.ForeignKey('pedidos.id'), nullable=False)
-    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id'))
+    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id', ondelete='SET NULL'))
     nombre_producto = db.Column(db.String(200), nullable=False)  # Guardamos nombre por si se borra el producto
     cantidad = db.Column(db.Integer, nullable=False)
     precio_unitario = db.Column(db.Float, nullable=False)
@@ -181,7 +181,7 @@ class DetallePedido(db.Model):
 class Resena(db.Model):
     __tablename__ = 'resenas'
     id = db.Column(db.Integer, primary_key=True)
-    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id'), nullable=False)
+    producto_id = db.Column(db.Integer, db.ForeignKey('productos.id', ondelete='CASCADE'), nullable=False)
     nombre_cliente = db.Column(db.String(100), nullable=False)
     calificacion = db.Column(db.Integer, nullable=False)  # 1 a 5
     comentario = db.Column(db.Text)

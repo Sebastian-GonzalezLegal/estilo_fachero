@@ -17,7 +17,7 @@
                 <div class="d-flex flex-wrap gap-2 pb-md-0 w-100 w-md-auto">
                     <a href="/productos"
                         class="filter-btn btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('categoria') and not request.args.get('tipo') else 'btn-light text-muted border' }}">
-                        Todo
+                        Todos
                     </a>
                     {% for c in categorias %}
                     <a href="/productos?categoria={{ c.id }}"

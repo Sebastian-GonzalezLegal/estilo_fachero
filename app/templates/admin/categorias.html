@@ -60,11 +60,10 @@
                                     data-bs-toggle="modal" data-bs-target="#modalEditar{{ c.id }}" title="Editar">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <form action="{{ url_for('admin.admin_eliminar_categoria', id=c.id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar categoría? Los productos quedarán sin categoría.')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 32px; height: 32px;" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
+                            <button class="btn btn-sm btn-outline-danger border-0 rounded-circle" style="width: 32px; height: 32px;" 
+                                    data-bs-toggle="modal" data-bs-target="#modalEliminar{{ c.id }}" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -116,6 +115,40 @@
                     </div>
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary py-2 fw-bold" style="background-color: var(--admin-accent); border: none;">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar Categoría -->
+<div class="modal fade" id="modalEliminar{{ c.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fs-6 fw-bold text-white"><i class="bi bi-exclamation-triangle me-2"></i> Eliminar Categoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="mb-4">¿Estás seguro de eliminar <strong>{{ c.nombre }}</strong>? <br>
+                <small class="text-muted">Debes elegir a qué categoría mover los productos asociados.</small></p>
+                
+                <form action="{{ url_for('admin.admin_eliminar_categoria', id=c.id) }}" method="POST">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Mover productos a:</label>
+                        <select name="nueva_categoria_id" class="form-select" required>
+                            <option value="0">Sin categoría</option>
+                            {% for ncat in categorias %}
+                                {% if ncat.id != c.id and ncat.activa %}
+                                    <option value="{{ ncat.id }}">{{ ncat.nombre }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light flex-fill fw-bold" data-bs-toggle="modal" data-bs-target="#modalEditar{{ c.id }}">Cancelar</button>
+                        <button type="submit" class="btn btn-danger flex-fill fw-bold">Confirmar y Eliminar</button>
                     </div>
                 </form>
             </div>

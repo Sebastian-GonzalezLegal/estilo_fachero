@@ -122,9 +122,15 @@
                         </div>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="{{ url_for('admin.admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-light border-0 rounded-circle" title="Editar">
-                            <i class="bi bi-pencil-fill text-muted"></i>
-                        </a>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('admin.admin_producto_editar', id=producto.id) }}" class="btn btn-sm btn-light border-0 rounded-circle" title="Editar">
+                                <i class="bi bi-pencil-fill text-muted"></i>
+                            </a>
+                            <button onclick="confirmarEliminarProducto({{ producto.id }}, '{{ producto.nombre }}')" class="btn btn-sm btn-light border-0 rounded-circle text-danger" title="Eliminar">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            <form id="delete-form-{{ producto.id }}" action="{{ url_for('admin.admin_producto_eliminar', id=producto.id) }}" method="POST" style="display: none;"></form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
@@ -167,14 +173,24 @@
         const ids = Array.from(document.querySelectorAll('.product-check:checked')).map(c => c.value);
         if (!ids.length) return;
 
+        let title = '¿Confirmar acción?';
+        let text = `Se aplicará la acción "${accion}" a ${ids.length} productos.`;
+        let confirmBtn = 'Sí, aplicar';
+
+        if (accion === 'eliminar') {
+            title = '¿Eliminar definitivamente?';
+            text = `¡Atención! Se eliminarán ${ids.length} productos de forma permanente. El historial de pedidos se conservará, pero los productos desaparecerán del catálogo.`;
+            confirmBtn = 'Sí, eliminar';
+        }
+
         Swal.fire({
-            title: '¿Confirmar acción?',
-            text: `Se aplicará la acción "${accion}" a ${ids.length} productos.`,
-            icon: 'warning',
+            title: title,
+            text: text,
+            icon: accion === 'eliminar' ? 'error' : 'warning',
             showCancelButton: true,
-            confirmButtonColor: 'var(--admin-accent)',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, aplicar',
+            confirmButtonColor: accion === 'eliminar' ? '#d33' : 'var(--admin-accent)',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: confirmBtn,
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -191,6 +207,23 @@
                         Swal.fire('Error', data.error, 'error');
                     }
                 });
+            }
+        });
+    }
+
+    function confirmarEliminarProducto(id, nombre) {
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: `¿Estás seguro de que quieres eliminar "${nombre}"? Esta acción no se puede deshacer.`,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById(`delete-form-${id}`).submit();
             }
         });
     }
