@@ -75,44 +75,49 @@ def api_producto_detalle(id):
         """
 
     html = f"""
-    <div class="row g-4 p-3">
-        <div class="col-md-5 text-center d-flex flex-column justify-content-center border-end-md">
-            {imagen_html}
-            <div class="mt-3">
+    <div class="row g-0">
+        <div class="col-md-6 p-4 d-flex flex-column justify-content-center align-items-center glass-panel-sm border-0" style="min-height: 350px;">
+            <div class="position-absolute top-0 start-0 m-3">
                 {estado_badge}
-                <span class="badge bg-light text-dark border fs-6 ms-2 text-capitalize">{producto.tipo}</span>
+            </div>
+            <div class="product-image-container p-3 bg-white rounded-4 shadow-sm" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.7);">
+                {imagen_html}
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <span class="badge glass-panel-sm text-dark border-0 px-3 py-2 text-capitalize">{producto.categoria.nombre if producto.categoria else producto.tipo}</span>
+                {f'<span class="badge glass-panel-sm text-dark border-0 px-3 py-2 text-capitalize opacity-75" style="font-size: 0.7rem;">{producto.tipo}</span>' if producto.categoria and producto.categoria.nombre.lower() != producto.tipo.lower() else ''}
             </div>
         </div>
-        <div class="col-md-7">
-            <h3 class="fw-bold mb-3 text-dark">{producto.nombre}</h3>
+        <div class="col-md-6 p-5 d-flex flex-column justify-content-center bg-white bg-opacity-10">
+            <h2 class="fw-800 mb-2 text-dark font-heading">{producto.nombre}</h2>
             
-            <div class="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom border-white border-opacity-10">
                 <div>
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 1px;">Precio</div>
-                    <div class="display-6 fw-bold text-primary">${producto.precio:,.0f}</div>
+                    <div class="text-muted small fw-800 text-uppercase mb-1" style="letter-spacing: 1px; font-size: 0.7rem;">Precio Premium</div>
+                    <div class="h2 fw-900 text-primary mb-0">${producto.precio:,.0f}</div>
                 </div>
-                <div class="text-end">
-                    <div class="text-muted small fw-bold text-uppercase" style="letter-spacing: 1px;">Disponibilidad</div>
+                <div class="ms-auto text-end">
+                    <div class="text-muted small fw-800 text-uppercase mb-1" style="letter-spacing: 1px; font-size: 0.7rem;">Stock</div>
                     <div class="h5 fw-bold text-dark mb-0">{producto.stock} unidades</div>
                 </div>
             </div>
             
             <div class="mb-4">
-                <div class="text-muted small fw-bold text-uppercase mb-2" style="letter-spacing: 1px;">Descripción</div>
-                <p class="text-muted lh-base">{producto.descripcion or 'Sin descripción disponible.'}</p>
+                <div class="text-muted small fw-800 text-uppercase mb-2" style="letter-spacing: 1px; font-size: 0.7rem;">Descripción</div>
+                <p class="text-muted lh-base small fw-medium">{producto.descripcion or 'Sin descripción disponible.'}</p>
             </div>
             
             <div class="row g-2 mb-4">
                 <div class="col-6">
-                    <div class="p-3 bg-light rounded-3 text-center border">
-                        <div class="text-muted small fw-bold"><i class="bi bi-box-seam mb-1 d-block"></i> PESO</div>
-                        <div class="fw-bold text-dark">{producto.peso_g} g</div>
+                    <div class="p-3 glass-panel-sm rounded-4 text-center border-0">
+                        <div class="text-muted small fw-700" style="font-size: 0.65rem;"><i class="bi bi-box-seam mb-1 d-block opacity-50"></i> PESO</div>
+                        <div class="fw-bold text-dark small">{producto.peso_g} g</div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="p-3 bg-light rounded-3 text-center border">
-                        <div class="text-muted small fw-bold"><i class="bi bi-arrows-fullscreen mb-1 d-block"></i> MEDIDAS</div>
-                        <div class="fw-bold text-dark">{producto.alto_cm}x{producto.ancho_cm}x{producto.largo_cm} cm</div>
+                    <div class="p-3 glass-panel-sm rounded-4 text-center border-0">
+                        <div class="text-muted small fw-700" style="font-size: 0.65rem;"><i class="bi bi-arrows-fullscreen mb-1 d-block opacity-50"></i> MEDIDAS</div>
+                        <div class="fw-bold text-dark small">{producto.alto_cm}x{producto.ancho_cm}x{producto.largo_cm} cm</div>
                     </div>
                 </div>
             </div>
@@ -120,11 +125,6 @@ def api_producto_detalle(id):
             {boton_publico}
         </div>
     </div>
-    <style>
-        @media (min-width: 768px) {{
-            .border-end-md {{ border-right: 1px solid #eee; }}
-        }}
-    </style>
     """
     return jsonify({"html": html})
 

@@ -3,20 +3,24 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="position-relative overflow-hidden py-5 mb-5">
+    <!-- Decorative Blobs -->
+    <div class="blob-decorator" style="top: -10%; right: -10%; width: 500px; height: 500px;"></div>
+    <div class="blob-decorator" style="bottom: -10%; left: -10%; width: 400px; height: 400px; background: radial-gradient(circle, var(--primary-color) 0%, transparent 70%); animation-delay: -5s;"></div>
+    
     <div class="container py-lg-5">
         <div class="row align-items-center g-5">
             <div class="col-lg-6 text-center text-lg-start z-1">
-                <span class="d-inline-block py-1 px-3 rounded-pill bg-light text-primary fw-bold small mb-3 border border-primary-subtle">
+                <span class="d-inline-block py-1 px-3 rounded-pill bg-white text-primary fw-bold small mb-3 border border-primary-subtle shadow-sm">
                     NUEVA COLECCIÓN 2026
                 </span>
-                <h1 class="display-3 fw-bold mb-3 lh-1 text-dark" style="letter-spacing: -2px;">
+                <h1 class="display-3 fw-bold mb-3 lh-1 text-dark" style="letter-spacing: -3px;">
                     MÁS ONDA A TUS <span class="text-primary position-relative d-inline-block">OUTFITS
-                        <svg class="position-absolute start-0 bottom-0 w-100 text-warning" height="10" viewBox="0 0 100 10" preserveAspectRatio="none" style="z-index: -1; opacity: 0.6;">
-                            <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="8" fill="none" />
+                        <svg class="position-absolute start-0 bottom-0 w-100 text-accent" height="12" viewBox="0 0 100 12" preserveAspectRatio="none" style="z-index: -1; opacity: 0.8;">
+                            <path d="M0 8 Q 50 15 100 8" stroke="currentColor" stroke-width="10" fill="none" />
                         </svg>
                     </span> ⚡
                 </h1>
-                <p class="lead text-muted mb-4 pe-lg-5">
+                <p class="lead text-muted mb-4 pe-lg-5 fw-medium">
                     Descubrí los accesorios que definen tu estilo. Gorras, lentes y medias con la mejor calidad y diseño. Envíos a todo el país.
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
@@ -106,13 +110,13 @@
         <div class="row g-4 justify-content-center">
             <!-- Gorras Card -->
             <div class="col-md-4">
-                <a href="/productos?tipo=gorra" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                <a href="/productos?tipo=gorra" class="card glass-card h-100 border-0 text-decoration-none group">
                     <div class="card-body p-5 text-center d-flex flex-column align-items-center">
-                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <div class="mb-4 p-3 rounded-circle bg-white bg-opacity-50 shadow-sm text-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; backdrop-filter: blur(5px);">
                             <i class="bi bi-capslock display-6"></i>
                         </div>
                         <h3 class="fw-bold text-dark mb-2">Gorras</h3>
-                        <p class="text-muted mb-4">Diseños únicos, Trucker, Visera Plana y más.</p>
+                        <p class="text-muted mb-4 fw-medium">Diseños únicos, Trucker, Visera Plana y más.</p>
                         <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
                     </div>
                 </a>
@@ -120,13 +124,13 @@
 
             <!-- Lentes Card -->
             <div class="col-md-4">
-                <a href="/productos?tipo=lentes" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                <a href="/productos?tipo=lentes" class="card glass-card h-100 border-0 text-decoration-none group">
                     <div class="card-body p-5 text-center d-flex flex-column align-items-center">
-                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-accent d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <div class="mb-4 p-3 rounded-circle bg-white bg-opacity-50 shadow-sm text-accent d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; backdrop-filter: blur(5px);">
                             <i class="bi bi-eyeglasses display-6"></i>
                         </div>
                         <h3 class="fw-bold text-dark mb-2">Lentes</h3>
-                        <p class="text-muted mb-4">Gafas de sol con estilo y protección para el verano.</p>
+                        <p class="text-muted mb-4 fw-medium">Gafas de sol con estilo y protección para el verano.</p>
                         <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
                     </div>
                 </a>
@@ -134,13 +138,13 @@
 
             <!-- Medias Card -->
             <div class="col-md-4">
-                <a href="/productos?tipo=medias" class="card h-100 border-0 shadow-sm hover-lift text-decoration-none bg-light group">
+                <a href="/productos?tipo=medias" class="card glass-card h-100 border-0 text-decoration-none group">
                     <div class="card-body p-5 text-center d-flex flex-column align-items-center">
-                        <div class="mb-4 p-3 rounded-circle bg-white shadow-sm text-dark d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <div class="mb-4 p-3 rounded-circle bg-white bg-opacity-50 shadow-sm text-dark d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; backdrop-filter: blur(5px);">
                             <i class="bi bi-emoji-smile display-6"></i>
                         </div>
                         <h3 class="fw-bold text-dark mb-2">Medias</h3>
-                        <p class="text-muted mb-4">Comodidad y diseño en cada paso. Packs disponibles.</p>
+                        <p class="text-muted mb-4 fw-medium">Comodidad y diseño en cada paso. Packs disponibles.</p>
                         <span class="btn btn-outline-fachero rounded-pill px-4 mt-auto">Ver Colección</span>
                     </div>
                 </a>
@@ -150,30 +154,30 @@
 </section>
 
 <!-- Features / Trust Section -->
-<section class="py-5">
+<section class="py-5 position-relative overflow-hidden">
     <div class="container py-4">
-        <div class="glass-panel p-5 rounded-4 shadow-sm">
+        <div class="glass-panel p-5 rounded-4 border-white border-opacity-20">
             <div class="row g-4 text-center">
                 <div class="col-md-4 border-end-md">
                     <div class="mb-3">
                         <i class="bi bi-truck fs-1 text-primary"></i>
                     </div>
                     <h5 class="fw-bold mb-2">Envíos a todo el País</h5>
-                    <p class="text-muted small mb-0 px-lg-4">Llegamos a cada rincón de Argentina a través de Correo Argentino.</p>
+                    <p class="text-muted small mb-0 px-lg-4 fw-medium">Llegamos a cada rincón de Argentina a través de Correo Argentino.</p>
                 </div>
                 <div class="col-md-4 border-end-md">
                     <div class="mb-3">
                         <i class="bi bi-shield-check fs-1 text-primary"></i>
                     </div>
                     <h5 class="fw-bold mb-2">Compra Segura</h5>
-                    <p class="text-muted small mb-0 px-lg-4">Tus datos están protegidos. Pagá tranquilo mediante transferencia.</p>
+                    <p class="text-muted small mb-0 px-lg-4 fw-medium">Tus datos están protegidos. Pagá tranquilo mediante transferencia.</p>
                 </div>
                 <div class="col-md-4">
                     <div class="mb-3">
                         <i class="bi bi-chat-heart fs-1 text-primary"></i>
                     </div>
                     <h5 class="fw-bold mb-2">Atención Personalizada</h5>
-                    <p class="text-muted small mb-0 px-lg-4">¿Tenés dudas? Escribinos por WhatsApp y te ayudamos al toque.</p>
+                    <p class="text-muted small mb-0 px-lg-4 fw-medium">¿Tenés dudas? Escribinos por WhatsApp y te ayudamos al toque.</p>
                 </div>
             </div>
         </div>

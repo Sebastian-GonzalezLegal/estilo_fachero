@@ -13,7 +13,7 @@
         <div class="container-fluid px-0">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <div class="main-filter-card bg-white rounded-4 shadow-sm border p-3">
+                    <div class="main-filter-card glass-panel rounded-4 border-white border-opacity-20 p-3">
                         <!-- Top Row: Search and Sort -->
                         <div class="d-flex flex-column flex-md-row gap-3 mb-3">
                             <form action="/productos" method="GET" class="flex-grow-1">
@@ -22,21 +22,21 @@
                                 {% elif request.args.get('tipo') %}
                                 <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
                                 {% endif %}
-                                <div class="input-group search-input-group">
-                                    <span class="input-group-text bg-light border-0 ps-3">
+                                <div class="input-group search-input-group glass-panel-sm rounded-pill border-0 overflow-hidden">
+                                    <span class="input-group-text bg-transparent border-0 ps-3">
                                         <i class="bi bi-search text-muted"></i>
                                     </span>
                                     <input type="text" name="q"
-                                        class="form-control border-0 bg-light ps-2 py-2"
+                                        class="form-control border-0 bg-transparent ps-2 py-2 shadow-none"
                                         placeholder="¿Qué estás buscando?" value="{{ busqueda or '' }}" aria-label="Buscar">
-                                    <button class="btn btn-dark rounded-pill px-4 ms-2 d-none d-md-block" type="submit">Buscar</button>
+                                    <button class="btn btn-dark rounded-pill px-4 m-1 d-none d-md-block" type="submit">Buscar</button>
                                 </div>
                             </form>
                             
                             <div class="d-flex gap-2">
                                 <select id="sort-select"
-                                    class="form-select border-0 bg-light text-muted rounded-pill cursor-pointer px-3"
-                                    style="min-width: 160px; height: 46px;">
+                                    class="form-select border-0 glass-panel-sm text-muted rounded-pill cursor-pointer px-3 shadow-none fw-medium"
+                                    style="min-width: 170px; height: 46px;">
                                     <option value="newest" {{ 'selected' if request.args.get('sort') == 'newest' }}>Más nuevos</option>
                                     <option value="price_low" {{ 'selected' if request.args.get('sort') == 'price_low' }}>Precio: Menor a Mayor</option>
                                     <option value="price_high" {{ 'selected' if request.args.get('sort') == 'price_high' }}>Precio: Mayor a Menor</option>
@@ -120,90 +120,89 @@
     <div class="row g-4">
         {% for prod in productos.items %}
         <div class="col-sm-6 col-lg-4 col-xl-3 fade-in-up" style="animation-delay: {{ loop.index0 * 0.05 }}s">
-            <div class="card h-100 border-0 shadow-sm product-card hover-lift">
-
-                <!-- Badges -->
-                <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-start pointer-events-none"
-                    style="z-index: 2;">
-                    <span class="badge bg-white text-dark shadow-sm text-uppercase border">{{ prod.categoria.nombre if
-                        prod.categoria else prod.tipo }}</span>
-                    {% if prod.stock <= 0 %} <span class="badge bg-danger shadow-sm">AGOTADO</span>
-                        {% elif prod.stock < 5 %} <span class="badge bg-warning text-dark shadow-sm">¡ÚLTIMOS!</span>
-                            {% endif %}
+            <div class="card h-100 border-0 glass-card product-card rounded-5 overflow-hidden">
+                <!-- Badges Superiores -->
+                <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-start" style="z-index: 5;">
+                    <div class="glass-badge-mini shadow-sm">
+                        {{ prod.categoria.nombre if prod.categoria else prod.tipo }}
+                    </div>
+                    {% if prod.stock <= 0 %} 
+                        <span class="badge bg-danger rounded-pill px-3 shadow-sm border-0 fw-bold">AGOTADO</span>
+                    {% elif prod.stock < 5 %} 
+                        <span class="badge bg-warning text-dark rounded-pill px-3 shadow-sm border-0 fw-bold">¡ÚLTIMOS!</span>
+                    {% endif %}
                 </div>
 
-                <!-- Imagen -->
-                <div class="card-img-top-wrapper bg-light rounded-top position-relative overflow-hidden">
-                    <a href="{{ url_for('main.producto_detalle', id=prod.id) }}"
-                        class="d-block w-100 h-100 position-absolute top-0 start-0 d-flex align-items-center justify-content-center text-decoration-none">
+                <!-- Imagen con Zoom Effect -->
+                <div class="card-img-top-wrapper bg-white position-relative">
+                    <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="d-block w-100 h-100">
                         {% if prod.primera_foto() %}
-                        {% set foto = prod.primera_foto() %}
-                        <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}"
-                            alt="{{ prod.nombre }}" class="img-fluid w-100 h-100" loading="eager"
-                            style="object-fit: contain; padding: 1rem; transition: transform 0.5s ease;">
+                            {% set foto = prod.primera_foto() %}
+                            <img src="{{ foto if foto.startswith('http') else url_for('api.imagen_producto', filename=foto) }}"
+                                alt="{{ prod.nombre }}" class="w-100 h-100 p-4" loading="eager"
+                                style="object-fit: contain;">
                         {% else %}
-                        <div class="text-muted opacity-50">
-                            <i class="bi bi-camera fs-1"></i>
-                        </div>
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25">
+                                <i class="bi bi-image fs-1"></i>
+                            </div>
                         {% endif %}
                     </a>
+                    
+                    <!-- Floating Price -->
+                    <div class="price-badge-floating">
+                        ${{ prod.precio }}
+                    </div>
 
                     <!-- Quick View Overlay -->
-                    <div class="quick-view-btn position-absolute bottom-0 start-0 w-100 p-2 translate-middle-y opacity-0 transition-all"
-                        style="z-index: 3; margin-bottom: -10px;">
+                    <div class="quick-view-btn position-absolute start-0 w-100 px-4" style="bottom: 15px; z-index: 12;">
                         <button onclick='abrirVistaRapida({{ prod.id }})'
-                            class="btn btn-dark btn-sm w-100 rounded-pill shadow-sm py-2 opacity-90">
-                            <i class="bi bi-eye me-1"></i> VISTA RÁPIDA
+                            class="btn btn-dark rounded-pill w-100 shadow-lg py-2 fw-800 border-0" style="background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);">
+                            <i class="bi bi-eye-fill me-2"></i> VISTA RÁPIDA
                         </button>
                     </div>
                 </div>
 
                 <!-- Card Body -->
-                <div class="card-body d-flex flex-column">
-                    <div class="mb-2">
-                        <!-- Estrellas -->
+                <div class="card-body d-flex flex-column p-4 pt-2">
+                    <div class="mb-3">
                         {% if prod.promedio_calificacion() > 0 %}
-                        <div class="text-warning small mb-1">
-                            {% for i in range(prod.promedio_calificacion()|round|int) %}
-                            <i class="bi bi-star-fill"></i>
-                            {% endfor %}
-                            <span class="text-muted ms-1" style="font-size: 0.75rem;">({{ prod.resenas|length }})</span>
+                        <div class="text-warning small mb-1 d-flex align-items-center gap-1">
+                            <i class="bi bi-star-fill" style="font-size: 0.75rem;"></i>
+                            <span class="text-muted fw-bold" style="font-size: 0.75rem;">{{ prod.promedio_calificacion() | round(1) }}</span>
                         </div>
-                        {% else %}
-                        <div class="text-muted small mb-1 opacity-0">.</div>
                         {% endif %}
 
-                        <h5 class="card-title fw-bold mb-1 lh-sm text-truncate">
-                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}"
-                                class="text-dark stretched-link text-decoration-none">
+                        <h5 class="card-title fw-800 mb-0">
+                            <a href="{{ url_for('main.producto_detalle', id=prod.id) }}" class="text-dark text-decoration-none">
                                 {{ prod.nombre }}
                             </a>
                         </h5>
                     </div>
 
-                    <div class="mt-auto position-relative" style="z-index: 5;">
-                        <div class="d-flex justify-content-between align-items-end mb-3">
-                            <span class="h4 mb-0 fw-bold text-primary">${{ "%.0f"|format(prod.precio) }}</span>
-                            {% if prod.stock > 0 %}
-                            <small class="text-muted" style="font-size: 0.8rem;">Stock: {{ prod.stock }}</small>
-                            {% endif %}
-                        </div>
-
+                    <div class="mt-auto">
                         {% if prod.stock > 0 %}
-                        <div class="d-flex gap-2">
-                            <input type="number" id="cantidad-{{ prod.id }}"
-                                class="form-control form-control-sm text-center border-secondary rounded-pill" value="1"
-                                min="1" max="{{ prod.stock }}" style="width: 60px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="quantity-selector d-flex align-items-center bg-white border border-opacity-10 rounded-pill px-2 shadow-sm" style="height: 42px;">
+                                <button type="button" class="btn btn-link text-dark p-0 border-0 hover-scale" onclick="cambiarCantidadCard('{{ prod.id }}', -1)" style="width: 25px;">
+                                    <i class="bi bi-dash-lg"></i>
+                                </button>
+                                <input type="number" id="cantidad-{{ prod.id }}"
+                                    class="form-control text-center border-0 bg-transparent fw-900 p-0 shadow-none" 
+                                    value="1" min="1" max="{{ prod.stock }}" 
+                                    style="width: 32px; font-size: 1rem; color: #000 !important;" readonly>
+                                <button type="button" class="btn btn-link text-dark p-0 border-0 hover-scale" onclick="cambiarCantidadCard('{{ prod.id }}', 1)" style="width: 25px;">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
                             <button id="btn-agregar-{{ prod.id }}"
                                 onclick='agregarAlCarrito({{ prod.id }}, {{ prod.nombre | tojson | safe }}, {{ prod.precio }})'
-                                class="btn btn-fachero btn-sm w-100 fw-bold rounded-pill d-flex align-items-center justify-content-center gap-2">
-                                <i class="bi bi-bag-plus"></i> AGREGAR
+                                class="btn btn-fachero w-100 fw-800 rounded-pill d-flex align-items-center justify-content-center gap-2" style="height: 42px; font-size: 0.8rem;">
+                                <i class="bi bi-bag-plus-fill"></i> COMPRAR
                             </button>
                         </div>
-                        <div id="en-carrito-{{ prod.id }}" class="text-success small fw-bold mt-2 text-center"
-                            style="height: 20px; font-size: 0.75rem;"></div>
+                        <div id="en-carrito-{{ prod.id }}" class="text-success small fw-700 mt-2 text-center" style="height: 15px; font-size: 0.7rem;"></div>
                         {% else %}
-                        <button class="btn btn-secondary btn-sm w-100 fw-bold rounded-pill" disabled>SIN STOCK</button>
+                        <button class="btn btn-outline-secondary w-100 fw-800 rounded-pill py-2 border-dashed opacity-75" style="border-style: dashed !important;" disabled>SIN STOCK</button>
                         {% endif %}
                     </div>
                 </div>

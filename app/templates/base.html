@@ -37,27 +37,27 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="mainNavbar">
-        <div class="container py-1">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <div class="logo-container rounded-circle">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="/">
+                <div class="logo-container">
                     <img src="{{ url_for('static', filename='img/logo.png') }}" alt="{{ config_tienda.nombre_tienda if config_tienda else 'Estilo Fachero' }}" class="nav-logo" loading="eager">
                 </div>
                 <div class="brand-info">
-                    <span class="brand-text fw-800 text-uppercase ls-tight d-block">{{ config_tienda.nombre_tienda if config_tienda else 'ESTILO FACHERO' }}</span>
+                    <span class="brand-text fw-800 text-uppercase ls-tight d-block" style="letter-spacing: -0.5px;">ESTILO <span>FACHERO</span></span>
                 </div>
             </a>
 
             <div class="d-flex align-items-center gap-3 order-lg-3">
                 <!-- Mobile Cart Toggle -->
                 {% if 'admin' not in request.path %}
-                <a class="nav-link btn-cart-nav d-lg-none position-relative" href="#offcanvasCart"
+                <a class="nav-link btn-cart-nav d-lg-none position-relative p-2" href="#offcanvasCart"
                     data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart">
-                    <i class="bi bi-bag-heart"></i>
-                    <span id="badge-carrito-mobile" class="badge rounded-pill bg-primary cart-badge-dot"></span>
+                    <i class="bi bi-bag-heart fs-4"></i>
+                    <span id="badge-carrito-mobile" class="badge rounded-pill bg-accent cart-badge-dot"></span>
                 </a>
                 {% endif %}
 
-                <button class="navbar-toggler border-0 p-0" type="button" data-bs-toggle="collapse"
+                <button class="navbar-toggler border-0 p-2 shadow-none" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarNav" aria-label="Toggle navigation">
                     <div class="toggler-icon">
                         <span></span>
@@ -67,23 +67,23 @@
             </div>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center gap-lg-2">
+                <ul class="navbar-nav ms-auto align-items-center gap-lg-3">
                     {% if 'admin' not in request.path %}
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">Inicio</a>
+                        <a class="nav-link fw-bold {{ 'active' if request.path == '/' }}" href="/">Inicio</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if '/productos' in request.path }}"
+                        <a class="nav-link fw-bold {{ 'active' if '/productos' in request.path }}"
                             href="/productos">Tienda</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if '/contacto' in request.path }}" href="/contacto">Contacto</a>
+                        <a class="nav-link fw-bold {{ 'active' if '/contacto' in request.path }}" href="/contacto">Contacto</a>
                     </li>
                     <li class="nav-item ms-lg-2 d-none d-lg-block">
-                        <a class="nav-link btn-cart-glass position-relative" href="#offcanvasCart"
+                        <a class="nav-link btn-cart-glass position-relative px-4" href="#offcanvasCart"
                             data-bs-toggle="offcanvas" role="button" aria-controls="offcanvasCart" title="Ver Carrito">
-                            <i class="bi bi-bag-heart-fill"></i>
-                            <span id="badge-carrito" class="badge-carrito-count">0</span>
+                            <i class="bi bi-bag-heart-fill me-2"></i> CARRITO
+                            <span id="badge-carrito" class="badge-carrito-count ms-2">0</span>
                         </a>
                     </li>
                     {% else %}
@@ -154,17 +154,17 @@
     </main>
 
     <!-- Offcanvas Cart -->
-    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel"
+    <div class="offcanvas offcanvas-end glass-panel-dark border-0 shadow-lg" tabindex="-1" id="offcanvasCart" aria-labelledby="offcanvasCartLabel"
         style="z-index: 1055;">
-        <div class="offcanvas-header bg-white border-bottom py-3">
-            <h5 class="offcanvas-title fw-bold font-heading d-flex align-items-center text-dark"
+        <div class="offcanvas-header bg-transparent border-bottom border-white border-opacity-10 py-3">
+            <h5 class="offcanvas-title fw-bold font-heading d-flex align-items-center text-white"
                 id="offcanvasCartLabel">
-                <i class="bi bi-bag-heart-fill me-2 text-primary"></i> Tu Carrito
+                <i class="bi bi-bag-heart-fill me-2 text-accent"></i> Tu Carrito
             </h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
 
-        <div class="offcanvas-body d-flex flex-column p-0 bg-light">
+        <div class="offcanvas-body d-flex flex-column p-0 bg-transparent">
             <!-- Items Area -->
             <div id="cart-items-container" class="flex-grow-1 overflow-auto p-3 custom-scrollbar">
                 <!-- Content injected by JS -->
@@ -179,16 +179,16 @@
             </div>
 
             <!-- Footer Area -->
-            <div class="border-top p-4 bg-white shadow-lg" id="cart-footer-actions">
+            <div class="border-top border-white border-opacity-10 p-4 bg-white bg-opacity-10 shadow-lg" id="cart-footer-actions">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <span class="text-muted text-uppercase fw-bold small">Subtotal</span>
-                    <span id="offcanvas-cart-total" class="fw-bold fs-4 text-primary">$0</span>
+                    <span class="text-white text-opacity-50 text-uppercase fw-bold small">Subtotal</span>
+                    <span id="offcanvas-cart-total" class="fw-bold fs-4 text-accent">$0</span>
                 </div>
                 <div class="d-grid gap-2">
                     <a href="/carrito" class="btn btn-fachero rounded-pill py-3 fw-bold">
                         INICIAR COMPRA <i class="bi bi-arrow-right-short ms-1"></i>
                     </a>
-                    <button type="button" class="btn btn-link text-muted text-decoration-none small"
+                    <button type="button" class="btn btn-link text-white text-opacity-50 text-decoration-none small"
                         data-bs-dismiss="offcanvas">
                         Seguir mirando
                     </button>
@@ -269,16 +269,17 @@
     </footer>
 
     <!-- Modal Vista Rápida Global -->
-    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(5px);">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 overflow-hidden shadow-lg">
+            <div class="modal-content border-0 rounded-5 overflow-hidden glass-panel border-white border-opacity-20">
                 <div class="modal-body p-0">
-                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3" style="z-index: 10;"
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-4 shadow-none" style="z-index: 100;"
                         data-bs-dismiss="modal" aria-label="Close"></button>
-                    <div id="quick-view-content">
+                    <div id="quick-view-content" style="min-height: 400px;">
                         <!-- Cargado vía AJAX -->
-                        <div class="p-5 text-center">
-                            <div class="spinner-border text-primary" role="status"></div>
+                        <div class="p-5 text-center d-flex flex-column align-items-center justify-content-center" style="height: 400px;">
+                            <div class="spinner-border text-accent mb-3" style="width: 3rem; height: 3rem; border-width: 0.25em;" role="status"></div>
+                            <h5 class="fw-bold text-muted">Cargando estilo...</h5>
                         </div>
                     </div>
                 </div>

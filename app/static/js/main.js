@@ -287,6 +287,18 @@ function agregarAlCarrito(id, nombre, precio) {
     }
 }
 
+function cambiarCantidadCard(id, delta) {
+    const input = document.getElementById('cantidad-' + id);
+    if (!input) return;
+    
+    let currentVal = parseInt(input.value);
+    let newVal = currentVal + delta;
+    
+    if (newVal >= 1 && newVal <= parseInt(input.max)) {
+        input.value = newVal;
+    }
+}
+
 function cambiarCantidad(index, delta) {
     let prod = carrito[index];
     let nuevaCantidad = prod.cantidad + delta;
@@ -364,7 +376,7 @@ function actualizarOffcanvas() {
 
     if (carrito.length === 0) {
         container.innerHTML = `
-            <div class="text-center py-5 text-muted">
+            <div class="text-center py-5 text-white-50">
                 <i class="bi bi-basket fs-1 mb-3 opacity-25"></i>
                 <p class="mb-0">Tu carrito está vacío.</p>
                 <small>¡Agregá algo con mucha onda!</small>
@@ -382,19 +394,19 @@ function actualizarOffcanvas() {
         total += subtotal;
 
         let item = `
-            <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+            <div class="d-flex align-items-center mb-3 border-bottom border-white border-opacity-10 pb-3">
                 <div class="flex-grow-1">
-                    <h6 class="mb-1 fw-bold">${prod.nombre}</h6>
+                    <h6 class="mb-1 fw-bold text-white">${prod.nombre}</h6>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <button onclick="cambiarCantidad(${index}, -1)" class="btn btn-sm btn-outline-secondary px-2 py-0 border-0 fs-5 lh-1">-</button>
-                        <span class="fw-bold fs-6">${prod.cantidad}</span>
-                        <button onclick="cambiarCantidad(${index}, 1)" class="btn btn-sm btn-outline-secondary px-2 py-0 border-0 fs-5 lh-1">+</button>
+                        <button onclick="cambiarCantidad(${index}, -1)" class="btn btn-sm btn-link text-white text-opacity-50 px-2 py-0 border-0 fs-5 lh-1">-</button>
+                        <span class="fw-bold fs-6 text-white">${prod.cantidad}</span>
+                        <button onclick="cambiarCantidad(${index}, 1)" class="btn btn-sm btn-link text-white text-opacity-50 px-2 py-0 border-0 fs-5 lh-1">+</button>
                     </div>
                 </div>
-                <div class="text-end ms-2">
-                    <span class="d-block fw-bold text-success">$${subtotal}</span>
-                    <button onclick="eliminar(${index})" class="btn btn-sm text-danger p-0 mt-1 text-decoration-none" title="Eliminar">
-                        <small><i class="bi bi-trash"></i></small>
+                <div class="text-end ms-3">
+                    <span class="d-block fw-bold text-accent mb-2">$${subtotal}</span>
+                    <button onclick="eliminar(${index})" class="btn btn-sm btn-outline-danger border-0 p-2 rounded-circle hover-scale" title="Eliminar" style="background: rgba(220, 53, 69, 0.1); width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-trash3-fill"></i>
                     </button>
                 </div>
             </div>

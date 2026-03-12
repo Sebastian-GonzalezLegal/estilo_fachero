@@ -105,39 +105,38 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
                 {% endif %}
 
                 <!-- Action Box -->
-                <div class="p-4 bg-light rounded-4 border mb-4">
+                <div class="p-4 glass-panel rounded-4 border-white border-opacity-20 shadow-lg mb-4">
                     {% if producto.stock > 0 %}
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold">Cantidad</span>
-                        <div class="input-group w-auto bg-white rounded-pill border">
-                            <button class="btn btn-link text-dark text-decoration-none px-3" type="button"
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fw-bold text-dark">Cantidad</span>
+                        <div class="input-group w-auto glass-panel-sm rounded-pill p-1 border-0">
+                            <button class="btn btn-link text-dark text-decoration-none px-3 py-1" type="button"
                                 onclick="disminuirCantidad()">
-                                <i class="bi bi-dash"></i>
+                                <i class="bi bi-dash-lg"></i>
                             </button>
                             <input type="number" id="cantidad-detalle"
-                                class="form-control border-0 text-center bg-transparent p-0 fw-bold"
-                                style="width: 50px;" value="1" min="1" max="{{ producto.stock }}">
-                            <button class="btn btn-link text-dark text-decoration-none px-3" type="button"
+                                class="form-control border-0 text-center bg-transparent p-0 fw-bold shadow-none"
+                                style="width: 50px; font-size: 1.1rem; color: #000 !important;" value="1" min="1" max="{{ producto.stock }}">
+                            <button class="btn btn-link text-dark text-decoration-none px-3 py-1" type="button"
                                 onclick="aumentarCantidad()">
-                                <i class="bi bi-plus"></i>
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                     </div>
 
-                    <button class="btn btn-fachero btn-lg w-100 shadow-sm mb-3 rounded-pill py-3 fw-bold"
+                    <button class="btn btn-fachero btn-lg w-100 shadow-md mb-3 rounded-pill py-3 fw-bold"
                         onclick='agregarAlCarritoDetalle({{ producto.id }}, {{ producto.nombre | tojson | safe }}, {{ producto.precio }})'>
                         AGREGAR AL CARRITO <i class="bi bi-bag-plus ms-2"></i>
                     </button>
 
-                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted small fw-medium">
                         <i class="bi bi-check-circle-fill text-success"></i> Stock disponible: {{ producto.stock }}
                         unidades
                     </div>
                     {% else %}
-                    <div class="text-center py-3">
+                    <div class="text-center py-4 glass-panel-sm rounded-4 border-0">
                         <h5 class="text-danger fw-bold mb-2">Producto Agotado</h5>
                         <p class="text-muted small mb-0">Dejanos tu email para avisarte cuando vuelva.</p>
-                        <!-- Fake subscribe form could go here -->
                     </div>
                     {% endif %}
                 </div>
@@ -219,10 +218,10 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
             {% if producto.resenas %}
             <div class="d-flex flex-column gap-3">
                 {% for resena in producto.resenas|reverse %}
-                <div class="card border-0 bg-light rounded-4 p-4">
+                <div class="card border-0 glass-card rounded-4 p-4">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-dark text-white fw-bold"
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-dark text-white fw-bold shadow-sm"
                                 style="width: 40px; height: 40px;">
                                 {{ resena.nombre_cliente[:1]|upper }}
                             </div>
@@ -235,9 +234,9 @@ producto.primera_foto() else url_for('static', filename='img/logo.png', _externa
                                 </div>
                             </div>
                         </div>
-                        <small class="text-muted">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
+                        <small class="text-muted fw-medium">{{ resena.fecha.strftime('%d/%m/%Y') }}</small>
                     </div>
-                    <p class="mb-0 text-muted ps-5 ms-2">{{ resena.comentario }}</p>
+                    <p class="mb-0 text-muted ps-5 ms-2 fw-medium opacity-75">{{ resena.comentario }}</p>
                 </div>
                 {% endfor %}
             </div>
