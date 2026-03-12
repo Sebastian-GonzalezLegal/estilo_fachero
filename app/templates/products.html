@@ -9,51 +9,98 @@
     </div>
 
     <!-- Filtros y Buscador -->
-    <div class="row justify-content-center mb-5 g-3">
-        <div class="col-md-8">
-            <div
-                class="filters-container d-flex flex-column flex-md-row gap-3 align-items-center justify-content-between p-3 bg-white rounded-4 shadow-sm border">
-                <!-- Filtros -->
-                <div class="d-flex flex-wrap gap-2 pb-md-0 w-100 w-md-auto">
-                    <a href="/productos"
-                        class="filter-btn btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-dark' if not request.args.get('categoria') and not request.args.get('tipo') else 'btn-light text-muted border' }}">
-                        Todos
-                    </a>
-                    {% for c in categorias %}
-                    <a href="/productos?categoria={{ c.id }}"
-                        class="filter-btn btn btn-sm rounded-pill px-3 text-capitalize fw-bold {{ 'btn-dark' if tipo_actual == c.id else 'btn-light text-muted border' }}">
-                        {{ c.nombre }}
-                    </a>
-                    {% endfor %}
-                </div>
-
-                <!-- Ordenar y Buscador -->
-                <div class="d-flex flex-grow-1 gap-2 w-100 mw-md-50">
-                    <select id="sort-select"
-                        class="form-select form-select-sm rounded-pill border-0 bg-light text-muted"
-                        style="width: auto; min-width: 140px;">
-                        <option value="newest">Más nuevos</option>
-                        <option value="price_low">Precio: Bajo a Alto</option>
-                        <option value="price_high">Precio: Alto a Bajo</option>
-                    </select>
-
-                    <form action="/productos" method="GET" class="d-flex flex-grow-1">
-                        {% if request.args.get('categoria') %}
-                        <input type="hidden" name="categoria" value="{{ request.args.get('categoria') }}">
-                        {% elif request.args.get('tipo') %}
-                        <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
-                        {% endif %}
-                        <div class="input-group">
-                            <input type="text" name="q"
-                                class="form-control border-end-0 rounded-start-pill ps-3 bg-light border-0"
-                                placeholder="Buscar..." value="{{ busqueda or '' }}" aria-label="Buscar">
-                            <button
-                                class="btn btn-light border-start-0 rounded-end-pill pe-3 border-0 bg-light text-muted"
-                                type="submit">
-                                <i class="bi bi-search"></i>
-                            </button>
+    <div class="filter-section mb-5">
+        <div class="container-fluid px-0">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="main-filter-card bg-white rounded-4 shadow-sm border p-3">
+                        <!-- Top Row: Search and Sort -->
+                        <div class="d-flex flex-column flex-md-row gap-3 mb-3">
+                            <form action="/productos" method="GET" class="flex-grow-1">
+                                {% if request.args.get('categoria') %}
+                                <input type="hidden" name="categoria" value="{{ request.args.get('categoria') }}">
+                                {% elif request.args.get('tipo') %}
+                                <input type="hidden" name="tipo" value="{{ request.args.get('tipo') }}">
+                                {% endif %}
+                                <div class="input-group search-input-group">
+                                    <span class="input-group-text bg-light border-0 ps-3">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" name="q"
+                                        class="form-control border-0 bg-light ps-2 py-2"
+                                        placeholder="¿Qué estás buscando?" value="{{ busqueda or '' }}" aria-label="Buscar">
+                                    <button class="btn btn-dark rounded-pill px-4 ms-2 d-none d-md-block" type="submit">Buscar</button>
+                                </div>
+                            </form>
+                            
+                            <div class="d-flex gap-2">
+                                <select id="sort-select"
+                                    class="form-select border-0 bg-light text-muted rounded-pill cursor-pointer px-3"
+                                    style="min-width: 160px; height: 46px;">
+                                    <option value="newest" {{ 'selected' if request.args.get('sort') == 'newest' }}>Más nuevos</option>
+                                    <option value="price_low" {{ 'selected' if request.args.get('sort') == 'price_low' }}>Precio: Menor a Mayor</option>
+                                    <option value="price_high" {{ 'selected' if request.args.get('sort') == 'price_high' }}>Precio: Mayor a Menor</option>
+                                </select>
+                            </div>
                         </div>
-                    </form>
+
+                        <!-- Bottom Row: Categories Grid (Desktop) / Dropdown (Mobile) -->
+                        <div class="categories-navigation mt-3">
+                            <!-- Desktop Pills -->
+                            <div class="d-none d-md-flex flex-wrap justify-content-center gap-2">
+                                <a href="/productos"
+                                    class="filter-btn btn btn-sm rounded-pill px-4 py-2 fw-bold {{ 'btn-dark shadow' if not request.args.get('categoria') and not request.args.get('tipo') else 'btn-light text-muted border' }}">
+                                    Todos
+                                </a>
+                                {% for c in categorias %}
+                                <a href="/productos?categoria={{ c.id }}"
+                                    class="filter-btn btn btn-sm rounded-pill px-4 py-2 text-capitalize fw-bold {{ 'btn-dark shadow' if tipo_actual == c.id else 'btn-light text-muted border' }}">
+                                    {{ c.nombre }}
+                                </a>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Mobile Dropdown -->
+                            <div class="d-md-none">
+                                <div class="dropdown">
+                                    <button class="btn btn-light border w-100 rounded-pill dropdown-toggle d-flex justify-content-between align-items-center px-4 py-2 fw-bold" 
+                                            type="button" 
+                                            id="categoryMobileDropdown" 
+                                            data-bs-toggle="dropdown" 
+                                            aria-expanded="false">
+                                        <span>
+                                            <i class="bi bi-tag-fill me-2 text-primary"></i>
+                                            {% set cat_actual_nombre = 'Todas las Categorías' %}
+                                            {% if request.args.get('categoria') %}
+                                                {% for c in categorias %}
+                                                    {% if c.id|string == request.args.get('categoria')|string %}
+                                                        {% set cat_actual_nombre = c.nombre %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            {{ cat_actual_nombre|capitalize }}
+                                        </span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end w-100 rounded-4 shadow border-0 p-2 mt-2" aria-labelledby="categoryMobileDropdown">
+                                        <li>
+                                            <a class="dropdown-item rounded-3 py-2 {{ 'bg-light fw-bold' if not request.args.get('categoria') }}" href="/productos">
+                                                Todos los productos
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider opacity-50"></li>
+                                        {% for c in categorias %}
+                                        <li>
+                                            <a class="dropdown-item rounded-3 py-2 text-capitalize {{ 'bg-light fw-bold' if request.args.get('categoria')|string == c.id|string }}" 
+                                               href="/productos?categoria={{ c.id }}">
+                                                {{ c.nombre }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
